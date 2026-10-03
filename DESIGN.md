@@ -89,7 +89,7 @@ components:
 
 Sayfa, bir seramik atölyesinin sergi için bastırdığı tek yapraklık ürün föyü gibi kurulur. Yapıyı kutular değil; serif başlıklar, ince çizgi ve ölçülü boşluk taşır. Renkler atölyenin malzemelerinden gelir: sırsız taş çamuru zemin, fırınlanmış koyu umber alan, bal mumu rengi tek vurgu.
 
-Yoğunluk içerik miktarına göre ayarlıdır: fotoğraflı başlık alanı masaüstünde 500px'te kalır, içerik bölümleri arasında tek bir ritim (48px) vardır. Her bölüm içeriğine göre farklı bir düzen alır: atölye fotoğraflı bir giriş, üç alanlı bir tanıtım, tek satırlık bir kategori dizini, sütun çizgili bir katalog. Hareket yoktur.
+Yoğunluk içerik miktarına göre ayarlıdır: fotoğraflı başlık alanı masaüstünde 500px'te kalır, içerik bölümleri arasında tek bir ritim (48px) vardır. Her bölüm içeriğine göre farklı bir düzen alır: atölye fotoğraflı bir giriş, üç alanlı bir tanıtım, tek satırlık bir kategori dizini, sütun çizgili bir katalog, alt çizgili alanlardan oluşan iki form. Hareket yoktur.
 
 **Key Characteristics:**
 - Kart, gölge, gradient ve köşe yuvarlama yok
@@ -121,7 +121,7 @@ Malzeme renkleri: nötr bir zemin, tek koyu alan, tek vurgu.
 
 **Vurgu Koyuda Kalır Kuralı.** Bal mumu rengi açık zeminde metin olarak kullanılmaz; kontrastı yetmez.
 
-Ölçülen kontrastlar (WCAG): `ink`/`stone` 10,88 · `ink-soft`/`stone` 5,85 · `slip`/`umber` 11,04 · `amber`/`umber` 6,09 · seçim (`ink`/`amber`) 6,99.
+Ölçülen kontrastlar (WCAG): `ink`/`stone` 10,88 · `ink-soft`/`stone` 5,85 · `slip`/`umber` 11,04 · `amber`/`umber` 6,09 · seçim (`ink`/`amber`) 6,99 · buton (`stone`/`ink`) 10,88 · gönderilirken buton (`stone`/`ink-soft`) 5,85.
 
 ## Typography
 
@@ -142,7 +142,7 @@ Malzeme renkleri: nötr bir zemin, tek koyu alan, tek vurgu.
 - **Title** (500, 19 / 17px, 1.25): Ürün adı ve fiyat.
 - **Tagline** (400, 18 / 16px): Header'daki slogan.
 - **Body** (400, 17 / 16px, 1.6): Gövde metni ve listeler; ürün açıklaması en çok 34ch ve `text-wrap: balance` ile dengelenir (tek kelimelik son satır kalmaz).
-- **Label** (400, 15px): Kategori etiketi, "Sektör" satırı, "Hedef Kitle" etiketi (500) ve listesi, footer.
+- **Label** (400, 15px): Kategori etiketi, "Sektör" satırı, "Hedef Kitle" etiketi (500) ve listesi, footer; form alan etiketleri, hata metni (500), buton (500) ve durum metni. Form başlıkları (`h3`) Title, alanlara yazılan metin Body boyutundadır.
 
 ### Named Rules
 **Etiket Sade Kalır Kuralı.** Küçük bilgiler büyük harfe çevrilmez ve harf aralığı açılmaz; yalnızca boyut ve renk ile ayrışır.
@@ -167,7 +167,8 @@ Malzeme renkleri: nötr bir zemin, tek koyu alan, tek vurgu.
   - 600–999px: iki sütun; tek kalan son ürün iki sütuna yayılır (görsel solda, metin sağda). Görseli üstteki kartlarla aynı genişliktedir, metni ikinci sütunun sol kenarından başlar.
   - 600px altı: tek sütun; ürünler yatay çizgiyle ayrılır.
 - Ürün kartında ad ve fiyat aynı satırda (ad solda, fiyat sağda), altında kategori, sonra açıklama. Görsel sıra CSS ile kurulur; DOM sırası değişmez.
-- Ölçülen sayfa yüksekliği: 1600px'te 1696px, 800px'te 1816px, 390px'te 2557px.
+- **Sipariş ve Bildirim:** 600px ve üstünde iki form yan yana, aralarında 1px dikey çizgi (iki sütunlu ürün ızgarasının çizgisiyle aynı yerde); altında alt alta, aralarında `section` boşluğu. Bölümün üst boşluğu yoktur; Ürünler'in alt boşluğu aradaki `section` ritmini verir.
+- Ölçülen sayfa yüksekliği: 1600px'te 2166px, 800px'te 2258px, 390px'te 3370px (formlar boşken).
 
 ## Elevation & Depth
 
@@ -232,6 +233,17 @@ Yuva `aspect-ratio: 4 / 3` ve `object-fit: cover` ile çalışır. Farklı oranl
 - **QR:** satır içi SVG; modüller `ink`, zemin sayfanın `stone` rengi (kontrast 10,88:1). Kutu, çerçeve, gölge veya köşe yuvarlama yok.
 - **Sessiz bölge:** SVG'de yoktur; QR sol içerik hizasına oturur ve çevresindeki açık zemin boşluğu sessiz bölge görevini görür. QR'ın dört yanında en az ~12px açık zemin kalmalı.
 - **Kodlanan adres:** sayfanın kendi adresi + `#urunler`.
+
+### Request Form
+"Sipariş ve Bildirim" bölümündeki iki form ("Sipariş Ver", "Stok Bildirimi İste") aynı bileşendir; yalnızca üçüncü alan değişir (telefon / e-posta). Her formun üstünde 1px `rule` çizgisi, altında serif `title` başlık vardır.
+
+- **Alan:** üstte `label` boyutunda `ink-soft` etiket, altında zeminsiz ve kutusuz, yalnızca 1px `ink-soft` alt çizgili giriş. Çizgi `rule` değildir: form denetimi sınırı en az 3:1 kontrast ister (`ink-soft`/`stone` 5,85). Alan genişliği en çok 28rem; yükseklik ~44px.
+- **Ürün seçimi:** tarayıcının kendi `select` öğesi ve oku; özel ok ya da ikon çizilmez.
+- **Hata:** alt çizgi 2px `ink` olur, altında `label` boyutunda 500 ağırlıkta `ink` metin çıkar. Kırmızı ya da başka bir yeni renk yoktur; durum renkle değil çizgi kalınlığı ve metinle anlatılır. İlk hatalı alana odaklanılır.
+- **Buton:** `ink` zemin, `stone` metin, keskin köşe, `label` boyutu 500; yükseklik ~46px. Gönderilirken devre dışıdır ve zemini `ink-soft` olur. Sayfadaki tek dolu düğmedir; umber kullanılmaz (Tek Alan Kuralı).
+- **Durum metni:** butonun altında `label` boyutunda tek satır (başarı ya da "Gönderilemedi"); boşken yer kaplamaz.
+- **Odak:** 2px `ink` çerçeve, 2px aralıkla.
+- Yer tutucu metin (placeholder), ikon, animasyon ve kutu yoktur.
 
 ### Site Footer
 Header ile aynı koyu alan; tek satır, `label` boyutunda.

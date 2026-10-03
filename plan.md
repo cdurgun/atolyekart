@@ -663,3 +663,41 @@ Hero'nun üç genişlikte kadrajı ve yazı okunabilirliği; Türkçe glifler ve
 
 - 600–680px arasında başlığın bitkiye/rafa yaklaşıp kontrast kaybedebileceği (çıkarım; ekran görüntüsü yok).
 - 800px ekran görüntüsünün sağındaki ~15px beyaz şerit: kaydırma çubuğu boşluğu. Ölçümde yatay taşma yok.
+
+---
+
+# Stage 1.6 — Webhook'a hazır formlar
+
+Durum: uygulandı. n8n bağlantısı yapılmadı; gerçek webhook adresi yok, mock adapter çalışıyor.
+
+## Kararlar
+
+1. Tarayıcı `X-Atolyekart-Signature` göndermez; imza ileride sunucu tarafında üretilebilir (`webhook-format.md`).
+2. Gizlilik maddesi: kişisel veri yalnızca ziyaretçinin kendi gönderdiği form olaylarında taşınır.
+3. Formlar katalogdan sonra, footer'dan önce "Sipariş ve Bildirim" bölümündedir; ürün kartları değişmedi.
+4. Tek `RequestForm` bileşeni iki kez kullanılır; doğrulama ve gönderim mantığı tekrar etmez.
+5. Metinler: "Sipariş ve Bildirim", "Sipariş Ver", "Stok Bildirimi İste".
+
+## Yapılanlar
+
+- **Katmanlar:** form → validation → payload → adapter. React'te `src/components/RequestForm.jsx` ve `src/webhook/{validation,payload,adapter}.js`; CDN'de `cdn/forms.js` (aynı dört bölüm).
+- **Olaylar:** `order.requested` (ad, ürün, telefon) ve `stock_alert.requested` (ad, ürün, e-posta); zarf ve ürün nesnesi sözleşmedeki gibi.
+- **Adres:** `VITE_WEBHOOK_URL` / `<meta name="atolyekart:webhook-url">`. Boşsa mock, `mock:fail` başarısız teslimat, gerçek adres HTTP adapter.
+- **Belgeler:** `webhook-format.md`, `SKILL.md`, `DESIGN.md` (Request Form), `CLAUDE.md`, `.env.example`.
+- Yeni bağımlılık yok.
+
+## Doğrulama (başsız Chrome, iki sürüm)
+
+- `npm run build` hatasız.
+- 1600 / 800 / 390px: yatay taşma yok, görseller yüklü. React ve CDN'de hero, Hakkında, Ürünler, Sipariş ve Bildirim ve sayfa yükseklikleri eşit (sayfa 2166 / 2258 / 3370px).
+- Boş gönderimde üç alan hatası ve ilk alana odak; geçersiz ad ve telefonda ilgili hatalar. İki sürümde aynı metinler.
+- Geçerli gönderimde iki form da mock adapter'dan başarı aldı, form temizlendi, durum metni göründü.
+- Aynı girdiyle iki sürümün payload'u ve başlıkları `id`, `occurred_at`, `source` ve adresler dışında birebir aynı.
+- `mock:fail` ile "Gönderilemedi" metni, değerlerin korunması ve yeniden gönderimde aynı `id` iki sürümde doğrulandı.
+
+## Kalanlar
+
+- Gerçek webhook adresi ve alıcıda CORS ayarı (n8n).
+- KVKK aydınlatma metni (canlıya çıkmadan önce).
+- HTTP adapter gerçek bir alıcıya karşı denenmedi.
+- Kapsamlı hata yönetimi (Stage 1.4); `catalog.*` ve `product.viewed` olayları tanımlı ama gönderilmiyor.

@@ -332,6 +332,94 @@ ul {
   font-size: var(--type-label);
 }
 
+/* Sipariş ve Bildirim */
+
+.requests {
+  padding: 0 var(--edge) var(--section);
+}
+
+.requests h2 {
+  margin-bottom: var(--heading-gap);
+}
+
+.request-form {
+  padding-top: var(--heading-gap);
+  border-top: 1px solid var(--rule);
+}
+
+.request-form + .request-form {
+  margin-top: var(--section);
+}
+
+.request-form h3 {
+  font-size: var(--type-title);
+  line-height: 1.25;
+}
+
+.request-field {
+  max-width: 28rem;
+  margin-top: 1rem;
+}
+
+.request-field label {
+  display: block;
+  color: var(--ink-soft);
+  font-size: var(--type-label);
+}
+
+/* Alan çizgisi rule değil ink-soft: form denetimi sınırı en az 3:1 kontrast ister */
+.request-field input,
+.request-field select {
+  display: block;
+  width: 100%;
+  padding: 0.5rem 0;
+  border: 0;
+  border-bottom: 1px solid var(--ink-soft);
+  border-radius: 0;
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+}
+
+.request-field [aria-invalid='true'] {
+  padding-bottom: calc(0.5rem - 1px);
+  border-bottom: 2px solid var(--ink);
+}
+
+.request-form :focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+
+.request-error {
+  margin-top: 0.35rem;
+  font-size: var(--type-label);
+  font-weight: 500;
+}
+
+.request-form button {
+  margin-top: 1.5rem;
+  padding: 0.7rem 1.5rem;
+  border: 0;
+  border-radius: 0;
+  background: var(--ink);
+  color: var(--stone);
+  font: inherit;
+  font-size: var(--type-label);
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.request-form button:disabled {
+  background: var(--ink-soft);
+  cursor: default;
+}
+
+.request-status:not(:empty) {
+  margin-top: 1rem;
+  font-size: var(--type-label);
+}
+
 /* Footer */
 
 .site-footer {
@@ -426,6 +514,27 @@ ul {
   .product-list > li:last-child:nth-child(odd) .product-description {
     grid-column: 2 / -1;
     grid-row: 3;
+  }
+
+  /* İki form yan yana; aradaki çizgi iki sütunlu ürün ızgarasının çizgisiyle aynı yerde */
+  .requests {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .requests h2 {
+    grid-column: 1 / -1;
+  }
+
+  .request-form {
+    padding-right: var(--col-pad);
+  }
+
+  .request-form + .request-form {
+    margin-top: 0;
+    padding-right: 0;
+    padding-left: var(--col-pad);
+    border-left: 1px solid var(--rule);
   }
 }
 

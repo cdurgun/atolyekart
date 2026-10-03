@@ -21,14 +21,15 @@ main
   section.about
   section.categories
   section.catalog#urunler
+  section.requests#siparis
 footer.site-footer
 ```
 
-- Bir bölüm `src/App.jsx` içinde düz JSX olarak yaşar. Bileşen, yalnızca tekrar eden ya da kendi mantığı olan parça için açılır: `ProductList → ProductCard → ProductImage`, `CatalogQR`.
+- Bir bölüm `src/App.jsx` içinde düz JSX olarak yaşar. Bileşen, yalnızca tekrar eden ya da kendi mantığı olan parça için açılır: `ProductList → ProductCard → ProductImage`, `CatalogQR`, `RequestForm`.
 - Bileşen başına bir dosya, `src/components/` altında, `export default function`. Dosya adı = bileşen adı (PascalCase).
 - Bileşenin kök öğesi, bileşen adının kebab-case sınıfını taşır: `ProductCard` → `.product-card`, `CatalogQR` → `.catalog-qr`.
 - Bileşen anlamsal HTML üretir. Başlık sırası sayfa genelinde `h1 → h2 → h3` kalır; sayfada tek `h1` vardır.
-- Bileşen veriyi prop olarak alır, kendisi veri tutmaz. Ürün verisi `App.jsx` içindeki `products` dizisidir: `name`, `category`, `price` (metin, ör. `"420 TL"`), `description`, `image` (yol ya da `null`).
+- Bileşen veriyi prop olarak alır, kendisi veri tutmaz. Tek istisna `RequestForm`'un form state'idir (alan değerleri, hatalar, gönderim durumu). Ürün verisi `App.jsx` içindeki `products` dizisidir: `name`, `category`, `price` (metin, ör. `"420 TL"`), `description`, `image` (yol ya da `null`).
 - Üç ürün kartının işaretlemesi birebir aynıdır; fark yalnızca veriden gelir.
 
 ## Adlandırma
@@ -82,10 +83,28 @@ Hero ekran genişliğine bağlıdır (`vw` + `clamp`), ekran yüksekliğine bağ
    ```sh
    { sed -n '1,8p' cdn/styles.css; sed -e "s#url('/fonts/#url('fonts/#g" -e "s#url('/images/#url('../public/images/#g" src/styles.css; } > cdn/styles.tmp && mv cdn/styles.tmp cdn/styles.css
    ```
-3. **Davranış:** React bileşenindeki mantığın karşılığı `cdn/script.js` içinde sade JavaScript olarak yazılır. Harici kütüphane yalnızca jsDelivr'den, sürümü sabitlenmiş ve `integrity` (SRI) hash'li `<script>` ile yüklenir.
+3. **Davranış:** React bileşenindeki mantığın karşılığı sade JavaScript olarak yazılır: QR kod `cdn/script.js`, formlar ve webhook `cdn/forms.js` içinde. Harici kütüphane yalnızca jsDelivr'den, sürümü sabitlenmiş ve `integrity` (SRI) hash'li `<script>` ile yüklenir.
 4. **Karşılaştırma:** iki sürümü üç genişlikte ölç; bölüm yükseklikleri ve sayfa yüksekliği eşit olmalı.
 
 `cdn/` hiçbir zaman `src/`, Vite ya da npm'e bağlanmaz.
+
+## Formlar ve webhook
+
+Akış dört katmandır ve her katman yalnızca bir sonrakini bilir: **form → validation → payload → adapter**.
+
+| Katman | React | CDN (`cdn/forms.js` içinde aynı adlı bölüm) |
+| --- | --- | --- |
+| Form | `src/components/RequestForm.jsx` | Forms |
+| Validation | `src/webhook/validation.js` | Validation |
+| Payload | `src/webhook/payload.js` | Payload |
+| Adapter | `src/webhook/adapter.js` | Webhook adapter |
+
+- İki form tek `RequestForm` bileşenidir; fark `kind` (`order` / `stock-alert`) ve `title` prop'larından gelir. Yeni bir form türü `requestKinds` tablosuna eklenir, bileşen kopyalanmaz.
+- UI yalnızca `sendEvent(payload)` çağırır; `fetch`, başlık ya da adres bileşene yazılmaz.
+- Webhook adresi koda yazılmaz: React'te `VITE_WEBHOOK_URL`, CDN'de `<meta name="atolyekart:webhook-url">`. Boşsa mock adapter çalışır (payload konsola `[webhook:mock]` ile yazılır), `mock:fail` başarısız teslimatı dener, gerçek adres HTTP adapter'ı açar.
+- Gerçek adres depoya girmez; `.env.local` içinde tutulur.
+- Hata durumu ek sınıfla değil `aria-invalid="true"` ile işaretlenir; hata metni `ink` rengindedir, yeni renk eklenmez.
+- `src/webhook/` içindeki bir değişiklik `cdn/forms.js` içindeki karşılığına aynen taşınır; iki sürüm aynı girdiyle aynı payload'u üretmelidir (`source`, `id`, `occurred_at` ve adresler dışında).
 
 ## Bitti sayılması için
 

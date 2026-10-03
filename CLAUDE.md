@@ -6,11 +6,13 @@ AtölyeKart — Luna Atelier için adım adım geliştirilen küçük bir atöly
 
 ## Current Stage
 
-Stage 1.5 — Skill / MCP / QR / sub-agent (tamamlandı). Stage 1.1 (HTML) ve Stage 1.2 (React'e geçiş ve görsel tasarım) da tamamlandı. Stage 1.3 (veri modeli) ve Stage 1.4 (hata yönetimi) henüz yapılmadı; istenmeden başlanmaz.
+Stage 1.6 — Webhook'a hazır formlar (tamamlandı; gerçek webhook/n8n bağlantısı yapılmadı, mock adapter çalışıyor). Stage 1.1 (HTML), Stage 1.2 (React'e geçiş ve görsel tasarım) ve Stage 1.5 (Skill / MCP / QR / sub-agent) da tamamlandı. Stage 1.3 (veri modeli) ve Stage 1.4 (hata yönetimi) henüz yapılmadı; istenmeden başlanmaz.
 
 Stage 1.2 kapsamında yapılanlar: HTML'in React bileşenlerine taşınması, editoryal/atölye tasarım sistemi (`DESIGN.md`), kompaktlaştırma turları, gerçek ürün fotoğrafları, atölye fotoğraflı hero ve build gerektirmeyen ayrı bir statik sürüm (`cdn/`).
 
 Stage 1.5 kapsamında yapılanlar: proje Skill'i (`.claude/skills/atolyekart-standartlari/`), GitHub deposu ve ilk commit (GitHub MCP ile), katalog QR kodu (`qrcode-generator`) ve bir alt ajanla art director tasarım incelemesi (öneriler `plan.md` içinde; onaysız uygulanmadı).
+
+Stage 1.6 kapsamında yapılanlar: "Sipariş ve Bildirim" bölümü ("Sipariş Ver" ve "Stok Bildirimi İste" formları), form doğrulama, `webhook-format.md` sözleşmesine uyan payload üretimi ve UI'dan ayrı webhook adapter katmanı (mock + HTTP). n8n'e bağlanmak için yalnızca webhook adresi verilir.
 
 ## Commands
 
@@ -53,13 +55,14 @@ Fotoğraflar 4:3, sRGB JPEG ve aynı çekim serisinin parçasıdır (taş yüzey
 
 - Vite + React (JSX); bağımlılıklar yalnızca `react`, `react-dom`, `qrcode-generator`, `vite`, `@vitejs/plugin-react`
 - `index.html`: Vite giriş dosyası (`#root` ve `src/main.jsx`)
-- `src/App.jsx`: header, Atölye Hakkında, Kategoriler, Ürünler, footer ve sabit `products` dizisi
-- `src/components/`: `ProductList`, `ProductCard`, `ProductImage`, `CatalogQR`
+- `src/App.jsx`: header, Atölye Hakkında, Kategoriler, Ürünler, Sipariş ve Bildirim, footer ve sabit `products` dizisi
+- `src/components/`: `ProductList`, `ProductCard`, `ProductImage`, `CatalogQR`, `RequestForm`
+- `src/webhook/`: `validation.js`, `payload.js`, `adapter.js` (UI'dan bağımsız; aşağıya bakın)
 - `src/styles.css`: tek stil dosyası; `src/main.jsx` içinden import edilir. Tasarım sistemi `DESIGN.md` içinde belgelidir
 - `public/images/`: üç ürün fotoğrafı ve hero fotoğrafları (`hero-atolye.jpg` masaüstü/tablet, `hero-atolye-mobil.jpg` mobil kırpım). Hero fotoğrafı JSX'te değil, `.site-header` için CSS arka planı olarak kullanılır
 - `public/fonts/`: Brygada 1918 ve Hanken Grotesk (woff2, yerel; CDN yok) ve OFL lisans metinleri
-- `cdn/`: React'siz statik sürüm; tek küçük script yalnızca QR kod için (aşağıya bakın)
-- State, veri çekme, routing yok; stok bilgisi gösterilmez
+- `cdn/`: React'siz statik sürüm; `script.js` QR kod, `forms.js` formlar için (aşağıya bakın)
+- State yalnızca `RequestForm` içindeki form state'idir. Veri çekme ve routing yok; stok bilgisi gösterilmez (stok bildirimi her ürün için istenebilir)
 
 Bileşenler Stage 1.1 işaretlemesini birebir üretir:
 
@@ -69,6 +72,7 @@ Bileşenler Stage 1.1 işaretlemesini birebir üretir:
 | `ProductCard` | `article.product-card` | Tek ürünün görselini, adını, kategorisini, fiyatını ve açıklamasını gösterir |
 | `ProductImage` | `img.product-image` (görsel yoksa boş `div.product-image`) | `src` ve `alt` alır; `src` varsa görseli, yoksa ekran okuyucudan gizli boş yuvayı render eder |
 | `CatalogQR` | `div.catalog-qr` (SVG QR kod + açıklama) | Katalog adresini QR kod olarak çizer |
+| `RequestForm` | `form.request-form` | `kind` (`order` / `stock-alert`), `title` ve `products` alır; doğrular, payload'u üretir, adapter'a verir |
 
 ### Katalog QR kodu
 
@@ -77,9 +81,25 @@ Bileşenler Stage 1.1 işaretlemesini birebir üretir:
 - Adres sabitlenecekse: React'te `VITE_CATALOG_URL` ortam değişkeni, CDN'de `<meta name="atolyekart:catalog-url" content="…">`.
 - QR'ın sessiz bölgesi SVG'de yoktur; çevresindeki açık zemin boşluğu bu işi görür. Etrafına koyu zemin ya da bitişik öğe konmaz.
 
+### Formlar ve webhook katmanı
+
+Akış: **form → validation → payload → adapter**. Bileşen yalnızca `sendEvent(payload)` çağırır.
+
+- `section.requests#siparis` kataloğun altında, footer'ın üstündedir. Ürün kartlarına buton eklenmedi.
+- "Sipariş Ver": ad, ürün, telefon → `order.requested`. "Stok Bildirimi İste": ad, ürün, e-posta → `stock_alert.requested`.
+- Doğrulama gönderimde yapılır; hatalar alan altında gösterilir. Telefon payload'a `+905XXXXXXXXX`, e-posta küçük harfle girer.
+- **Webhook adresi koda yazılmaz.** React'te `VITE_WEBHOOK_URL` (`.env.local`; örnek `.env.example`), CDN'de `<meta name="atolyekart:webhook-url" content="…">`.
+  - Boş: mock adapter. Ağ isteği yapılmaz; payload ve başlıklar konsola `[webhook:mock]` ile yazılır.
+  - `mock:fail`: başarısız teslimatı dener.
+  - Gerçek adres: HTTP adapter (`POST`, sözleşmedeki başlıklar, 5 sn zaman aşımı). n8n'e geçiş için yapılacak tek şey budur.
+- Tarayıcı `X-Atolyekart-Signature` göndermez (gizli anahtar istemcide saklanamaz).
+- Başarısız gönderimde form değerleri kalır; aynı değerlerle yeniden gönderim aynı olay `id`'sini kullanır. Daha kapsamlı hata yönetimi Stage 1.4'tür.
+- Gerçek adres bağlanırken alıcıda CORS (özel başlıklar ön kontrol isteği doğurur) ve canlıya çıkmadan önce KVKK aydınlatma metni gerekir; ikisi de yapılmadı.
+
 ### Statik sürüm (`cdn/`)
 
 - `cdn/index.html`: React'in ürettiği HTML'in elle yazılmış kopyası
+- `cdn/forms.js`: `src/webhook/` ve `RequestForm`'un sade JavaScript karşılığı. Ürün verisini sayfadaki kartlardan okur; QR kütüphanesine bağlı değildir
 - `cdn/script.js`: `CatalogQR` bileşeninin sade JavaScript karşılığı. `qrcode-generator` 2.0.4 jsDelivr'den, sürümü sabit ve `integrity` (SRI) hash'li yüklenir; kütüphane yüklenemezse QR satırı gizli kalır, sayfanın geri kalanı etkilenmez
 - `cdn/styles.css`: `src/styles.css`'ten üretilir; yalnızca varlık yolları farklı (`fonts/` ve `../public/images/`). Elle düzenlenmez; üretme komutu Skill'de yazılı
 - `cdn/fonts/`: font kopyaları. `file://` ile açılan sayfalarda Firefox/Safari üst klasörden font yüklemediği için gerekli
@@ -92,6 +112,7 @@ Bileşenler Stage 1.1 işaretlemesini birebir üretir:
 - `DESIGN.md` — uygulanan tasarım sistemi (token'lar, tipografi, düzen, bileşenler, fotoğraf yönergeleri). Stil değişikliğinden önce okunur ve değişiklikten sonra güncellenir
 - `plan.md` — aşama planları ve uygulama raporları
 - `.claude/skills/atolyekart-standartlari/` — proje Skill'i: bileşen, adlandırma, görsel, stil, responsive ve React↔CDN standartları (`SKILL.md`) ile webhook payload formatı (`webhook-format.md`)
+- `.env.example` — ortam değişkenleri (`VITE_CATALOG_URL`, `VITE_WEBHOOK_URL`); gerçek değerler `.env.local` içinde tutulur ve depoya girmez
 - `.impeccable/config.json` — tasarım dedektörünün yok sayma kayıtları
 
 ## Future Roadmap
@@ -100,7 +121,7 @@ Yalnızca yol haritasıdır; istenmeden uygulanmaz.
 
 - Stage 1.3 — Veri modeli
 - Stage 1.4 — Hata yönetimi
-- Stage 1.6 — Webhook
+- Gerçek webhook bağlantısı (n8n): yalnızca adres ve alıcı tarafı
 
 ## Design Principles
 
@@ -140,6 +161,6 @@ Design decisions should serve the Luna Atelier brand and its products.
 7. Açıkça istenmeyen hiçbir şeyi değiştirme. Kapsamlı işlerde önce kısa bir plan sun ve onay bekle.
 8. Hero bitmiş kabul edildi (1600px'te 500px, `hero-atolye.jpg`, `75% 42%`). Açıkça istenmedikçe yüksekliğine, görseline, konumuna, tipografisine ve renklerine dokunma.
 9. Overlay, gradient, gölge, yuvarlak köşeli kart, ikon, animasyon veya süs öğesi ekleme.
-10. React sürümünde içerik, stil veya davranış değişirse `cdn/index.html`, `cdn/styles.css` ve `cdn/script.js` aynı şekilde güncellenir; iki sürüm görsel olarak aynı kalmalı.
+10. React sürümünde içerik, stil veya davranış değişirse `cdn/index.html`, `cdn/styles.css`, `cdn/script.js` ve `cdn/forms.js` aynı şekilde güncellenir; iki sürüm görsel olarak aynı kalmalı.
 11. Ürün veya hero fotoğrafı yerine yapay placeholder, SVG veya ikon koyma.
 12. Bileşen, stil, görsel, `cdn/` ya da webhook üzerinde çalışırken `atolyekart-standartlari` Skill'ini kullan.

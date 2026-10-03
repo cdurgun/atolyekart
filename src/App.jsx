@@ -1,5 +1,6 @@
 import CatalogQR from './components/CatalogQR.jsx'
 import ProductList from './components/ProductList.jsx'
+import RequestForm from './components/RequestForm.jsx'
 
 const products = [
   {
@@ -59,6 +60,12 @@ export default function App() {
           <h2>Ürünler</h2>
           <ProductList products={products} />
           <CatalogQR />
+        </section>
+
+        <section className="requests" id="siparis">
+          <h2>Sipariş ve Bildirim</h2>
+          <RequestForm kind="order" title="Sipariş Ver" products={products} />
+          <RequestForm kind="stock-alert" title="Stok Bildirimi İste" products={products} />
         </section>
       </main>
 

@@ -5,11 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Luna Atelier — El Yapımı Dekorasyon ve Yaşam Ürünleri</title>
   <meta name="description" content="Luna Atelier: el yapımı seramik, doğal mum ve aksesuar atölyesi.">
+  <!-- Webhook adresi. Boşsa mock adapter çalışır; "mock:fail" başarısız teslimatı dener. -->
+  <meta name="atolyekart:webhook-url" content="">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
   <!--
-    Standalone version of the React app (src/App.jsx). No build step; one small script for the QR code.
+    Standalone version of the React app (src/App.jsx). No build step; script.js draws the QR code, forms.js runs the two forms.
     The markup mirrors what App → ProductList → ProductCard → ProductImage render;
     keep it in sync when content changes.
   -->
@@ -79,6 +81,61 @@
         <p class="catalog-qr-text">Kataloğu telefonunuzda açın</p>
       </div>
     </section>
+
+    <!-- forms.js validates, builds the webhook payload and hands it to the adapter -->
+    <section class="requests" id="siparis">
+      <h2>Sipariş ve Bildirim</h2>
+      <form class="request-form" novalidate data-request-form="order">
+        <h3>Sipariş Ver</h3>
+        <div class="request-field">
+          <label for="order-name">Adınız</label>
+          <input type="text" autocomplete="name" id="order-name" name="name" value="">
+          <p class="request-error" id="order-name-error" hidden></p>
+        </div>
+        <div class="request-field">
+          <label for="order-product">Ürün</label>
+          <select id="order-product" name="product">
+            <option value="">Ürün seçin</option>
+            <option value="luna-seramik-kupa">Luna Seramik Kupa</option>
+            <option value="amber-soya-mum">Amber Soya Mum</option>
+            <option value="terra-minimal-kolye">Terra Minimal Kolye</option>
+          </select>
+          <p class="request-error" id="order-product-error" hidden></p>
+        </div>
+        <div class="request-field">
+          <label for="order-phone">Telefon numaranız</label>
+          <input type="tel" autocomplete="tel" id="order-phone" name="phone" value="">
+          <p class="request-error" id="order-phone-error" hidden></p>
+        </div>
+        <button type="submit">Sipariş Ver</button>
+        <p class="request-status" role="status"></p>
+      </form>
+      <form class="request-form" novalidate data-request-form="stock-alert">
+        <h3>Stok Bildirimi İste</h3>
+        <div class="request-field">
+          <label for="stock-alert-name">Adınız</label>
+          <input type="text" autocomplete="name" id="stock-alert-name" name="name" value="">
+          <p class="request-error" id="stock-alert-name-error" hidden></p>
+        </div>
+        <div class="request-field">
+          <label for="stock-alert-product">Ürün</label>
+          <select id="stock-alert-product" name="product">
+            <option value="">Ürün seçin</option>
+            <option value="luna-seramik-kupa">Luna Seramik Kupa</option>
+            <option value="amber-soya-mum">Amber Soya Mum</option>
+            <option value="terra-minimal-kolye">Terra Minimal Kolye</option>
+          </select>
+          <p class="request-error" id="stock-alert-product-error" hidden></p>
+        </div>
+        <div class="request-field">
+          <label for="stock-alert-email">E-posta adresiniz</label>
+          <input type="email" autocomplete="email" id="stock-alert-email" name="email" value="">
+          <p class="request-error" id="stock-alert-email-error" hidden></p>
+        </div>
+        <button type="submit">Stok Bildirimi İste</button>
+        <p class="request-status" role="status"></p>
+      </form>
+    </section>
   </main>
 
   <footer class="site-footer">
@@ -88,5 +145,6 @@
   <!-- QR code: qrcode-generator 2.0.4 (MIT), pinned and integrity-checked -->
   <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@2.0.4/dist/qrcode.js" integrity="sha384-e9EFD6BGC90bkW9aDV5xbbBfzwN7G8YImHao2lfLVKV/hPB0E0go+H3I64h7oHtA" crossorigin="anonymous"></script>
   <script src="script.js"></script>
+  <script src="forms.js"></script>
 </body>
 </html>
