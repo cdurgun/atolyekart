@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Luna Atelier — El Yapımı Dekorasyon ve Yaşam Ürünleri</title>
+  <meta name="description" content="Luna Atelier: el yapımı seramik, doğal mum ve aksesuar atölyesi.">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <!--
+    Standalone version of the React app (src/App.jsx). No build step; one small script for the QR code.
+    The markup mirrors what App → ProductList → ProductCard → ProductImage render;
+    keep it in sync when content changes.
+  -->
+  <header class="site-header">
+    <h1>Luna Atelier</h1>
+    <p>El emeğiyle, sana özel.</p>
+  </header>
+
+  <main>
+    <section class="about">
+      <h2>Atölye Hakkında</h2>
+      <p>Luna Atelier, el yapımı dekorasyon ve yaşam ürünleri üreten küçük bir atölyedir. Her ürün tek tek, özenle ve küçük adetlerde hazırlanır.</p>
+      <p>Sektör: El yapımı dekorasyon ve yaşam ürünleri</p>
+      <h3>Hedef Kitle</h3>
+      <ul>
+        <li>El yapımı ve özgün ürünleri sevenler</li>
+        <li>Evine sade, doğal dokunuşlar katmak isteyenler</li>
+        <li>Sevdiklerine özel hediye arayanlar</li>
+      </ul>
+    </section>
+
+    <section class="categories">
+      <h2>Kategoriler</h2>
+      <ul>
+        <li>Seramik</li>
+        <li>Doğal Mumlar</li>
+        <li>El Yapımı Aksesuarlar</li>
+      </ul>
+    </section>
+
+    <section class="catalog" id="urunler">
+      <h2>Ürünler</h2>
+      <ul class="product-list">
+        <li>
+          <article class="product-card">
+            <img class="product-image" src="../public/images/luna-seramik-kupa.jpg" alt="Luna Seramik Kupa" width="300" height="300">
+            <h3 class="product-name">Luna Seramik Kupa</h3>
+            <p class="product-category">Seramik</p>
+            <p class="product-price">420 TL</p>
+            <p class="product-description">El yapımı, minimalist tasarımlı seramik kupa.</p>
+          </article>
+        </li>
+        <li>
+          <article class="product-card">
+            <img class="product-image" src="../public/images/amber-soya-mum.jpg" alt="Amber Soya Mum" width="300" height="300">
+            <h3 class="product-name">Amber Soya Mum</h3>
+            <p class="product-category">Doğal Mumlar</p>
+            <p class="product-price">350 TL</p>
+            <p class="product-description">Doğal soya mumundan, amber kokulu el yapımı mum.</p>
+          </article>
+        </li>
+        <li>
+          <article class="product-card">
+            <img class="product-image" src="../public/images/terra-minimal-kolye.jpg" alt="Terra Minimal Kolye" width="300" height="300">
+            <h3 class="product-name">Terra Minimal Kolye</h3>
+            <p class="product-category">El Yapımı Aksesuarlar</p>
+            <p class="product-price">290 TL</p>
+            <p class="product-description">Toprak tonlarında, sade tasarımlı el yapımı kolye.</p>
+          </article>
+        </li>
+      </ul>
+      <!-- script.js fills the QR code and removes `hidden`; stays hidden if the library cannot load -->
+      <div class="catalog-qr" data-catalog-qr hidden>
+        <svg class="catalog-qr-code" viewBox="0 0 1 1" role="img" aria-label="Katalog sayfasının QR kodu" shape-rendering="crispEdges">
+          <path d=""/>
+        </svg>
+        <p class="catalog-qr-text">Kataloğu telefonunuzda açın</p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <p>&copy; 2026 Luna Atelier. Tüm ürünler el emeğiyle üretilir.</p>
+  </footer>
+
+  <!-- QR code: qrcode-generator 2.0.4 (MIT), pinned and integrity-checked -->
+  <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@2.0.4/dist/qrcode.js" integrity="sha384-e9EFD6BGC90bkW9aDV5xbbBfzwN7G8YImHao2lfLVKV/hPB0E0go+H3I64h7oHtA" crossorigin="anonymous"></script>
+  <script src="script.js"></script>
+</body>
+</html>

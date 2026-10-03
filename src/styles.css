@@ -1,0 +1,516 @@
+@font-face {
+  font-family: 'Brygada 1918';
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url('/fonts/brygada-1918-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+@font-face {
+  font-family: 'Brygada 1918';
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url('/fonts/brygada-1918-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: 'Hanken Grotesk';
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url('/fonts/hanken-grotesk-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+@font-face {
+  font-family: 'Hanken Grotesk';
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url('/fonts/hanken-grotesk-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+:root {
+  --stone: #ddd6c9;
+  --stone-deep: #d2c9b9;
+  --ink: #2b211b;
+  --ink-soft: #5a4a3f;
+  --umber: #3a2a22;
+  --slip: #ede6da;
+  --amber: #d9a441;
+  --rule: rgb(43 33 27 / 0.24);
+
+  --serif: 'Brygada 1918', 'Iowan Old Style', Georgia, serif;
+  --sans: 'Hanken Grotesk', system-ui, sans-serif;
+
+  /* Tipografi rolleri */
+  --type-display: clamp(2.5rem, 6vw, 5.5rem);
+  --type-headline: clamp(1.375rem, 2vw, 1.625rem);
+  --type-lead: clamp(1.125rem, 1.6vw, 1.375rem);
+  --type-tagline: clamp(1rem, 1.2vw, 1.125rem);
+  --type-title: clamp(1.0625rem, 1.3vw, 1.1875rem);
+  --type-body: clamp(1rem, 0.95rem + 0.2vw, 1.0625rem);
+  --type-label: 0.9375rem;
+
+  /* Boşluk rolleri */
+  --gutter: clamp(1.25rem, 5vw, 4rem);
+  --edge: max(var(--gutter), calc((100% - 80rem) / 2));
+  --section: clamp(2rem, 3vw, 3rem);
+  --heading-gap: clamp(1rem, 1.6vw, 1.5rem);
+
+  /* Ürün görsel yuvası: gerçek fotoğraflar gelince yalnızca oran değişir */
+  --product-image-ratio: 4 / 3;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--stone);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: var(--type-body);
+  line-height: 1.6;
+}
+
+::selection {
+  background: var(--amber);
+  color: var(--ink);
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--serif);
+  font-weight: 500;
+  margin: 0;
+  text-wrap: balance;
+}
+
+h2 {
+  font-size: var(--type-headline);
+  line-height: 1.15;
+  letter-spacing: -0.005em;
+}
+
+p {
+  margin: 0;
+}
+
+ul {
+  list-style-type: '';
+  margin: 0;
+  padding: 0;
+}
+
+/* Header */
+
+.site-header {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 0 var(--edge) clamp(1.75rem, 3vw, 2.75rem);
+  background: var(--umber);
+  color: var(--slip);
+}
+
+/* Mobil: önce fotoğraf bandı, altında umber zeminde marka adı */
+.site-header::before {
+  content: '';
+  height: clamp(13.75rem, 58vw, 16.25rem);
+  margin: 0 calc(-1 * var(--edge)) clamp(1.25rem, 5vw, 1.75rem);
+  background: url('/images/hero-atolye-mobil.jpg') 50% 20% / cover no-repeat;
+}
+
+.site-header h1 {
+  font-size: var(--type-display);
+  line-height: 0.95;
+  letter-spacing: -0.025em;
+}
+
+.site-header p {
+  margin-top: clamp(0.75rem, 1.4vw, 1.25rem);
+  color: var(--amber);
+  font-size: var(--type-tagline);
+  letter-spacing: 0.005em;
+}
+
+/* Atölye Hakkında */
+
+.about {
+  padding: var(--section) var(--edge);
+}
+
+.about h2 {
+  margin-bottom: var(--heading-gap);
+}
+
+.about > p:first-of-type {
+  max-width: 30em;
+  font-family: var(--serif);
+  font-size: var(--type-lead);
+  line-height: 1.4;
+  text-wrap: pretty;
+}
+
+.about > p:nth-of-type(2) {
+  margin-top: 1rem;
+  color: var(--ink-soft);
+  font-size: var(--type-label);
+}
+
+.about h3 {
+  margin-top: clamp(1.75rem, 3vw, 2.25rem);
+  margin-bottom: 0.5rem;
+  color: var(--ink-soft);
+  font-family: var(--sans);
+  font-size: var(--type-label);
+  line-height: 1.6;
+}
+
+.about ul {
+  max-width: 36rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--rule);
+  color: var(--ink-soft);
+  font-size: var(--type-label);
+}
+
+.about li {
+  padding: 0.15rem 0;
+}
+
+/* Kategoriler */
+
+.categories {
+  padding: 0 var(--edge);
+}
+
+.categories h2 {
+  margin-bottom: var(--heading-gap);
+}
+
+.categories ul {
+  border-block: 1px solid var(--rule);
+}
+
+.categories li {
+  padding: 0.75rem 0;
+  font-family: var(--serif);
+  font-size: var(--type-lead);
+  line-height: 1.2;
+  text-wrap: balance;
+}
+
+.categories li + li {
+  border-top: 1px solid var(--rule);
+}
+
+/* Ürünler */
+
+.catalog {
+  padding: var(--section) var(--edge);
+}
+
+.catalog h2 {
+  margin-bottom: var(--heading-gap);
+}
+
+.product-list {
+  --col-pad: clamp(1rem, 2vw, 1.75rem);
+  --row-gap: clamp(2rem, 4vw, 2.75rem);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  row-gap: var(--row-gap);
+}
+
+.product-list > li + li .product-card {
+  padding-top: var(--row-gap);
+  border-top: 1px solid var(--rule);
+}
+
+.product-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  column-gap: 1rem;
+  align-items: baseline;
+}
+
+/* Görsel yuvası: fotoğraf varken <img>, yokken aynı sınıfta boş alan */
+.product-image {
+  grid-column: 1 / -1;
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: var(--product-image-ratio);
+  object-fit: cover;
+  object-position: center;
+  margin-bottom: 1rem;
+  background: var(--stone-deep);
+}
+
+.product-name,
+.product-price {
+  grid-row: 2;
+  font-family: var(--serif);
+  font-size: var(--type-title);
+  font-weight: 500;
+  line-height: 1.25;
+}
+
+.product-name {
+  grid-column: 1;
+}
+
+.product-price {
+  grid-column: 2;
+  white-space: nowrap;
+  font-variant-numeric: lining-nums;
+}
+
+.product-category {
+  grid-column: 1 / -1;
+  grid-row: 3;
+  margin-top: 0.2rem;
+  color: var(--ink-soft);
+  font-size: var(--type-label);
+}
+
+.product-description {
+  grid-column: 1 / -1;
+  grid-row: 4;
+  max-width: 34ch;
+  margin-top: 0.6rem;
+}
+
+/* Katalog QR kodu */
+
+.catalog-qr {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-top: var(--section);
+  padding-top: var(--heading-gap);
+  border-top: 1px solid var(--rule);
+}
+
+/* CDN sürümünde kütüphane yüklenene kadar gizli kalır */
+.catalog-qr[hidden] {
+  display: none;
+}
+
+.catalog-qr-code {
+  flex: none;
+  width: 6rem;
+  height: 6rem;
+  fill: var(--ink);
+}
+
+.catalog-qr-text {
+  color: var(--ink-soft);
+  font-size: var(--type-label);
+}
+
+/* Footer */
+
+.site-footer {
+  padding: clamp(1.75rem, 3vw, 2.5rem) var(--edge);
+  background: var(--umber);
+  color: var(--slip);
+  font-size: var(--type-label);
+}
+
+@media (min-width: 600px) {
+  /* Fotoğraf arka planda; metin sol üstteki koyu duvarın üzerinde */
+  .site-header {
+    justify-content: flex-start;
+    min-height: clamp(20rem, 40vw, 23.75rem);
+    padding-top: clamp(2.5rem, 4vw, 4rem);
+    background: var(--umber) url('/images/hero-atolye.jpg') 75% 42% / cover no-repeat;
+  }
+
+  .site-header::before {
+    content: none;
+  }
+
+  .categories ul {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .categories li {
+    padding: clamp(0.875rem, 1.6vw, 1.25rem) 1.25rem clamp(0.875rem, 1.6vw, 1.25rem) 0;
+  }
+
+  .categories li + li {
+    padding-left: 1.25rem;
+    border-top: 0;
+    border-left: 1px solid var(--rule);
+  }
+
+  .product-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    margin-inline: calc(-1 * var(--col-pad));
+  }
+
+  .product-list > li {
+    padding-inline: var(--col-pad);
+    border-left: 1px solid var(--rule);
+  }
+
+  .product-list > li:nth-child(odd) {
+    border-left-color: transparent;
+  }
+
+  .product-list > li + li .product-card {
+    padding-top: 0;
+    border-top: 0;
+  }
+
+  /* Tek kalan son ürün iki sütuna yayılır: görsel solda, metin sağda */
+  .product-list > li:last-child:nth-child(odd) {
+    grid-column: 1 / -1;
+  }
+
+  .product-list > li:last-child:nth-child(odd) .product-card {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+    grid-template-rows: auto auto 1fr;
+    column-gap: calc(2 * var(--col-pad));
+    align-items: start;
+    padding-top: var(--row-gap);
+    border-top: 1px solid var(--rule);
+  }
+
+  .product-list > li:last-child:nth-child(odd) .product-image {
+    grid-column: 1;
+    grid-row: 1 / -1;
+    margin-bottom: 0;
+  }
+
+  .product-list > li:last-child:nth-child(odd) .product-name {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .product-list > li:last-child:nth-child(odd) .product-price {
+    grid-column: 3;
+    grid-row: 1;
+  }
+
+  .product-list > li:last-child:nth-child(odd) .product-category {
+    grid-column: 2 / -1;
+    grid-row: 2;
+  }
+
+  .product-list > li:last-child:nth-child(odd) .product-description {
+    grid-column: 2 / -1;
+    grid-row: 3;
+  }
+}
+
+@media (min-width: 1000px) {
+  .site-header {
+    min-height: clamp(27.5rem, 31.25vw, 35rem);
+  }
+
+  /* Üç alan: başlık | giriş ve künye | hedef kitle */
+  .about {
+    display: grid;
+    grid-template-columns: minmax(0, 0.75fr) minmax(0, 1.75fr) minmax(0, 1.3fr);
+    grid-template-rows: auto auto 1fr;
+    column-gap: clamp(2rem, 3.5vw, 3.5rem);
+    align-items: start;
+  }
+
+  .about > h2 {
+    grid-column: 1;
+    grid-row: 1 / -1;
+    margin-bottom: 0;
+  }
+
+  .about > p:first-of-type {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+  }
+
+  .about > p:nth-of-type(2) {
+    grid-column: 2;
+    grid-row: 3;
+  }
+
+  .about h3 {
+    grid-column: 3;
+    grid-row: 1;
+    margin-top: 0;
+  }
+
+  .about ul {
+    grid-column: 3;
+    grid-row: 2 / span 2;
+    max-width: none;
+  }
+
+  .product-list {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .product-list > li:nth-child(odd) {
+    border-left-color: var(--rule);
+  }
+
+  .product-list > li:nth-child(3n + 1) {
+    border-left-color: transparent;
+  }
+
+  .product-list > li:last-child:nth-child(odd) {
+    grid-column: auto;
+  }
+
+  .product-list > li:last-child:nth-child(odd) .product-card {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-rows: none;
+    column-gap: 1rem;
+    align-items: baseline;
+    padding-top: 0;
+    border-top: 0;
+  }
+
+  .product-list > li:last-child:nth-child(odd) .product-image {
+    grid-column: 1 / -1;
+    grid-row: auto;
+    margin-bottom: 1rem;
+  }
+
+  .product-list > li:last-child:nth-child(odd) .product-name {
+    grid-column: 1;
+    grid-row: 2;
+  }
+
+  .product-list > li:last-child:nth-child(odd) .product-price {
+    grid-column: 2;
+    grid-row: 2;
+  }
+
+  .product-list > li:last-child:nth-child(odd) .product-category {
+    grid-column: 1 / -1;
+    grid-row: 3;
+  }
+
+  .product-list > li:last-child:nth-child(odd) .product-description {
+    grid-column: 1 / -1;
+    grid-row: 4;
+  }
+}
