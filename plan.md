@@ -653,6 +653,8 @@ Durum: uygulandı. Alt ajanın tasarım önerileri onay bekliyor; hiçbiri uygul
 | 9 | "Sektör:" ve "Hedef Kitle" metinlerini müşteriye dönük yazmak | Metin | **Uygulanmaz** (metinler değişmez kuralı). Yine de ajanın en güçlü tespiti; ödev kapsamı izin verirse en büyük kazanç burada |
 | 10 | Hero ile footer tonunu yakınlaştırmak | Orta | **Uygulanmaz** (hero ve palet kilitli) |
 
+**Sonuç:** 1–4 numaralı öneriler onaylandı ve hem React hem CDN sürümüne uygulandı (yalnızca `src/styles.css`; `cdn/styles.css` ondan üretildi). Ölçüm: 1600px'te kategori ve ürün dikey çizgileri aynı konumda (569,8 ve 1015,2px); 800px'te üçüncü kartın görseli 336px ve metni 409px'ten başlıyor; "Hedef Kitle" çizgisi kategori çizgileriyle aynı uzunlukta; üç açıklamada da tek kelimelik son satır yok. 5–10 uygulanmadı.
+
 ### Ajanın "sorun yok" dediği noktalar
 
 Hero'nun üç genişlikte kadrajı ve yazı okunabilirliği; Türkçe glifler ve fiyatlardaki rakamlar; ad–fiyat satırı hizası; ürün fotoğraflarının seri tutarlılığı; 1600px'te Hakkında yerleşimi; 48px bölüm ritmi; mobilde kategoriler ve ürün ayraçları; gölge, köşe, gradient, ikon kurallarına uyum.

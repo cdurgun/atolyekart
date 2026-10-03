@@ -141,7 +141,7 @@ Malzeme renkleri: nötr bir zemin, tek koyu alan, tek vurgu.
 - **Lead** (400, 22 / 18px, 1.4): Hakkında giriş paragrafı (en çok 30em) ve kategori adları.
 - **Title** (500, 19 / 17px, 1.25): Ürün adı ve fiyat.
 - **Tagline** (400, 18 / 16px): Header'daki slogan.
-- **Body** (400, 17 / 16px, 1.6): Gövde metni ve listeler; ürün açıklaması en çok 34ch.
+- **Body** (400, 17 / 16px, 1.6): Gövde metni ve listeler; ürün açıklaması en çok 34ch ve `text-wrap: balance` ile dengelenir (tek kelimelik son satır kalmaz).
 - **Label** (400, 15px): Kategori etiketi, "Sektör" satırı, "Hedef Kitle" etiketi (500) ve listesi, footer.
 
 ### Named Rules
@@ -161,13 +161,13 @@ Malzeme renkleri: nötr bir zemin, tek koyu alan, tek vurgu.
 - **Atölye Hakkında:**
   - 1000px ve üstü: üç alan, `0.75fr / 1.75fr / 1.3fr`, kolon aralığı `clamp(2rem, 3.5vw, 3.5rem)` (başlık | giriş + "Sektör" | "Hedef Kitle" listesi). Dar başlık kolonu, giriş ile listeyi tek bir grup olarak öne çıkarır. Bölümün sesi giriş paragrafıdır; "Sektör" ve "Hedef Kitle" aynı sakin `label` / `ink-soft` tonunda kalır.
   - Altında: tek sütun.
-- **Kategoriler:** 600px ve üstünde üç eşit sütunlu tek satır; altında alt alta satırlar.
+- **Kategoriler:** 600px ve üstünde üç sütunlu tek satır; altında alt alta satırlar. 1000px ve üstünde sütunlar ürün ızgarasıyla aynı yerde biter: dikey çizgiler ve metin kenarları ürün sütunlarınınkiyle çakışır (`--col-pad` ortak değişkeni).
 - **Ürünler:**
   - 1000px ve üstü: üç sütun.
-  - 600–999px: iki sütun; tek kalan son ürün iki sütuna yayılır (görsel solda, metin sağda).
+  - 600–999px: iki sütun; tek kalan son ürün iki sütuna yayılır (görsel solda, metin sağda). Görseli üstteki kartlarla aynı genişliktedir, metni ikinci sütunun sol kenarından başlar.
   - 600px altı: tek sütun; ürünler yatay çizgiyle ayrılır.
 - Ürün kartında ad ve fiyat aynı satırda (ad solda, fiyat sağda), altında kategori, sonra açıklama. Görsel sıra CSS ile kurulur; DOM sırası değişmez.
-- Ölçülen sayfa yüksekliği: 1600px'te 1696px, 800px'te 1783px, 390px'te 2557px.
+- Ölçülen sayfa yüksekliği: 1600px'te 1696px, 800px'te 1816px, 390px'te 2557px.
 
 ## Elevation & Depth
 
@@ -185,7 +185,7 @@ Atölye fotoğrafı üzerinde serif başlık ve bal mumu renkli slogan. Fotoğra
 **Hero fotoğrafı:** `public/images/hero-atolye.jpg` (1918×820, kaynak: "Sunlit Ceramics Studio Crafting") ve `hero-atolye-mobil.jpg` (1000×578, kaynağın x 880–1918, y 100–700 bölgesi; baş, yüz, eller ve kupa kadrajda). Yeni bir hero fotoğrafı gelirse sol ~%40 sakin ve koyu kalmalı, kişi sağ yarıda olmalı.
 
 ### Quiet List
-"Hedef Kitle": sans etiket (`label`, 500, `ink-soft`), altında tek bir 1px çizgi ve madde imsiz, `label` boyutunda `ink-soft` satırlar. Satırlar arasında çizgi yok; tablo değil, bir künye notu gibi okunur.
+"Hedef Kitle": sans etiket (`label`, 500, `ink-soft`), altında tek bir 1px çizgi ve madde imsiz, `label` boyutunda `ink-soft` satırlar. Satırlar arasında çizgi yok; tablo değil, bir künye notu gibi okunur. Etiketin altındaki çizgi her genişlikte bulunduğu sütunun tam genişliğindedir.
 
 ### Category Index
 Üstte ve altta tam genişlikte çizgi olan dizin satırı; kategori adları serif, aralarında dikey çizgi.
