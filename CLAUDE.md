@@ -118,6 +118,7 @@ Akış: **form → validation → payload → adapter**. Bileşen yalnızca `sen
 - `DESIGN.md` — uygulanan tasarım sistemi (token'lar, tipografi, düzen, bileşenler, fotoğraf yönergeleri). Stil değişikliğinden önce okunur ve değişiklikten sonra güncellenir
 - `plan.md` — aşama planları ve uygulama raporları
 - `.claude/skills/atolyekart-standartlari/` — proje Skill'i: bileşen, adlandırma, görsel, stil, responsive ve React↔CDN standartları (`SKILL.md`) ile webhook payload formatı (`webhook-format.md`)
+  - `evals/evals.json` — Skill'i ölçen senaryolar ve beklentiler. `scripts/degerlendir_dorduncu_urun.py` ve `scripts/duzen_olc.mjs` 1. senaryoyu bir proje kopyasında otomatik notlar. İlk ölçüm (tek çalıştırma): Skill ile 12/12, Skill'siz 11/12; fark `DESIGN.md` güncellemesi ve tarayıcıda doğrulama. Ölçüm projenin kopyasında yapılır, bu depoda değil
 - `.env.example` — ortam değişkenleri (`VITE_CATALOG_URL`, `VITE_WEBHOOK_URL`); gerçek değerler `.env.local` içinde tutulur ve depoya girmez
 - `.impeccable/config.json` — tasarım dedektörünün yok sayma kayıtları
 

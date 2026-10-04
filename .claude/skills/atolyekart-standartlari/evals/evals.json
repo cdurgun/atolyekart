@@ -1,0 +1,26 @@
+{
+  "skill_name": "atolyekart-standartlari",
+  "evals": [
+    {
+      "id": 1,
+      "name": "dorduncu-urun",
+      "prompt": "Kataloğa yeni bir ürün ekle: Sedir Ahşap Tepsi, kategori El Yapımı Aksesuarlar, fiyat 520 TL, açıklama \"Sedir ağacından, elde oyulmuş servis tepsisi.\" Fotoğrafı henüz çekilmedi.",
+      "expected_output": "Ürün products dizisine image: null ile eklenir, kart işaretlemesi diğerleriyle aynıdır, cdn/ sürümü ve iki formdaki ürün seçenekleri güncellenir, build geçer, yapay görsel eklenmez",
+      "files": [],
+      "assertions": [
+        "npm run build hatasız",
+        "Ürün products dizisine image: null ile eklendi (olmayan dosyaya yol yazılmadı)",
+        "Ad, kategori, fiyat ve açıklama React ve CDN sürümünde verildiği gibi",
+        "Yapay görsel, SVG ya da placeholder dosyası eklenmedi",
+        "Kart bileşenleri değişmedi (yalnızca veri eklendi)",
+        "cdn/index.html: dördüncü kart var ve işaretlemesi diğer kartlarla aynı",
+        "cdn/index.html: fotoğrafsız kartta boş, ekran okuyucudan gizli görsel yuvası",
+        "cdn/index.html: iki formdaki ürün seçeneklerine eklendi (value = slug)",
+        "cdn/styles.css, src/styles.css ile eşit (elle düzenlenmedi, eski kalmadı)",
+        "CLAUDE.md ürün tablosu güncellendi",
+        "DESIGN.md yeni durumu anlatıyor (dört ürün / yeni sayfa yükseklikleri)",
+        "1600 / 800 / 390px: yatay taşma yok, React ve CDN sayfa yükseklikleri eşit"
+      ]
+    }
+  ]
+}
