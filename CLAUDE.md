@@ -61,6 +61,7 @@ Fotoğraflar 4:3, sRGB JPEG ve aynı çekim serisinin parçasıdır (taş yüzey
 - `src/styles.css`: tek stil dosyası; `src/main.jsx` içinden import edilir. Tasarım sistemi `DESIGN.md` içinde belgelidir
 - `public/images/`: üç ürün fotoğrafı ve hero fotoğrafları (`hero-atolye.jpg` masaüstü/tablet, `hero-atolye-mobil.jpg` mobil kırpım). Hero fotoğrafı JSX'te değil, `.site-header` için CSS arka planı olarak kullanılır
 - `public/images/paylasim-gorseli.png`: bağlantı önizleme görseli (1200×630, yazı markası + slogan). `index.html` içindeki `og:` etiketleri tam adresle bunu gösterir (`https://atolyekart-tawny.vercel.app/…`); alan adı değişirse etiketler güncellenir. Statik `cdn/` sürümü yayınlanmadığı için orada `og:` etiketi yoktur
+- `public/favicon.png`: sekme simgesi (umber zeminde "L" harfi). Kural 9'daki ikon yasağının bilinçli tek istisnasıdır; sayfa içine ikon eklenmez
 - `public/fonts/`: Brygada 1918 ve Hanken Grotesk (woff2, yerel; CDN yok) ve OFL lisans metinleri
 - `cdn/`: React'siz statik sürüm; `script.js` QR kod, `forms.js` formlar için (aşağıya bakın)
 - State yalnızca `RequestForm` içindeki form state'idir. Veri çekme ve routing yok; stok bilgisi gösterilmez (stok bildirimi her ürün için istenebilir)
