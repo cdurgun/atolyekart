@@ -247,6 +247,9 @@ Yuva `aspect-ratio: 4 / 3` ve `object-fit: cover` ile çalışır. Farklı oranl
 - **Odak:** 2px `ink` çerçeve, 2px aralıkla.
 - Yer tutucu metin (placeholder), ikon, animasyon ve kutu yoktur.
 
+### Share Image
+Site bağlantısı paylaşıldığında görünen önizleme görseli: `public/images/paylasim-gorseli.png` (1200×630). `umber` zemin, sol altta `slip` renginde "Luna Atelier" (Brygada 1918, 400, 132px, harf aralığı −0,02em) ve altında `amber` slogan (Hanken Grotesk, 34px); kenar boşluğu 96px. Fotoğraf, çizim ya da süs yoktur. Sayfada görünmez; yalnızca `index.html` içindeki `og:` etiketleriyle bağlanır. Metin ya da palet değişirse görsel yeniden üretilir.
+
 ### Site Footer
 Header ile aynı koyu alan; tek satır, `label` boyutunda.
 
