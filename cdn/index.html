@@ -103,9 +103,19 @@
           <p class="request-error" id="order-product-error" hidden></p>
         </div>
         <div class="request-field">
+          <label for="order-quantity">Adet</label>
+          <input type="number" min="1" max="99" step="1" id="order-quantity" name="quantity" value="1">
+          <p class="request-error" id="order-quantity-error" hidden></p>
+        </div>
+        <div class="request-field">
           <label for="order-phone">Telefon numaranız</label>
           <input type="tel" autocomplete="tel" id="order-phone" name="phone" value="">
           <p class="request-error" id="order-phone-error" hidden></p>
+        </div>
+        <div class="request-field">
+          <label for="order-email">E-posta adresiniz (isteğe bağlı)</label>
+          <input type="email" autocomplete="email" id="order-email" name="email" value="">
+          <p class="request-error" id="order-email-error" hidden></p>
         </div>
         <button type="submit">Sipariş Ver</button>
         <p class="request-status" role="status"></p>

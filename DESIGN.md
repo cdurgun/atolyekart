@@ -168,7 +168,7 @@ Malzeme renkleri: nötr bir zemin, tek koyu alan, tek vurgu.
   - 600px altı: tek sütun; ürünler yatay çizgiyle ayrılır.
 - Ürün kartında ad ve fiyat aynı satırda (ad solda, fiyat sağda), altında kategori, sonra açıklama. Görsel sıra CSS ile kurulur; DOM sırası değişmez.
 - **Sipariş ve Bildirim:** 600px ve üstünde iki form yan yana, aralarında 1px dikey çizgi (iki sütunlu ürün ızgarasının çizgisiyle aynı yerde); altında alt alta, aralarında `section` boşluğu. Bölümün üst boşluğu yoktur; Ürünler'in alt boşluğu aradaki `section` ritmini verir.
-- Ölçülen sayfa yüksekliği: 1600px'te 2166px, 800px'te 2258px, 390px'te 3370px (formlar boşken).
+- Ölçülen sayfa yüksekliği: 1600px'te 2334px, 800px'te 2425px, 390px'te 3535px (formlar boşken).
 
 ## Elevation & Depth
 
@@ -235,10 +235,12 @@ Yuva `aspect-ratio: 4 / 3` ve `object-fit: cover` ile çalışır. Farklı oranl
 - **Kodlanan adres:** sayfanın kendi adresi + `#urunler`.
 
 ### Request Form
-"Sipariş ve Bildirim" bölümündeki iki form ("Sipariş Ver", "Stok Bildirimi İste") aynı bileşendir; yalnızca üçüncü alan değişir (telefon / e-posta). Her formun üstünde 1px `rule` çizgisi, altında serif `title` başlık vardır.
+"Sipariş ve Bildirim" bölümündeki iki form ("Sipariş Ver", "Stok Bildirimi İste") aynı bileşendir; yalnızca alan listesi değişir. Sipariş: ad, ürün, adet, telefon, e-posta (isteğe bağlı). Stok bildirimi: ad, ürün, e-posta. Yan yana durduklarında sipariş formu daha uzundur; aradaki dikey çizgi uzun formun boyunca iner. Her formun üstünde 1px `rule` çizgisi, altında serif `title` başlık vardır.
 
 - **Alan:** üstte `label` boyutunda `ink-soft` etiket, altında zeminsiz ve kutusuz, yalnızca 1px `ink-soft` alt çizgili giriş. Çizgi `rule` değildir: form denetimi sınırı en az 3:1 kontrast ister (`ink-soft`/`stone` 5,85). Alan genişliği en çok 28rem; yükseklik ~44px.
 - **Ürün seçimi:** tarayıcının kendi `select` öğesi ve oku; özel ok ya da ikon çizilmez.
+- **Adet:** tarayıcının kendi sayı girişi (`type="number"`, 1–99, varsayılan 1); diğer alanlarla aynı çizgi ve genişlik.
+- **İsteğe bağlı alan:** etiketin sonunda aynı stilde "(isteğe bağlı)" yazar; zorunlu alanlar işaretlenmez.
 - **Hata:** alt çizgi 2px `ink` olur, altında `label` boyutunda 500 ağırlıkta `ink` metin çıkar. Kırmızı ya da başka bir yeni renk yoktur; durum renkle değil çizgi kalınlığı ve metinle anlatılır. İlk hatalı alana odaklanılır.
 - **Buton:** `ink` zemin, `stone` metin, keskin köşe, `label` boyutu 500; yükseklik ~46px. Gönderilirken devre dışıdır ve zemini `ink-soft` olur. Sayfadaki tek dolu düğmedir; umber kullanılmaz (Tek Alan Kuralı).
 - **Durum metni:** butonun altında `label` boyutunda tek satır (başarı ya da "Gönderilemedi"); boşken yer kaplamaz.

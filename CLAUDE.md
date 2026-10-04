@@ -12,7 +12,7 @@ Stage 1.2 kapsamında yapılanlar: HTML'in React bileşenlerine taşınması, ed
 
 Stage 1.5 kapsamında yapılanlar: proje Skill'i (`.claude/skills/atolyekart-standartlari/`), GitHub deposu ve ilk commit (GitHub MCP ile), katalog QR kodu (`qrcode-generator`) ve bir alt ajanla art director tasarım incelemesi (öneriler `plan.md` içinde; onaysız uygulanmadı).
 
-Stage 1.6 kapsamında yapılanlar: "Sipariş ve Bildirim" bölümü ("Sipariş Ver" ve "Stok Bildirimi İste" formları), form doğrulama, `webhook-format.md` sözleşmesine uyan payload üretimi ve UI'dan ayrı webhook adapter katmanı (mock + HTTP). n8n'e bağlanmak için yalnızca webhook adresi verilir.
+Stage 1.6 kapsamında yapılanlar: "Sipariş ve Bildirim" bölümü ("Sipariş Ver" ve "Stok Bildirimi İste" formları), form doğrulama, ödev sözleşmesiyle birebir aynı düz payload (`webhook-format.md`) ve UI'dan ayrı webhook adapter katmanı (mock + HTTP). İki form webhook.site'a gerçek POST ile denendi. n8n'e bağlanmak için yalnızca webhook adresi verilir.
 
 ## Commands
 
@@ -86,14 +86,20 @@ Bileşenler Stage 1.1 işaretlemesini birebir üretir:
 Akış: **form → validation → payload → adapter**. Bileşen yalnızca `sendEvent(payload)` çağırır.
 
 - `section.requests#siparis` kataloğun altında, footer'ın üstündedir. Ürün kartlarına buton eklenmedi.
-- "Sipariş Ver": ad, ürün, telefon → `order.requested`. "Stok Bildirimi İste": ad, ürün, e-posta → `stock_alert.requested`.
+- "Sipariş Ver": ad, ürün, adet, telefon, e-posta (isteğe bağlı) → `order.requested`. "Stok Bildirimi İste": ad, ürün, e-posta → `stock_alert.requested`.
+- **Gövde ödev sözleşmesiyle birebir aynıdır** ve yalnızca şu alanları taşır; başka alan eklenmez:
+  - Sipariş: `event`, `name`, `productId`, `productName`, `phone`, `email`, `quantity`, `source`
+  - Stok bildirimi: `event`, `name`, `productId`, `productName`, `email`, `source`
+- `productId` ürünün slug'ıdır (ürün modelinde ayrı `id` yok); `quantity` sayıdır (1–99, varsayılan 1); siparişte e-posta boşsa `email: null` gider; `source` `react` ya da `cdn`'dir ve iki sürümün gövdesi arasındaki tek farktır.
+- Sözleşme yalnızca payload katmanındadır (`requestKinds`, `buildRequestEvent`); adapter gövdeyi olduğu gibi gönderir.
+- Talep başına tek ürün vardır. Çoklu ürün yalnızca bir planlama egzersiziydi; uygulanmadı.
 - Doğrulama gönderimde yapılır; hatalar alan altında gösterilir. Telefon payload'a `+905XXXXXXXXX`, e-posta küçük harfle girer.
 - **Webhook adresi koda yazılmaz.** React'te `VITE_WEBHOOK_URL` (`.env.local`; örnek `.env.example`), CDN'de `<meta name="atolyekart:webhook-url" content="…">`.
   - Boş: mock adapter. Ağ isteği yapılmaz; payload ve başlıklar konsola `[webhook:mock]` ile yazılır.
   - `mock:fail`: başarısız teslimatı dener.
   - Gerçek adres: HTTP adapter (`POST`, sözleşmedeki başlıklar, 5 sn zaman aşımı). n8n'e geçiş için yapılacak tek şey budur.
 - Tarayıcı `X-Atolyekart-Signature` göndermez (gizli anahtar istemcide saklanamaz).
-- Başarısız gönderimde form değerleri kalır; aynı değerlerle yeniden gönderim aynı olay `id`'sini kullanır. Daha kapsamlı hata yönetimi Stage 1.4'tür.
+- Başarısız gönderimde form değerleri kalır ve ziyaretçi yeniden gönderebilir. Daha kapsamlı hata yönetimi Stage 1.4'tür.
 - Gerçek adres bağlanırken alıcıda CORS (özel başlıklar ön kontrol isteği doğurur) ve canlıya çıkmadan önce KVKK aydınlatma metni gerekir; ikisi de yapılmadı.
 
 ### Statik sürüm (`cdn/`)

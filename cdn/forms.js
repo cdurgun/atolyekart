@@ -18,6 +18,16 @@
     return { value: raw };
   }
 
+  // Goes into the payload as a number, not text.
+  function validateQuantity(raw) {
+    var value = raw.trim();
+    if (!value) return { error: 'Adedi yazın.' };
+    if (!/^\d+$/.test(value) || Number(value) < 1 || Number(value) > 99) {
+      return { error: 'Adet 1 ile 99 arasında bir tam sayı olmalı.' };
+    }
+    return { value: Number(value) };
+  }
+
   // Turkish mobile number; goes into the payload as +905XXXXXXXXX.
   function validatePhone(raw) {
     if (!raw.trim()) return { error: 'Telefon numaranızı yazın.' };
@@ -33,28 +43,42 @@
     return { value: value };
   }
 
-  // contact: 'phone' or 'email'. Field order matches the form.
-  function validateRequest(raw, contact, slugs) {
-    var fields = ['name', 'product', contact];
-    var results = {
-      name: validateName(raw.name),
-      product: validateProduct(raw.product, slugs)
-    };
-    results[contact] = contact === 'phone' ? validatePhone(raw[contact]) : validateEmail(raw[contact]);
+  var validators = {
+    name: validateName,
+    product: validateProduct,
+    quantity: validateQuantity,
+    phone: validatePhone,
+    email: validateEmail
+  };
+
+  // kind.fields: field names in form order. kind.optional: fields that may stay empty; empty becomes null.
+  function validateRequest(raw, kind, slugs) {
     var values = {};
     var errors = {};
-    fields.forEach(function (field) {
-      if (results[field].error) errors[field] = results[field].error;
-      else values[field] = results[field].value;
+    kind.fields.forEach(function (field) {
+      var result = kind.optional.indexOf(field) !== -1 && !raw[field].trim() ? { value: null } : validators[field](raw[field], slugs);
+      if (result.error) errors[field] = result.error;
+      else values[field] = result.value;
     });
     return { values: values, errors: errors };
   }
 
   /* ---- Payload (src/webhook/payload.js) ---- */
 
+  // fields: form fields in order. optional: may stay empty. body: fields of the request body in order.
   var requestKinds = {
-    order: { event: 'order.requested', contact: 'phone' },
-    'stock-alert': { event: 'stock_alert.requested', contact: 'email' }
+    order: {
+      event: 'order.requested',
+      fields: ['name', 'product', 'quantity', 'phone', 'email'],
+      optional: ['email'],
+      body: ['event', 'name', 'productId', 'productName', 'phone', 'email', 'quantity', 'source']
+    },
+    'stock-alert': {
+      event: 'stock_alert.requested',
+      fields: ['name', 'product', 'email'],
+      optional: [],
+      body: ['event', 'name', 'productId', 'productName', 'email', 'source']
+    }
   };
 
   var turkishLetters = { 'ç': 'c', 'ğ': 'g', 'ı': 'i', 'ö': 'o', 'ş': 's', 'ü': 'u' };
@@ -69,46 +93,21 @@
       .replace(/^-|-$/g, '');
   }
 
-  function productObject(product, baseUrl) {
-    return {
-      slug: productSlug(product),
-      name: product.name,
-      category: product.category,
-      // "1.250,50 TL" -> 1250.5
-      price: { amount: Number(product.price.replace(/[^\d,]/g, '').replace(',', '.')), currency: 'TRY' },
-      image_url: product.image ? new URL(product.image, baseUrl).href : null
+  // The body carries only the fields of the contract (webhook-format.md).
+  function buildRequestEvent(kind, values, product, source) {
+    var all = {
+      event: requestKinds[kind].event,
+      name: values.name,
+      productId: productSlug(product),
+      productName: product.name,
+      phone: values.phone,
+      email: values.email,
+      quantity: values.quantity,
+      source: source
     };
-  }
-
-  function eventId() {
-    var bytes = crypto.getRandomValues(new Uint8Array(16));
-    bytes[6] = (bytes[6] & 0x0f) | 0x40;
-    bytes[8] = (bytes[8] & 0x3f) | 0x80;
-    var hex = Array.prototype.map.call(bytes, function (byte) { return ('0' + byte.toString(16)).slice(-2); }).join('');
-    return 'evt_' + hex.slice(0, 8) + '-' + hex.slice(8, 12) + '-' + hex.slice(12, 16) + '-' + hex.slice(16, 20) + '-' + hex.slice(20);
-  }
-
-  // context: { source, pageUrl, baseUrl }
-  function buildEvent(event, data, context) {
-    return {
-      id: eventId(),
-      event: event,
-      version: '1',
-      occurred_at: new Date().toISOString().replace(/\.\d{3}Z$/, 'Z'),
-      source: context.source,
-      page_url: context.pageUrl,
-      data: data
-    };
-  }
-
-  function buildRequestEvent(kind, values, product, context) {
-    var customer = { name: values.name };
-    customer[requestKinds[kind].contact] = values[requestKinds[kind].contact];
-    return buildEvent(
-      requestKinds[kind].event,
-      { product: productObject(product, context.baseUrl), customer: customer },
-      context
-    );
+    var payload = {};
+    requestKinds[kind].body.forEach(function (key) { payload[key] = all[key]; });
+    return payload;
   }
 
   /* ---- Webhook adapter (src/webhook/adapter.js) ---- */
@@ -119,8 +118,7 @@
   function webhookHeaders(payload) {
     return {
       'Content-Type': 'application/json; charset=utf-8',
-      'X-Atolyekart-Event': payload.event,
-      'X-Atolyekart-Delivery': payload.id
+      'X-Atolyekart-Event': payload.event
     };
   }
 
@@ -182,12 +180,9 @@
 
   Array.prototype.forEach.call(document.querySelectorAll('[data-request-form]'), function (form) {
     var kind = form.getAttribute('data-request-form');
-    var contact = requestKinds[kind].contact;
-    var fields = ['name', 'product', contact];
+    var fields = requestKinds[kind].fields;
     var button = form.querySelector('button');
     var status = form.querySelector('.request-status');
-    // A failed delivery is sent again with the same id.
-    var failed = null;
 
     function showError(name, message) {
       var control = form.elements[name];
@@ -214,7 +209,7 @@
       event.preventDefault();
       var raw = {};
       fields.forEach(function (name) { raw[name] = form.elements[name].value; });
-      var result = validateRequest(raw, contact, slugs);
+      var result = validateRequest(raw, requestKinds[kind], slugs);
       fields.forEach(function (name) { showError(name, result.errors[name]); });
       status.textContent = '';
       var invalid = Object.keys(result.errors)[0];
@@ -224,17 +219,11 @@
       }
 
       var product = products[slugs.indexOf(result.values.product)];
-      var payload = buildRequestEvent(kind, result.values, product, {
-        source: 'cdn',
-        pageUrl: window.location.href,
-        baseUrl: document.baseURI
-      });
-      if (failed && JSON.stringify(failed.data) === JSON.stringify(payload.data)) payload = failed;
+      var payload = buildRequestEvent(kind, result.values, product, 'cdn');
 
       button.disabled = true;
       adapter.send(payload).then(function (response) {
         button.disabled = false;
-        failed = response.ok ? null : payload;
         if (response.ok) form.reset();
         status.textContent = response.ok ? successTexts[kind] : failureText;
       });

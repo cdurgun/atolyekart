@@ -1,6 +1,8 @@
 # AtölyeKart Webhook Formatı
 
-AtölyeKart'tan dışarı giden olay bildirimlerinin sözleşmesi. Stage 1.6'da form olayları (`order.requested`, `stock_alert.requested`) bu sözleşmeyle üretilir ve bir webhook adapter'ına verilir; gerçek adres bağlanana kadar mock adapter çalışır. Gönderen ya da alan her kod bu şekle uyar.
+AtölyeKart'tan dışarı giden form bildirimlerinin sözleşmesi. Gövde, ödevde tanımlanan sözleşmeyle birebir aynıdır: yalnızca aşağıdaki alanları taşır, başka alan eklenmez. Gönderen ya da alan her kod bu şekle uyar.
+
+Gerçek adres bağlanana kadar mock adapter çalışır; adres verilince aynı gövde HTTP ile gönderilir.
 
 ## İstek
 
@@ -11,117 +13,75 @@ AtölyeKart'tan dışarı giden olay bildirimlerinin sözleşmesi. Stage 1.6'da 
 | --- | --- |
 | `Content-Type` | `application/json; charset=utf-8` |
 | `X-Atolyekart-Event` | olay adı, gövdedeki `event` ile aynı |
-| `X-Atolyekart-Delivery` | gövdedeki `id` ile aynı |
-| `X-Atolyekart-Signature` | `sha256=<hex>`; ham gövdenin paylaşılan gizli anahtarla HMAC-SHA256 özeti. Yalnızca sunucudan gönderilen isteklerde bulunur (aşağıya bakın) |
 
-- **Tarayıcıdan gelen istekler imzasızdır.** React ve CDN sürümleri isteği doğrudan tarayıcıdan gönderir; gizli anahtar istemci kodunda saklanamayacağı için `X-Atolyekart-Signature` başlığı gönderilmez. Alıcı bu isteklerde imza beklemez. İleride araya bir sunucu katmanı girerse imza orada üretilir (server-side signing) ve alıcı doğrulamayı o zaman açar.
-
-- **Başarı:** alıcı 5 saniye içinde `2xx` döner. Diğer her yanıt başarısız teslimat sayılır.
-- **Tekrar:** başarısız teslimat aynı `id` ile yeniden gönderilir. Alıcı `id`'yi daha önce gördüyse olayı yeniden işlemeden `2xx` döner.
-
-## Zarf
-
-Her olay aynı zarfı taşır; olaya özgü içerik `data` altındadır.
-
-```json
-{
-  "id": "evt_0f8c2a4e-6b1d-4c3a-9e57-2d1b7a9c4f10",
-  "event": "product.viewed",
-  "version": "1",
-  "occurred_at": "2026-10-03T18:42:07Z",
-  "source": "react",
-  "page_url": "https://ornek-alan-adi.com/#urunler",
-  "data": {}
-}
-```
-
-| Alan | Tip | Kural |
-| --- | --- | --- |
-| `id` | metin | `evt_` + UUID v4. Olay başına benzersiz; tekrar gönderimde aynı kalır |
-| `event` | metin | `nesne.eylem`, küçük harf (aşağıdaki listeden) |
-| `version` | metin | Format sürümü. Geriye uyumsuz değişiklikte artar |
-| `occurred_at` | metin | ISO 8601, UTC, saniye hassasiyeti, `Z` ile biter |
-| `source` | metin | Olayı üreten sürüm: `"react"` ya da `"cdn"` |
-| `page_url` | metin | Olayın gerçekleştiği sayfanın tam adresi |
-| `data` | nesne | Olaya özgü içerik; boş olabilir, `null` olmaz |
-
-## Adlandırma
-
-- Alan adları `snake_case` ve İngilizcedir.
-- Değerler veriden olduğu gibi gelir: ürün adı ve kategori Türkçe kalır.
-- Bilinmeyen değer için alan gönderilir ve `null` verilir; alan atlanmaz.
-- Yeni alan eklemek geriye uyumludur (`version` değişmez). Alan silmek, yeniden adlandırmak ya da tip değiştirmek `version`'ı artırır.
-
-## Ürün nesnesi
-
-Ürün geçen her olayda aynı şekil kullanılır.
-
-```json
-{
-  "slug": "luna-seramik-kupa",
-  "name": "Luna Seramik Kupa",
-  "category": "Seramik",
-  "price": { "amount": 420, "currency": "TRY" },
-  "image_url": "https://ornek-alan-adi.com/images/luna-seramik-kupa.jpg"
-}
-```
-
-| Alan | Kural |
-| --- | --- |
-| `slug` | Ürünün kalıcı kimliği: görsel dosya adının uzantısız hali. Stage 1.3'te veri modeline `id` gelirse `slug` yine korunur |
-| `price.amount` | Sayı. Sitedeki `"420 TL"` metninden sayıya çevrilir |
-| `price.currency` | ISO 4217 kodu; `"TRY"` |
-| `image_url` | Tam adres. Fotoğraf yoksa `null` |
+- **Başarı:** alıcı 5 saniye içinde `2xx` döner. Diğer her yanıt başarısız teslimat sayılır; ziyaretçi formu yeniden gönderebilir.
+- **Tarayıcıdan gelen istekler imzasızdır.** React ve CDN sürümleri isteği doğrudan tarayıcıdan gönderir; gizli anahtar istemci kodunda saklanamayacağı için imza başlığı gönderilmez. İleride araya bir sunucu katmanı girerse imza orada üretilir (server-side signing; `X-Atolyekart-Signature: sha256=<hex>`, ham gövdenin HMAC-SHA256 özeti).
+- **CORS:** özel başlık ve JSON içerik türü ön kontrol (`OPTIONS`) isteği doğurur; alıcı CORS başlıklarını döndürmelidir.
 
 ## Olaylar
 
-| `event` | Ne zaman | `data` |
+| `event` | Ne zaman | Gövde alanları (bu sırayla) |
 | --- | --- | --- |
-| `catalog.viewed` | Katalog sayfası açıldığında | `{ "product_count": 3, "entry": "direct" }` |
-| `product.viewed` | Bir ürün kartı ekranda göründüğünde | `{ "product": <ürün nesnesi>, "position": 1 }` |
-| `catalog.qr_displayed` | Katalog QR kodu üretildiğinde | `{ "target_url": "<QR'ın kodladığı adres>" }` |
-| `order.requested` | "Sipariş Ver" formu geçerli değerlerle gönderildiğinde | `{ "product": <ürün nesnesi>, "customer": { "name": "Ayşe Yılmaz", "phone": "+905321234567" } }` |
-| `stock_alert.requested` | "Stok Bildirimi İste" formu geçerli değerlerle gönderildiğinde | `{ "product": <ürün nesnesi>, "customer": { "name": "Ayşe Yılmaz", "email": "ayse@ornek.com" } }` |
+| `order.requested` | "Sipariş Ver" formu geçerli değerlerle gönderildiğinde | `event`, `name`, `productId`, `productName`, `phone`, `email`, `quantity`, `source` |
+| `stock_alert.requested` | "Stok Bildirimi İste" formu geçerli değerlerle gönderildiğinde | `event`, `name`, `productId`, `productName`, `email`, `source` |
 
-- `entry`: sayfaya nasıl gelindiği; `"direct"` ya da `"qr"`. QR'dan gelişi ayırt etmek için QR adresine `?kaynak=qr` eklenir; bu parametre yoksa değer `"direct"` olur.
-- `position`: ürünün listedeki sırası, 1'den başlar.
-- `customer.name`: baştaki ve sondaki boşluklar atılmış, ardışık boşluklar teke indirilmiş ad; en az 2 karakter.
-- `customer.phone`: Türkiye cep numarası, E.164 biçiminde (`+905XXXXXXXXX`). Ziyaretçi `0532 123 45 67` yazsa da payload'a bu biçimde girer.
-- `customer.email`: boşlukları atılmış, küçük harfe çevrilmiş e-posta adresi.
+Gövde düzdür: sarmalayıcı nesne (`data`, `customer`, `product`) ve `id`, `version`, `occurred_at`, `page_url`, kategori, fiyat ya da görsel adresi gibi ek alanlar yoktur.
 
-Stage 1.6'da yalnızca iki form olayı üretilir; `catalog.*` ve `product.viewed` olayları tanımlıdır ama henüz gönderilmez.
+## Alanlar
 
-Yeni olay eklerken: adı `nesne.eylem` biçiminde ve geçmiş zamanda yaz, bu tabloya ekle, `data` şeklini örnekle göster.
+| Alan | Tip | Kural |
+| --- | --- | --- |
+| `event` | metin | `order.requested` ya da `stock_alert.requested` |
+| `name` | metin | Baştaki ve sondaki boşluklar atılmış, ardışık boşluklar teke indirilmiş ad; en az 2 karakter |
+| `productId` | metin | Ürünün slug'ı: görsel dosya adının uzantısız hali (ör. `amber-soya-mum`). Ürün modelinde ayrı bir `id` alanı yoktur |
+| `productName` | metin | Ürün adı, veriden olduğu gibi (Türkçe) |
+| `phone` | metin | Yalnızca siparişte. Türkiye cep numarası, E.164 biçiminde (`+905XXXXXXXXX`); ziyaretçi `0532 123 45 67` yazsa da bu biçimde girer |
+| `email` | metin ya da `null` | Boşlukları atılmış, küçük harfe çevrilmiş adres. Stok bildiriminde zorunludur. Siparişte isteğe bağlıdır; boş bırakılırsa alan atlanmaz, `null` gönderilir |
+| `quantity` | sayı | Yalnızca siparişte. Tam sayı, 1–99; varsayılan 1. Metin değil sayı olarak gönderilir |
+| `source` | metin | İsteği üreten sürüm: `"react"` ya da `"cdn"`. İki sürümün gövdesi arasındaki tek fark budur |
 
-## Tam örnek
+Talep başına tek ürün vardır: bir `productId`, bir `productName`, siparişte bir `quantity`.
+
+## Örnekler
+
+Sipariş:
 
 ```http
 POST /webhooks/atolyekart HTTP/1.1
 Content-Type: application/json; charset=utf-8
-X-Atolyekart-Event: product.viewed
-X-Atolyekart-Delivery: evt_0f8c2a4e-6b1d-4c3a-9e57-2d1b7a9c4f10
-X-Atolyekart-Signature: sha256=5d41402abc4b2a76b9719d911017c592ae8f3c1d0c2b7e6f4a1d9e8c7b6a5f40
+X-Atolyekart-Event: order.requested
 
 {
-  "id": "evt_0f8c2a4e-6b1d-4c3a-9e57-2d1b7a9c4f10",
-  "event": "product.viewed",
-  "version": "1",
-  "occurred_at": "2026-10-03T18:42:07Z",
-  "source": "cdn",
-  "page_url": "https://ornek-alan-adi.com/#urunler",
-  "data": {
-    "product": {
-      "slug": "amber-soya-mum",
-      "name": "Amber Soya Mum",
-      "category": "Doğal Mumlar",
-      "price": { "amount": 350, "currency": "TRY" },
-      "image_url": "https://ornek-alan-adi.com/images/amber-soya-mum.jpg"
-    },
-    "position": 2
-  }
+  "event": "order.requested",
+  "name": "Ayşe Yılmaz",
+  "productId": "amber-soya-mum",
+  "productName": "Amber Soya Mum",
+  "phone": "+905321234567",
+  "email": "ayse@ornek.com",
+  "quantity": 3,
+  "source": "react"
 }
 ```
 
+E-postasız sipariş: aynı gövde, `"email": null`.
+
+Stok bildirimi:
+
+```json
+{
+  "event": "stock_alert.requested",
+  "name": "Ayşe Yılmaz",
+  "productId": "terra-minimal-kolye",
+  "productName": "Terra Minimal Kolye",
+  "email": "ayse@ornek.com",
+  "source": "cdn"
+}
+```
+
+## Sözleşmeyi değiştirme
+
+Alan adları, sırası ve kümesi ödev sözleşmesinden gelir; alan eklenmez, silinmez, yeniden adlandırılmaz. Sözleşme yalnızca payload katmanında (`src/webhook/payload.js` içindeki `requestKinds` ve `buildRequestEvent`; CDN'de `cdn/forms.js` içindeki karşılığı) tanımlıdır. Adapter gövdeyi olduğu gibi gönderir, alan üretmez.
+
 ## Gizlilik
 
-Kişisel veri yalnızca ziyaretçinin kendi gönderdiği form olaylarında taşınır; görüntüleme olaylarında taşınmaz. Form olayları yalnızca ziyaretçinin forma yazdığı alanları (ad ve telefon ya da e-posta) içerir. IP adresi ya da cihaz kimliği hiçbir olayda gönderilmez.
+Kişisel veri yalnızca ziyaretçinin kendi gönderdiği form olaylarında taşınır; görüntüleme olaylarında taşınmaz. Gövde yalnızca ziyaretçinin forma yazdığı alanları (ad, telefon, e-posta) ve seçtiği ürünü içerir. IP adresi ya da cihaz kimliği gönderilmez.

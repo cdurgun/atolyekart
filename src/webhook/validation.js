@@ -13,6 +13,16 @@ function validateProduct(raw, slugs) {
   return { value: raw }
 }
 
+// Payload'a metin değil sayı olarak girer.
+function validateQuantity(raw) {
+  const value = raw.trim()
+  if (!value) return { error: 'Adedi yazın.' }
+  if (!/^\d+$/.test(value) || Number(value) < 1 || Number(value) > 99) {
+    return { error: 'Adet 1 ile 99 arasında bir tam sayı olmalı.' }
+  }
+  return { value: Number(value) }
+}
+
 // Türkiye cep numarası; payload'a +905XXXXXXXXX olarak girer.
 function validatePhone(raw) {
   if (!raw.trim()) return { error: 'Telefon numaranızı yazın.' }
@@ -28,16 +38,20 @@ function validateEmail(raw) {
   return { value }
 }
 
-// contact: 'phone' ya da 'email'. Alan sırası formdaki sırayla aynıdır.
-export function validateRequest(raw, contact, slugs) {
-  const results = {
-    name: validateName(raw.name),
-    product: validateProduct(raw.product, slugs),
-    [contact]: contact === 'phone' ? validatePhone(raw[contact]) : validateEmail(raw[contact]),
-  }
+const validators = {
+  name: validateName,
+  product: validateProduct,
+  quantity: validateQuantity,
+  phone: validatePhone,
+  email: validateEmail,
+}
+
+// fields: formdaki sırayla alan adları. optional: boş bırakılabilen alanlar; boşsa değeri null olur.
+export function validateRequest(raw, { fields, optional }, slugs) {
   const values = {}
   const errors = {}
-  for (const [field, result] of Object.entries(results)) {
+  for (const field of fields) {
+    const result = optional.includes(field) && !raw[field].trim() ? { value: null } : validators[field](raw[field], slugs)
     if (result.error) errors[field] = result.error
     else values[field] = result.value
   }

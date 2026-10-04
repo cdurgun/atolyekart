@@ -1,4 +1,4 @@
-// Webhook adapter'ı: payload'u alır, teslim eder, { ok } döner. UI yalnızca sendEvent'i bilir.
+// Webhook adapter'ı: hazır payload'u alır, teslim eder, { ok } döner. Sözleşmeyi bilmez; UI yalnızca sendEvent'i bilir.
 // VITE_WEBHOOK_URL boşsa mock adapter çalışır; adres yazılınca HTTP adapter devreye girer.
 // "mock:fail" değeri başarısız teslimatı denemek içindir.
 // cdn/forms.js içindeki karşılığıyla aynı kalmalı.
@@ -10,7 +10,6 @@ export function webhookHeaders(payload) {
   return {
     'Content-Type': 'application/json; charset=utf-8',
     'X-Atolyekart-Event': payload.event,
-    'X-Atolyekart-Delivery': payload.id,
   }
 }
 

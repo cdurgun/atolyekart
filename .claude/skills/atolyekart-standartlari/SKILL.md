@@ -99,12 +99,14 @@ Akış dört katmandır ve her katman yalnızca bir sonrakini bilir: **form → 
 | Payload | `src/webhook/payload.js` | Payload |
 | Adapter | `src/webhook/adapter.js` | Webhook adapter |
 
-- İki form tek `RequestForm` bileşenidir; fark `kind` (`order` / `stock-alert`) ve `title` prop'larından gelir. Yeni bir form türü `requestKinds` tablosuna eklenir, bileşen kopyalanmaz.
+- İki form tek `RequestForm` bileşenidir; fark `kind` (`order` / `stock-alert`) ve `title` prop'larından gelir. Her türün form alanları (`fields`), boş bırakılabilen alanları (`optional`) ve gövde alanları (`body`) `requestKinds` tablosundadır; yeni bir form türü oraya eklenir, bileşen kopyalanmaz.
+- Gövde ödev sözleşmesiyle birebir aynıdır (`webhook-format.md`): düz, yalnızca listelenen alanlar. Sözleşme yalnızca payload katmanında durur; adapter alan üretmez, gövdeyi olduğu gibi gönderir.
+- Talep başına tek ürün: `productId` ürünün slug'ı, `productName` ürün adıdır. `quantity` sayı olarak, boş bırakılan isteğe bağlı alan `null` olarak gönderilir.
 - UI yalnızca `sendEvent(payload)` çağırır; `fetch`, başlık ya da adres bileşene yazılmaz.
 - Webhook adresi koda yazılmaz: React'te `VITE_WEBHOOK_URL`, CDN'de `<meta name="atolyekart:webhook-url">`. Boşsa mock adapter çalışır (payload konsola `[webhook:mock]` ile yazılır), `mock:fail` başarısız teslimatı dener, gerçek adres HTTP adapter'ı açar.
 - Gerçek adres depoya girmez; `.env.local` içinde tutulur.
 - Hata durumu ek sınıfla değil `aria-invalid="true"` ile işaretlenir; hata metni `ink` rengindedir, yeni renk eklenmez.
-- `src/webhook/` içindeki bir değişiklik `cdn/forms.js` içindeki karşılığına aynen taşınır; iki sürüm aynı girdiyle aynı payload'u üretmelidir (`source`, `id`, `occurred_at` ve adresler dışında).
+- `src/webhook/` içindeki bir değişiklik `cdn/forms.js` içindeki karşılığına aynen taşınır; iki sürüm aynı girdiyle aynı gövdeyi üretmelidir; tek fark `source` değeridir (`react` / `cdn`).
 
 ## Bitti sayılması için
 

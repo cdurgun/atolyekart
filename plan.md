@@ -701,3 +701,15 @@ Durum: uygulandı. n8n bağlantısı yapılmadı; gerçek webhook adresi yok, mo
 - KVKK aydınlatma metni (canlıya çıkmadan önce).
 - HTTP adapter gerçek bir alıcıya karşı denenmedi.
 - Kapsamlı hata yönetimi (Stage 1.4); `catalog.*` ve `product.viewed` olayları tanımlı ama gönderilmiyor.
+
+## Ek: ödev sözleşmesine geçiş
+
+Durum: uygulandı. İlk sürümdeki zarflı payload (`id`, `version`, `occurred_at`, `page_url`, `data.product`, `data.customer`) ödevin zorunlu sözleşmesiyle uyuşmuyordu; gövde sözleşmeyle birebir aynı hale getirildi. Yukarıdaki "Olaylar" ve "aynı `id` ile yeniden gönderim" maddeleri bu ekle geçersizdir.
+
+- **Gövde:** sipariş `event, name, productId, productName, phone, email, quantity, source`; stok bildirimi `event, name, productId, productName, email, source`. Başka alan yok.
+- **Form:** siparişe "Adet" (1–99, varsayılan 1, sayı olarak gider) ve isteğe bağlı "E-posta adresiniz" (boşsa `null`) eklendi. Stok bildiriminde e-posta zorunlu kaldı.
+- **`productId`:** mevcut slug; ürün modeline `id` eklenmedi.
+- **Katmanlar:** sözleşme `requestKinds` + `buildRequestEvent` içinde; validation alan listesine göre çalışıyor; adapter yalnızca gönderiyor. `X-Atolyekart-Delivery` başlığı ve aynı-`id` mantığı, gövdede `id` kalmadığı için kaldırıldı.
+- **Çoklu ürün:** Stage 1.3'teki analiz planlama egzersizi olarak kaldı; talep başına tek ürün.
+
+Doğrulama (başsız Chrome, iki sürüm): build hatasız; validation durumları (boş form, adet 0 / 100 / 1,5 / boş, geçersiz e-posta) iki sürümde aynı metinlerle; mock gövdeleri `source` dışında birebir aynı; webhook.site'a dört gerçek POST ulaştı ve anahtarlar sözleşmeyle aynı sırada, `quantity` sayı. Sayfa yükseklikleri 2334 / 2425 / 3535px, React ve CDN eşit.
