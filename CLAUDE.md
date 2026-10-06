@@ -6,24 +6,23 @@ AtölyeKart — Luna Atelier için adım adım geliştirilen küçük bir atöly
 
 ## Current Stage
 
-Stage 1.6 — Webhook'a hazır formlar (tamamlandı; gerçek webhook/n8n bağlantısı yapılmadı, mock adapter çalışıyor). Stage 1.1 (HTML), Stage 1.2 (React'e geçiş ve görsel tasarım) ve Stage 1.5 (Skill / MCP / QR / sub-agent) da tamamlandı. Stage 1.3 (veri modeli) ve Stage 1.4 (hata yönetimi) henüz yapılmadı; istenmeden başlanmaz.
+Hafta 2 — Güvenli API katmanı, KVKK ve deploy. Formlar artık webhook'a doğrudan gitmez; `/api` arkasından çalışır. Stage 1.1 (HTML), 1.2 (React ve tasarım), 1.5 (Skill / MCP / QR / sub-agent) ve 1.6 (formlar) tamamlandı. Stage 1.3 (veri modeli) ve Stage 1.4 (hata yönetimi) henüz yapılmadı; istenmeden başlanmaz.
 
-Stage 1.2 kapsamında yapılanlar: HTML'in React bileşenlerine taşınması, editoryal/atölye tasarım sistemi (`DESIGN.md`), kompaktlaştırma turları, gerçek ürün fotoğrafları, atölye fotoğraflı hero ve build gerektirmeyen ayrı bir statik sürüm (`cdn/`).
+Hafta 2 kapsamında yapılanlar: e-posta doğrulama hatasının düzeltilmesi, worktree'de geliştirilen kategori filtresi, sunucu API'si (`/api/order`, `/api/stock-request`, `/api/admin/orders`), sunucu tarafı doğrulama ve stok kontrolü, IP bazlı rate limit, admin için JWT, sırların sunucuya taşınması, açık rıza kutusu, örnek gizlilik politikası (`/gizlilik.html`), `GUVENLIK-KONTROL-LISTESI.md` ve testler (`node:test`). Build gerektirmeyen statik sürüm (`cdn/`) kullanıcı isteğiyle kaldırıldı.
 
-Stage 1.5 kapsamında yapılanlar: proje Skill'i (`.claude/skills/atolyekart-standartlari/`), GitHub deposu ve ilk commit (GitHub MCP ile), katalog QR kodu (`qrcode-generator`) ve bir alt ajanla art director tasarım incelemesi (öneriler `plan.md` içinde; onaysız uygulanmadı).
-
-Stage 1.6 kapsamında yapılanlar: "Sipariş ve Bildirim" bölümü ("Sipariş Ver" ve "Stok Bildirimi İste" formları), form doğrulama, ödev sözleşmesiyle birebir aynı düz payload (`webhook-format.md`) ve UI'dan ayrı webhook adapter katmanı (mock + HTTP). İki form webhook.site'a gerçek POST ile denendi. n8n'e bağlanmak için yalnızca webhook adresi verilir.
+Önceki aşamalardan kalanlar: editoryal/atölye tasarım sistemi (`DESIGN.md`), gerçek ürün fotoğrafları, atölye fotoğraflı hero, proje Skill'i, katalog QR kodu ve alt ajanla yapılan tasarım incelemesi (öneriler `plan.md` içinde).
 
 ## Commands
 
 - `npm install` — bağımlılıkları kurar
-- `npm run dev` — geliştirme sunucusu (React/Vite sürümü)
+- `npm run dev` — geliştirme sunucusu; sayfayı ve `/api`'yi birlikte çalıştırır (`vercel dev` gerekmez)
 - `npm run build` — üretim derlemesi
-- `cdn/index.html` — statik sürüm; tarayıcıda doğrudan açılır, npm veya build gerekmez
+- `npm test` — `node:test` ile doğrulama ve API testleri
+- `node --env-file=.env.local scripts/admin-token.mjs` — yerel/test amaçlı admin JWT üretir
 
 ## Project Purpose
 
-Luna Atelier'yi ve ürünlerini tanıtan, butik ve editoryal bir tek sayfa oluşturmak. Stage 1.1'deki HTML sayfası içeriği değiştirilmeden React bileşenlerine taşındı, ardından tasarlandı.
+Luna Atelier'yi ve ürünlerini tanıtan, butik ve editoryal bir tek sayfa oluşturmak; ziyaretçinin sipariş ve stok bildirimi taleplerini güvenli bir API üzerinden atölyeye iletmek.
 
 ## Business / Domain
 
@@ -53,20 +52,23 @@ Fotoğraflar 4:3, sRGB JPEG ve aynı çekim serisinin parçasıdır (taş yüzey
 
 ## Current Scope
 
-- Vite + React (JSX); bağımlılıklar yalnızca `react`, `react-dom`, `qrcode-generator`, `vite`, `@vitejs/plugin-react`
-- `index.html`: Vite giriş dosyası (`#root` ve `src/main.jsx`)
-- `src/App.jsx`: header, Atölye Hakkında, Kategoriler, Ürünler, Sipariş ve Bildirim, footer ve sabit `products` dizisi
+- Vite + React (JSX); bağımlılıklar yalnızca `react`, `react-dom`, `qrcode-generator`, `vite`, `@vitejs/plugin-react`. Sunucu kodu bağımlılık kullanmaz (`node:crypto`, `fetch`)
+- `index.html`: Vite giriş dosyası (`#root` ve `src/main.jsx`). `gizlilik.html`: ikinci Vite girişi, React'siz statik sayfa
+- `src/App.jsx`: header, Atölye Hakkında, Kategoriler, Ürünler, Sipariş ve Bildirim, footer
+- `src/products.js`: sabit `products` dizisi (web ve mobil ortak). Stok durumu burada tutulmaz
 - `src/components/`: `ProductList`, `ProductCard`, `ProductImage`, `CatalogQR`, `CategoryFilter`, `RequestForm`
 - `src/webhook/`: `validation.js`, `payload.js`, `adapter.js` (UI'dan bağımsız; aşağıya bakın)
-- `src/styles.css`: tek stil dosyası; `src/main.jsx` içinden import edilir. Tasarım sistemi `DESIGN.md` içinde belgelidir
+- `api/index.js`: tek Vercel Function; `vercel.json` içindeki rewrite tüm `/api/*` isteklerini buraya verir
+- `server/`: `router.js`, `routes/` (`order`, `stock-request`, `admin-orders`), `lib/` (`catalog`, `validate`, `rate-limit`, `jwt`, `webhook`, `orders`, `http`) ve `api.test.js`
+- `scripts/admin-token.mjs`: yerel admin JWT üretici
+- `src/styles.css`: tek stil dosyası; `src/main.jsx` ve `gizlilik.html` kullanır. Tasarım sistemi `DESIGN.md` içinde belgelidir
 - `public/images/`: üç ürün fotoğrafı ve hero fotoğrafları (`hero-atolye.jpg` masaüstü/tablet, `hero-atolye-mobil.jpg` mobil kırpım). Hero fotoğrafı JSX'te değil, `.site-header` için CSS arka planı olarak kullanılır
-- `public/images/paylasim-gorseli.png`: bağlantı önizleme görseli (1200×630, yazı markası + slogan). `index.html` içindeki `og:` etiketleri tam adresle bunu gösterir (`https://atolyekart-tawny.vercel.app/…`); alan adı değişirse etiketler güncellenir. Statik `cdn/` sürümü yayınlanmadığı için orada `og:` etiketi yoktur
+- `public/images/paylasim-gorseli.png`: bağlantı önizleme görseli (1200×630, yazı markası + slogan). `index.html` içindeki `og:` etiketleri tam adresle bunu gösterir (`https://atolyekart-tawny.vercel.app/…`); alan adı değişirse etiketler güncellenir
 - `public/favicon.png`: sekme simgesi (umber zeminde "L" harfi). Kural 9'daki ikon yasağının bilinçli tek istisnasıdır; sayfa içine ikon eklenmez
 - `public/fonts/`: Brygada 1918 ve Hanken Grotesk (woff2, yerel; CDN yok) ve OFL lisans metinleri
-- `cdn/`: React'siz statik sürüm; `script.js` QR kod, `forms.js` formlar, `filter.js` kategori filtresi için (aşağıya bakın)
-- State yalnızca `RequestForm` içindeki form state'i ve `App` içindeki seçili kategoridir. Veri çekme ve routing yok; stok bilgisi gösterilmez (stok bildirimi her ürün için istenebilir)
+- State yalnızca `RequestForm` içindeki form state'i ve `App` içindeki seçili kategoridir. Routing yok. Stok bilgisi sayfada gösterilmez; kartlara stok etiketi eklenmez. Stok kuralını sunucu uygular ve reddederse mesajı form durum satırında görünür
 
-Bileşenler Stage 1.1 işaretlemesini birebir üretir:
+Bileşenler:
 
 | Bileşen | Ürettiği HTML | Sorumluluk |
 | --- | --- | --- |
@@ -75,55 +77,48 @@ Bileşenler Stage 1.1 işaretlemesini birebir üretir:
 | `ProductImage` | `img.product-image` (görsel yoksa boş `div.product-image`) | `src` ve `alt` alır; `src` varsa görseli, yoksa ekran okuyucudan gizli boş yuvayı render eder |
 | `CatalogQR` | `div.catalog-qr` (SVG QR kod + açıklama) | Katalog adresini QR kod olarak çizer |
 | `CategoryFilter` | `div.category-filter` (`role="group"`, `button[aria-pressed]`) | `categories`, `selected`, `onSelect` alır; "Tümü" ve kategori düğmelerini çizer. Filtreleme `App` içinde yapılır |
-| `RequestForm` | `form.request-form` | `kind` (`order` / `stock-alert`), `title` ve `products` alır; doğrular, payload'u üretir, adapter'a verir |
+| `RequestForm` | `form.request-form` | `kind` (`order` / `stock-alert`), `title` ve `products` alır; doğrular, istek gövdesini üretir, adapter'a verir |
 
 ### Katalog QR kodu
 
 - Ürünler bölümünün (`section.catalog#urunler`) sonunda durur; 96px, `ink` modüller taş zeminde, yanında "Kataloğu telefonunuzda açın".
-- Adres sabit yazılmaz: sayfanın kendi adresinden üretilir (`<sayfa adresi>#urunler`). Deploy edilince alan adını kendiliğinden kullanır; yerelde `localhost` ya da `file://` adresini kodlar.
-- Adres sabitlenecekse: React'te `VITE_CATALOG_URL` ortam değişkeni, CDN'de `<meta name="atolyekart:catalog-url" content="…">`.
+- Adres sabit yazılmaz: sayfanın kendi adresinden üretilir (`<sayfa adresi>#urunler`). Sabitlenecekse `VITE_CATALOG_URL` kullanılır.
 - QR'ın sessiz bölgesi SVG'de yoktur; çevresindeki açık zemin boşluğu bu işi görür. Etrafına koyu zemin ya da bitişik öğe konmaz.
 
-### Formlar ve webhook katmanı
+### Formlar, API ve webhook
 
-Akış: **form → validation → payload → adapter**. Bileşen yalnızca `sendEvent(payload)` çağırır.
+Akış: **form → validation → istek gövdesi → API adapter → `/api` (sunucu) → webhook**. Bileşen yalnızca `sendRequest(path, body)` çağırır.
 
 - `section.requests#siparis` kataloğun altında, footer'ın üstündedir. Ürün kartlarına buton eklenmedi.
-- "Sipariş Ver": ad, ürün, adet, telefon, e-posta (isteğe bağlı) → `order.requested`. "Stok Bildirimi İste": ad, ürün, e-posta → `stock_alert.requested`.
-- **Gövde ödev sözleşmesiyle birebir aynıdır** ve yalnızca şu alanları taşır; başka alan eklenmez:
-  - Sipariş: `event`, `name`, `productId`, `productName`, `phone`, `email`, `quantity`, `source`
-  - Stok bildirimi: `event`, `name`, `productId`, `productName`, `email`, `source`
-- `productId` ürünün slug'ıdır (ürün modelinde ayrı `id` yok); `quantity` sayıdır (1–99, varsayılan 1); siparişte e-posta boşsa `email: null` gider; `source` `react` ya da `cdn`'dir ve iki sürümün gövdesi arasındaki tek farktır.
-- Sözleşme yalnızca payload katmanındadır (`requestKinds`, `buildRequestEvent`); adapter gövdeyi olduğu gibi gönderir.
-- Talep başına tek ürün vardır. Çoklu ürün yalnızca bir planlama egzersiziydi; uygulanmadı.
-- Doğrulama gönderimde yapılır; hatalar alan altında gösterilir. Telefon payload'a `+905XXXXXXXXX`, e-posta küçük harfle girer.
-- **Webhook adresi koda yazılmaz.** React'te `VITE_WEBHOOK_URL` (`.env.local`; örnek `.env.example`), CDN'de `<meta name="atolyekart:webhook-url" content="…">`.
-  - Boş: mock adapter. Ağ isteği yapılmaz; payload ve başlıklar konsola `[webhook:mock]` ile yazılır.
-  - `mock:fail`: başarısız teslimatı dener.
-  - Gerçek adres: HTTP adapter (`POST`, sözleşmedeki başlıklar, 5 sn zaman aşımı). n8n'e geçiş için yapılacak tek şey budur.
-- Tarayıcı `X-Atolyekart-Signature` göndermez (gizli anahtar istemcide saklanamaz).
+- "Sipariş Ver": ad, ürün, adet, telefon, e-posta (isteğe bağlı), açık rıza → `POST /api/order`. "Stok Bildirimi İste": ad, ürün, e-posta, açık rıza → `POST /api/stock-request`.
+- İstemci gövdesi: sipariş `name`, `productId`, `phone`, `email`, `quantity`, `consent`, `source`; stok bildirimi `name`, `productId`, `email`, `consent`, `source`. `productName` ve `event` gönderilmez.
+- **Sunucu istemciye güvenmez:** aynı doğrulama kuralları (`src/webhook/validation.js`) sunucuda yeniden uygulanır, türler denetlenir, `productName` ve stok `server/lib/catalog.js`'ten gelir, `consent: true` zorunludur.
+- **Stok:** Terra Minimal Kolye stokta yok, diğer ikisi stokta. Sipariş yalnızca stoktaki ürüne (`409 out_of_stock`), stok bildirimi yalnızca tükenmiş ürüne (`409 in_stock`) kabul edilir.
+- **Webhook'u sunucu gönderir** ve `X-Atolyekart-Signature` (HMAC-SHA256) ile imzalar. Olay gövdesi `webhook-format.md` içindedir.
+- **Sırlar yalnızca sunucudadır:** `WEBHOOK_URL`, `WEBHOOK_SECRET`, `JWT_SECRET`. Hiçbirine `VITE_` öneki verilmez; koda, depoya, terminal çıktısına ya da rapora yazılmaz. Canlı değerleri kullanıcı Vercel panelinden girer; Claude üretmez ve eklemez. Yerelde `.env.local`.
+  - Yerelde `WEBHOOK_URL` boşsa olay sunucu günlüğüne `[webhook:mock]` ile yazılır. Canlıda adres ya da anahtar eksikse talep `502` ile reddedilir.
+  - `VITE_API_URL` gizli değildir: boşsa aynı alan adı, `mock:` ağ isteği yapmaz, `mock:fail` hatayı dener.
+- **Rate limit:** IP başına dakikada 10 istek, tüm `/api` yolları için ortak; aşılırsa `429` ve `Retry-After`. Sayaç bellek içidir ve Vercel'de instance başınadır (`server/lib/rate-limit.js` içindeki nota bakın). Redis/Upstash eklenmedi.
+- **JWT yalnızca admin içindir:** `GET /api/admin/orders`, `Authorization: Bearer <HS256 JWT>`, `role: "admin"` ve geçerli `exp` ister (401 / 403). Ziyaretçi formları JWT ile korunmaz.
+- Son siparişler veritabanında değil, instance belleğinde tutulur (en fazla 50); yalnızca admin uç noktasının gösterimi içindir.
+- API yanıtlarında teknik ayrıntı ya da stack trace bulunmaz; ayrıntı yalnızca sunucu günlüğüne yazılır.
+- API CORS başlığı göndermez: web aynı alan adından, mobil yerel `fetch` ile çağırır.
+- Talep başına tek ürün vardır. Doğrulama gönderimde yapılır; hatalar alan altında gösterilir. Telefon `+905XXXXXXXXX`, e-posta küçük harfle ve yalnızca ASCII olarak girer.
 - Başarısız gönderimde form değerleri kalır ve ziyaretçi yeniden gönderebilir. Daha kapsamlı hata yönetimi Stage 1.4'tür.
-- Gerçek adres bağlanırken alıcıda CORS (özel başlıklar ön kontrol isteği doğurur) ve canlıya çıkmadan önce KVKK aydınlatma metni gerekir; ikisi de yapılmadı.
 
-### Statik sürüm (`cdn/`)
+### KVKK
 
-- `cdn/index.html`: React'in ürettiği HTML'in elle yazılmış kopyası
-- `cdn/forms.js`: `src/webhook/` ve `RequestForm`'un sade JavaScript karşılığı. Ürün verisini sayfadaki kartlardan okur; QR kütüphanesine bağlı değildir
-- `cdn/filter.js`: `CategoryFilter` ve `App` içindeki filtrelemenin sade JavaScript karşılığı. Eşleşmeyen kartları gizlemez, listeden çıkarır (yapısal seçiciler React sürümündeki gibi çalışsın diye); `forms.js`'ten sonra yüklenir
-- `cdn/script.js`: `CatalogQR` bileşeninin sade JavaScript karşılığı. `qrcode-generator` 2.0.4 jsDelivr'den, sürümü sabit ve `integrity` (SRI) hash'li yüklenir; kütüphane yüklenemezse QR satırı gizli kalır, sayfanın geri kalanı etkilenmez
-- `cdn/styles.css`: `src/styles.css`'ten üretilir; yalnızca varlık yolları farklı (`fonts/` ve `../public/images/`). Elle düzenlenmez; üretme komutu Skill'de yazılı
-- `cdn/fonts/`: font kopyaları. `file://` ile açılan sayfalarda Firefox/Safari üst klasörden font yüklemediği için gerekli
-- Görseller kopyalanmaz, `../public/images/` kullanılır. `cdn/` tek başına yayınlanacaksa `public/images/` içine kopyalanıp yollar `images/` yapılmalı
-- `cdn/index.html` font preload satırı içermez (`file://` altında CORS hatası verir)
-- `.impeccable/config.json` içinde `cdn/index.html` için `cramped-padding` yok sayma kaydı var: çizgilere yaslı metin onaylı katalog düzenidir
+- İki formda da açık rıza kutusu vardır; işaretlenmeden form gönderilmez ve sunucu da reddeder.
+- `/gizlilik.html` örnek bir taslaktır: hukuki danışmanlık değildir, şirket bilgileri köşeli parantezli yer tutucudur. Gerçek bilgiler yayından önce yazılmalıdır.
 
 ## Project Files
 
 - `DESIGN.md` — uygulanan tasarım sistemi (token'lar, tipografi, düzen, bileşenler, fotoğraf yönergeleri). Stil değişikliğinden önce okunur ve değişiklikten sonra güncellenir
 - `plan.md` — aşama planları ve uygulama raporları
-- `.claude/skills/atolyekart-standartlari/` — proje Skill'i: bileşen, adlandırma, görsel, stil, responsive ve React↔CDN standartları (`SKILL.md`) ile webhook payload formatı (`webhook-format.md`)
-  - `evals/evals.json` — Skill'i ölçen senaryolar ve beklentiler. `scripts/degerlendir_dorduncu_urun.py` ve `scripts/duzen_olc.mjs` 1. senaryoyu bir proje kopyasında otomatik notlar. İlk ölçüm (tek çalıştırma): Skill ile 12/12, Skill'siz 11/12; fark `DESIGN.md` güncellemesi ve tarayıcıda doğrulama. Ölçüm projenin kopyasında yapılır, bu depoda değil
-- `.env.example` — ortam değişkenleri (`VITE_CATALOG_URL`, `VITE_WEBHOOK_URL`); gerçek değerler `.env.local` içinde tutulur ve depoya girmez
+- `.claude/skills/atolyekart-standartlari/` — proje Skill'i: bileşen, adlandırma, görsel, stil, responsive ve form/API standartları (`SKILL.md`) ile webhook ve API gövde formatı (`webhook-format.md`)
+  - `evals/evals.json` — Skill'i ölçen senaryolar ve beklentiler. `scripts/degerlendir_dorduncu_urun.py` ve `scripts/duzen_olc.mjs` 1. senaryoyu bir proje kopyasında otomatik notlar. İlk ölçüm (tek çalıştırma, `cdn/` sürümü varken): Skill ile 12/12, Skill'siz 11/12; fark `DESIGN.md` güncellemesi ve tarayıcıda doğrulama. `cdn/` kaldırılınca beklentiler 10'a indi ve yeniden ölçülmedi. Ölçüm projenin kopyasında yapılır, bu depoda değil
+- `GUVENLIK-KONTROL-LISTESI.md` — Hafta 2 güvenlik kontrol listesi ve her maddenin kanıtı
+- `.env.example` — ortam değişkenlerinin adları ve biçimi (`VITE_CATALOG_URL`, `VITE_API_URL`, `WEBHOOK_URL`, `WEBHOOK_SECRET`, `JWT_SECRET`); gerçek değerler `.env.local` ve Vercel'de tutulur, depoya girmez
 - `.impeccable/config.json` — tasarım dedektörünün yok sayma kayıtları
 
 ## Future Roadmap
@@ -132,7 +127,8 @@ Yalnızca yol haritasıdır; istenmeden uygulanmaz.
 
 - Stage 1.3 — Veri modeli
 - Stage 1.4 — Hata yönetimi
-- Gerçek webhook bağlantısı (n8n): yalnızca adres ve alıcı tarafı
+- n8n bağlantısı: `WEBHOOK_URL` değişir, alıcıda imza doğrulanır
+- Paylaşımlı rate limit ve kalıcı sipariş kaydı (ortak depo gerektirir)
 
 ## Design Principles
 
@@ -172,6 +168,7 @@ Design decisions should serve the Luna Atelier brand and its products.
 7. Açıkça istenmeyen hiçbir şeyi değiştirme. Kapsamlı işlerde önce kısa bir plan sun ve onay bekle.
 8. Hero bitmiş kabul edildi (1600px'te 500px, `hero-atolye.jpg`, `75% 42%`). Açıkça istenmedikçe yüksekliğine, görseline, konumuna, tipografisine ve renklerine dokunma.
 9. Overlay, gradient, gölge, yuvarlak köşeli kart, ikon, animasyon veya süs öğesi ekleme.
-10. React sürümünde içerik, stil veya davranış değişirse `cdn/index.html`, `cdn/styles.css`, `cdn/script.js`, `cdn/forms.js` ve `cdn/filter.js` aynı şekilde güncellenir; iki sürüm görsel olarak aynı kalmalı.
+10. Sırları (`WEBHOOK_URL`, `WEBHOOK_SECRET`, `JWT_SECRET`, tokenlar) koda, depoya, terminal çıktısına ya da rapora yazma; `VITE_` önekiyle tarayıcıya açma. Canlı sır değerlerini üretme ya da Vercel'e ekleme; eksikse dur ve bildir.
 11. Ürün veya hero fotoğrafı yerine yapay placeholder, SVG veya ikon koyma.
-12. Bileşen, stil, görsel, `cdn/` ya da webhook üzerinde çalışırken `atolyekart-standartlari` Skill'ini kullan.
+12. Bileşen, stil, görsel, form/API ya da webhook üzerinde çalışırken `atolyekart-standartlari` Skill'ini kullan.
+13. Ziyaretçi formlarını (`/api/order`, `/api/stock-request`) JWT ile koruma. Açıkça istenmeden `git push` yapma.

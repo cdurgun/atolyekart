@@ -40,7 +40,7 @@ Gövde düzdür: sarmalayıcı nesne (`data`, `customer`, `product`) ve `id`, `v
 | `email` | metin ya da `null` | Boşlukları atılmış, küçük harfe çevrilmiş, yalnızca ASCII adres. Stok bildiriminde zorunludur. Siparişte isteğe bağlıdır; boş bırakılırsa alan atlanmaz, `null` gönderilir |
 | `quantity` | sayı | Yalnızca siparişte. Tam sayı, 1–99; varsayılan 1. Metin değil sayı olarak gönderilir |
 | `consent` | boolean | Her zaman `true`: ziyaretçi açık rıza kutusunu işaretlemeden olay üretilmez |
-| `source` | metin | İsteği üreten istemci: `"react"`, `"cdn"` ya da `"mobile"` |
+| `source` | metin | İsteği üreten istemci: `"react"` ya da `"mobile"` |
 
 Talep başına tek ürün vardır: bir `productId`, bir `productName`, siparişte bir `quantity`.
 
@@ -79,7 +79,7 @@ Stok bildirimi:
   "productName": "Terra Minimal Kolye",
   "email": "ayse@ornek.com",
   "consent": true,
-  "source": "cdn"
+  "source": "mobile"
 }
 ```
 
@@ -96,7 +96,7 @@ Yanıt: başarıda `{ "ok": true }`; hatada `{ "ok": false, "error": "<kod>", "m
 
 ## Sözleşmeyi değiştirme
 
-Olay gövdesi yalnızca `server/lib/webhook.js` içinde (`eventBody`, `buildEvent`), istemci gövdesi yalnızca `src/webhook/payload.js` içinde (`requestKinds`, `buildRequestBody`; CDN'de `cdn/forms.js` içindeki karşılığı) tanımlıdır. Adapter gövdeyi olduğu gibi gönderir, alan üretmez.
+Olay gövdesi yalnızca `server/lib/webhook.js` içinde (`eventBody`, `buildEvent`), istemci gövdesi yalnızca `src/webhook/payload.js` içinde (`requestKinds`, `buildRequestBody`) tanımlıdır. Adapter gövdeyi olduğu gibi gönderir, alan üretmez.
 
 ## Gizlilik
 

@@ -1,7 +1,6 @@
 // API adapter'ı: hazır istek gövdesini alır, /api uç noktasına gönderir, { ok, message, errors } döner.
 // Webhook adresi ve gizli anahtar burada yoktur: ikisi de yalnızca sunucudadır (server/lib/webhook.js).
 // VITE_API_URL boşsa istek sayfanın kendi alan adına gider; "mock:" ağ isteği yapmaz, "mock:fail" hatayı dener.
-// cdn/forms.js içindeki karşılığıyla aynı kalmalı.
 
 const TIMEOUT_MS = 8000
 

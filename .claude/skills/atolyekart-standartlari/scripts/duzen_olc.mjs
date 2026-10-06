@@ -1,7 +1,7 @@
-// Bir proje kopyasında React (vite preview) ve CDN sürümlerini 1600 / 800 / 390px'te ölçer.
+// Bir proje kopyasında sayfayı (vite preview) 1600 / 800 / 390px'te ölçer.
 // Kullanım: node duzen_olc.mjs <proje-kopyası> <çıktı-klasörü>
 // Çıktı: <çıktı-klasörü>/layout.json  ->  { ok, evidence }
-// ok: iki sürümde yatay taşma yok ve sayfa yükseklikleri eşit. Google Chrome ve kurulu node_modules gerekir.
+// ok: üç genişlikte yatay taşma yok. Google Chrome ve kurulu node_modules gerekir.
 import { spawn, execSync } from 'node:child_process'
 import { mkdtempSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
@@ -58,10 +58,9 @@ async function measure(url, width) {
 let ok = true
 const rows = []
 for (const width of [1600, 800, 390]) {
-  const react = await measure(`http://localhost:${PORT}/`, width)
-  const cdn = await measure(`file://${repo}/cdn/index.html`, width)
-  ok = ok && !react.overflow && !cdn.overflow && react.page === cdn.page
-  rows.push(`${width}px: React ${react.page} / CDN ${cdn.page}${react.overflow || cdn.overflow ? ' TAŞMA' : ''}`)
+  const page = await measure(`http://localhost:${PORT}/`, width)
+  ok = ok && !page.overflow
+  rows.push(`${width}px: ${page.page}px${page.overflow ? ' TAŞMA' : ''}`)
 }
 
 writeFileSync(join(out, 'layout.json'), JSON.stringify({ ok, evidence: rows.join(' · ') }))

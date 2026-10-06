@@ -1,5 +1,4 @@
 // Kategori filtresi: seçili kategori aria-pressed ile işaretlenir; boş değer ('') tüm ürünleri gösterir.
-// cdn/filter.js içindeki karşılığıyla aynı kalmalı.
 export default function CategoryFilter({ categories, selected, onSelect }) {
   return (
     <div className="category-filter" role="group" aria-label="Kategoriye göre filtrele">

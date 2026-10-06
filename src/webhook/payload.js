@@ -1,6 +1,5 @@
 // İstek gövdesi: formun /api uç noktasına gönderdiği düz gövdeyi üretir.
 // Webhook olayını (event, productName, imza) sunucu üretir: server/lib/webhook.js.
-// cdn/forms.js içindeki karşılığıyla aynı kalmalı.
 
 // path: uç nokta. event: sunucunun webhook'a yazdığı olay adı. fields: formdaki alanlar (sırayla).
 // optional: boş bırakılabilenler. body: istek gövdesindeki alanlar (sırayla).
@@ -33,7 +32,7 @@ export function productSlug(product) {
     .replace(/^-|-$/g, '')
 }
 
-// values: validateRequest'ten gelen temiz değerler; product: seçilen ürün; source: 'react', 'cdn' ya da 'mobile'.
+// values: validateRequest'ten gelen temiz değerler; product: seçilen ürün; source: 'react' ya da 'mobile'.
 // productName gönderilmez: sunucu adı kendi kataloğundan yazar.
 export function buildRequestBody(kind, values, product, source) {
   const all = { ...values, productId: productSlug(product), source }

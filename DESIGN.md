@@ -253,13 +253,13 @@ Yuva `aspect-ratio: 4 / 3` ve `object-fit: cover` ile çalışır. Farklı oranl
 - Yer tutucu metin (placeholder), ikon, animasyon ve kutu yoktur.
 
 ### Policy Page
-`gizlilik.html` (ve `cdn/gizlilik.html`): fotoğrafsız, alçak bir umber başlık bandında ana sayfaya dönen serif "Luna Atelier" bağlantısı; altında en çok 40rem genişliğinde tek okuma sütunu. Sayfa başlığı `page-title` (`clamp(1.75rem, 3vw, 2.25rem)`), hemen altında üstü ve altı 1px `rule` çizgili, `label` boyutunda `ink-soft` taslak notu. Bölüm başlıkları serif `title`; listeler "– " imli. Bağlantılar metin rengindedir ve altı çizilidir; yeni renk yoktur. Footer ana sayfadakiyle aynıdır, ikinci satırında "Ana sayfa" bağlantısı vardır (ana sayfada "Gizlilik Politikası").
+`gizlilik.html`: fotoğrafsız, alçak bir umber başlık bandında ana sayfaya dönen serif "Luna Atelier" bağlantısı; altında en çok 40rem genişliğinde tek okuma sütunu. Sayfa başlığı `page-title` (`clamp(1.75rem, 3vw, 2.25rem)`), hemen altında üstü ve altı 1px `rule` çizgili, `label` boyutunda `ink-soft` taslak notu. Bölüm başlıkları serif `title`; listeler "– " imli. Bağlantılar metin rengindedir ve altı çizilidir; yeni renk yoktur. Footer ana sayfadakiyle aynıdır, ikinci satırında "Ana sayfa" bağlantısı vardır (ana sayfada "Gizlilik Politikası").
 
 ### Share Image
 Site bağlantısı paylaşıldığında görünen önizleme görseli: `public/images/paylasim-gorseli.png` (1200×630). `umber` zemin, sol altta `slip` renginde "Luna Atelier" (Brygada 1918, 400, 132px, harf aralığı −0,02em) ve altında `amber` slogan (Hanken Grotesk, 34px); kenar boşluğu 96px. Fotoğraf, çizim ya da süs yoktur. Sayfada görünmez; yalnızca `index.html` içindeki `og:` etiketleriyle bağlanır. Metin ya da palet değişirse görsel yeniden üretilir.
 
 ### Favicon
-Sekme simgesi: `public/favicon.png` (96×96). `umber` kare zemin üzerinde `slip` renginde tek "L" harfi (Brygada 1918, 500); köşeler keskin. Çizim ya da simge değil, yazı markasının ilk harfidir. React sürümü `/favicon.png`, CDN sürümü `../public/favicon.png` yolunu kullanır.
+Sekme simgesi: `public/favicon.png` (96×96). `umber` kare zemin üzerinde `slip` renginde tek "L" harfi (Brygada 1918, 500); köşeler keskin. Çizim ya da simge değil, yazı markasının ilk harfidir. Sayfalar `/favicon.png` yolunu kullanır.
 
 ### Site Footer
 Header ile aynı koyu alan; tek satır, `label` boyutunda.

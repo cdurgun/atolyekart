@@ -1,5 +1,4 @@
 // Form doğrulama: ham değerleri alır, temizlenmiş değerleri ve Türkçe hata metinlerini döner.
-// cdn/forms.js içindeki karşılığıyla aynı kalmalı.
 
 function validateName(raw) {
   const value = raw.trim().replace(/\s+/g, ' ')

@@ -4,7 +4,7 @@ import { requestKinds } from '../../src/webhook/payload.js'
 import { validateRequest } from '../../src/webhook/validation.js'
 import { productIds } from './catalog.js'
 
-const SOURCES = ['react', 'cdn', 'mobile']
+const SOURCES = ['react', 'mobile']
 
 export function validateBody(kind, body) {
   const { fields, optional } = requestKinds[kind]

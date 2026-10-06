@@ -339,11 +339,6 @@ ul {
   border-top: 1px solid var(--rule);
 }
 
-/* CDN sürümünde kütüphane yüklenene kadar gizli kalır */
-.catalog-qr[hidden] {
-  display: none;
-}
-
 .catalog-qr-code {
   flex: none;
   width: 6rem;

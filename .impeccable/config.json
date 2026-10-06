@@ -2,16 +2,6 @@
   "detector": {
     "ignoreRules": [],
     "ignoreFiles": [],
-    "ignoreValues": [
-      {
-        "rule": "cramped-padding",
-        "value": "*",
-        "files": [
-          "cdn/index.html"
-        ],
-        "createdAt": "2026-10-03T18:06:23.811Z",
-        "reason": "user confirmed: cdn/ must reproduce the approved React design with no visual changes; flush text against 1px rules is the approved catalogue layout (src/ shows the same layout)"
-      }
-    ]
+    "ignoreValues": []
   }
 }
