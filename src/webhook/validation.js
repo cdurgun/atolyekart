@@ -31,10 +31,14 @@ function validatePhone(raw) {
   return { value: `+90${match[1]}` }
 }
 
+// Türkçe klavyede Caps Lock açıkken "i" tuşu "İ" üretir; toLowerCase() bunu "i" + birleşik nokta (U+0307) yapar
+// ve adres bozulur. Bu yüzden "İ" önce "i"ye çevrilir, adres yalnızca ASCII karakter taşıyabilir.
+const EMAIL_PATTERN = /^[a-z0-9_%+-]+(?:\.[a-z0-9_%+-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z]{2,}$/
+
 function validateEmail(raw) {
-  const value = raw.trim().toLowerCase()
+  const value = raw.trim().replace(/İ/g, 'i').toLowerCase()
   if (!value) return { error: 'E-posta adresinizi yazın.' }
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(value)) return { error: 'Geçerli bir e-posta adresi yazın (ör. ad@ornek.com).' }
+  if (!EMAIL_PATTERN.test(value)) return { error: 'Geçerli bir e-posta adresi yazın (ör. ad@ornek.com).' }
   return { value }
 }
 

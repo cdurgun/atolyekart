@@ -36,10 +36,14 @@
     return { value: '+90' + match[1] };
   }
 
+  // On a Turkish keyboard with Caps Lock on, the "i" key types "İ"; toLowerCase() turns it into "i" + a combining
+  // dot (U+0307) and corrupts the address. So "İ" becomes "i" first, and the address may carry ASCII only.
+  var EMAIL_PATTERN = /^[a-z0-9_%+-]+(?:\.[a-z0-9_%+-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z]{2,}$/;
+
   function validateEmail(raw) {
-    var value = raw.trim().toLowerCase();
+    var value = raw.trim().replace(/İ/g, 'i').toLowerCase();
     if (!value) return { error: 'E-posta adresinizi yazın.' };
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(value)) return { error: 'Geçerli bir e-posta adresi yazın (ör. ad@ornek.com).' };
+    if (!EMAIL_PATTERN.test(value)) return { error: 'Geçerli bir e-posta adresi yazın (ör. ad@ornek.com).' };
     return { value: value };
   }
 
