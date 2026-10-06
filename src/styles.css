@@ -229,6 +229,36 @@ ul {
   margin-bottom: var(--heading-gap);
 }
 
+/* Kategori filtresi: düz metin düğmeler; seçili olan ink renginde ve altı çizgili */
+.category-filter {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 1.5rem;
+  margin-bottom: var(--heading-gap);
+}
+
+.category-filter button {
+  padding: 0.5rem 0;
+  border: 0;
+  border-bottom: 1px solid transparent;
+  border-radius: 0;
+  background: none;
+  color: var(--ink-soft);
+  font: inherit;
+  font-size: var(--type-label);
+  cursor: pointer;
+}
+
+.category-filter button[aria-pressed='true'] {
+  border-bottom-color: var(--ink);
+  color: var(--ink);
+}
+
+.category-filter :focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+
 .product-list {
   --row-gap: clamp(2rem, 4vw, 2.75rem);
   display: grid;

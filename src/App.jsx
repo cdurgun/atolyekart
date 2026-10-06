@@ -1,4 +1,6 @@
+import { useState } from 'react'
 import CatalogQR from './components/CatalogQR.jsx'
+import CategoryFilter from './components/CategoryFilter.jsx'
 import ProductList from './components/ProductList.jsx'
 import RequestForm from './components/RequestForm.jsx'
 
@@ -26,7 +28,12 @@ const products = [
   },
 ]
 
+const categories = [...new Set(products.map((product) => product.category))]
+
 export default function App() {
+  const [category, setCategory] = useState('')
+  const visibleProducts = category ? products.filter((product) => product.category === category) : products
+
   return (
     <>
       <header className="site-header">
@@ -58,7 +65,8 @@ export default function App() {
 
         <section className="catalog" id="urunler">
           <h2>Ürünler</h2>
-          <ProductList products={products} />
+          <CategoryFilter categories={categories} selected={category} onSelect={setCategory} />
+          <ProductList products={visibleProducts} />
           <CatalogQR />
         </section>
 
