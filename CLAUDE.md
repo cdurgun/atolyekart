@@ -8,7 +8,7 @@ AtölyeKart — Luna Atelier için adım adım geliştirilen küçük bir atöly
 
 Hafta 2 — Güvenli API katmanı, KVKK ve deploy. Formlar artık webhook'a doğrudan gitmez; `/api` arkasından çalışır. Stage 1.1 (HTML), 1.2 (React ve tasarım), 1.5 (Skill / MCP / QR / sub-agent) ve 1.6 (formlar) tamamlandı. Stage 1.3 (veri modeli) ve Stage 1.4 (hata yönetimi) henüz yapılmadı; istenmeden başlanmaz.
 
-Hafta 2 kapsamında yapılanlar: e-posta doğrulama hatasının düzeltilmesi, worktree'de geliştirilen kategori filtresi, sunucu API'si (`/api/order`, `/api/stock-request`, `/api/admin/orders`), sunucu tarafı doğrulama ve stok kontrolü, IP bazlı rate limit, admin için JWT, sırların sunucuya taşınması, açık rıza kutusu, örnek gizlilik politikası (`/gizlilik.html`), `GUVENLIK-KONTROL-LISTESI.md` ve testler (`node:test`). Build gerektirmeyen statik sürüm (`cdn/`) kullanıcı isteğiyle kaldırıldı.
+Hafta 2 kapsamında yapılanlar: e-posta doğrulama hatasının düzeltilmesi, worktree'de geliştirilen kategori filtresi, sunucu API'si (`/api/order`, `/api/stock-request`, `/api/admin/orders`), sunucu tarafı doğrulama ve stok kontrolü, IP bazlı rate limit, admin için JWT, sırların sunucuya taşınması, açık rıza kutusu, örnek gizlilik politikası (`/gizlilik.html`), `GUVENLIK-KONTROL-LISTESI.md`, testler (`node:test`) ve Expo mobil uygulaması (`mobile/`). Build gerektirmeyen statik sürüm (`cdn/`) kullanıcı isteğiyle kaldırıldı.
 
 Önceki aşamalardan kalanlar: editoryal/atölye tasarım sistemi (`DESIGN.md`), gerçek ürün fotoğrafları, atölye fotoğraflı hero, proje Skill'i, katalog QR kodu ve alt ajanla yapılan tasarım incelemesi (öneriler `plan.md` içinde).
 
@@ -18,6 +18,7 @@ Hafta 2 kapsamında yapılanlar: e-posta doğrulama hatasının düzeltilmesi, w
 - `npm run dev` — geliştirme sunucusu; sayfayı ve `/api`'yi birlikte çalıştırır (`vercel dev` gerekmez)
 - `npm run build` — üretim derlemesi
 - `npm test` — `node:test` ile doğrulama ve API testleri
+- `cd mobile && npx expo start` — mobil uygulama (Expo Go)
 - `node --env-file=.env.local scripts/admin-token.mjs` — yerel/test amaçlı admin JWT üretir
 
 ## Project Purpose
@@ -61,6 +62,7 @@ Fotoğraflar 4:3, sRGB JPEG ve aynı çekim serisinin parçasıdır (taş yüzey
 - `api/index.js`: tek Vercel Function; `vercel.json` içindeki rewrite tüm `/api/*` isteklerini buraya verir
 - `server/`: `router.js`, `routes/` (`order`, `stock-request`, `admin-orders`), `lib/` (`catalog`, `validate`, `rate-limit`, `jwt`, `webhook`, `orders`, `http`) ve `api.test.js`
 - `scripts/admin-token.mjs`: yerel admin JWT üretici
+- `mobile/`: ayrı Expo projesi (SDK 57, kendi `package.json`'ı). `App.js`, `RequestForm.js`, `api.js`, `theme.js`. Ürün verisini, doğrulamayı ve istek gövdesini `../src`'ten içe aktarır (`metro.config.js` → `watchFolders`); `source: "mobile"` ile aynı `/api`'yi çağırır. Bu yüzden `src/products.js`, `src/webhook/validation.js` ve `src/webhook/payload.js` tarayıcıya ya da Vite'a özgü API (`import.meta`, `document`) kullanmaz ve npm paketi içe aktarmaz. `.vercelignore` ile deploy dışındadır
 - `src/styles.css`: tek stil dosyası; `src/main.jsx` ve `gizlilik.html` kullanır. Tasarım sistemi `DESIGN.md` içinde belgelidir
 - `public/images/`: üç ürün fotoğrafı ve hero fotoğrafları (`hero-atolye.jpg` masaüstü/tablet, `hero-atolye-mobil.jpg` mobil kırpım). Hero fotoğrafı JSX'te değil, `.site-header` için CSS arka planı olarak kullanılır
 - `public/images/paylasim-gorseli.png`: bağlantı önizleme görseli (1200×630, yazı markası + slogan). `index.html` içindeki `og:` etiketleri tam adresle bunu gösterir (`https://atolyekart-tawny.vercel.app/…`); alan adı değişirse etiketler güncellenir
