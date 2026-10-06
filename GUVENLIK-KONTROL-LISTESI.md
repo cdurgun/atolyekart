@@ -74,7 +74,8 @@ Her maddenin yanında nerede uygulandığı ve nasıl doğrulandığı yazar. `[
 
 ## Mobil (Expo Go)
 
-- [x] Gerçek telefonda Expo Go testi — proje sahibi uygulamayı Expo Go ile telefonda açtı ve "Sipariş Ver" akışında bir sipariş gönderdi; işlem başarılı oldu (6 Ekim 2026). "Stok Bildirimi İste" akışının telefonda denendiği bildirilmedi; aynı form bileşeni ve aynı API istemcisini kullanır, uç noktası canlıda `curl` ile doğrulandı
+- [x] Gerçek telefonda "Sipariş Ver" — proje sahibi uygulamayı Expo Go ile telefonda açtı ve bir sipariş gönderdi; işlem başarılı oldu (6 Ekim 2026)
+- [x] Gerçek telefonda "Stok Bildirimi İste" — proje sahibi Terra Minimal Kolye için stok bildirimi gönderdi; işlem başarılı oldu. webhook.site'ta `stock_alert.requested` olayının ulaştığını, gövdenin doğru olduğunu ve `X-Atolyekart-Signature` başlığının geldiğini doğruladı (6 Ekim 2026)
 - [x] Bilgisayarda — Metro çalışıyor ve Expo Go manifest'ini sunuyor, iOS ve Android paketleri derleniyor, `expo-doctor` 21/21
 
 ## Bilinen sınırlar
