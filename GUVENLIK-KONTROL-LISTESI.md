@@ -70,11 +70,12 @@ Her maddenin yanında nerede uygulandığı ve nasıl doğrulandığı yazar. `[
 - [x] `productName` sunucudan — istekte gönderilen sahte `productName` yok sayıldı, webhook'a katalogdaki ad gitti
 - [x] Tarayıcıdan uçtan uca — canlı sayfadaki formda rızasız gönderim engellendi, rıza ile sipariş başarı mesajı verdi
 - [x] Yanlış rollü token → `403`, geçerli admin token → `200` — proje sahibi canlı `JWT_SECRET` ile imzalanmış tokenlarla canlıda denedi (6 Ekim 2026); anahtar ve tokenlar paylaşılmadı
-- [ ] İmza değerinin doğruluğu alıcıda hesaplanarak doğrulanmadı (webhook.site imza doğrulamaz); başlığın varlığı ve biçimi doğrulandı, üretim mantığı `npm test` içinde sınanıyor
+- [ ] İmza değerinin alıcıda hesaplanarak doğrulanması — n8n aşamasına bağlı: webhook.site imza doğrulamaz. Başlığın varlığı ve biçimi canlıda doğrulandı, üretim mantığı `npm test` içinde sınanıyor
 
-## Açık kalan manuel adım
+## Mobil (Expo Go)
 
-- [ ] Gerçek telefonda Expo Go ile "Sipariş Ver" ve "Stok Bildirimi İste" akışları — proje sahibi dener (README → "Expo Go ile telefonda açma"). Bilgisayarda doğrulananlar: Metro çalışıyor ve Expo Go manifest'ini sunuyor, iOS ve Android paketleri derleniyor, `expo-doctor` 21/21
+- [x] Gerçek telefonda Expo Go testi — proje sahibi uygulamayı Expo Go ile telefonda açtı ve "Sipariş Ver" akışında bir sipariş gönderdi; işlem başarılı oldu (6 Ekim 2026). "Stok Bildirimi İste" akışının telefonda denendiği bildirilmedi; aynı form bileşeni ve aynı API istemcisini kullanır, uç noktası canlıda `curl` ile doğrulandı
+- [x] Bilgisayarda — Metro çalışıyor ve Expo Go manifest'ini sunuyor, iOS ve Android paketleri derleniyor, `expo-doctor` 21/21
 
 ## Bilinen sınırlar
 
