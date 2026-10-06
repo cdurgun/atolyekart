@@ -11,7 +11,7 @@ Her maddenin yanında nerede uygulandığı ve nasıl doğrulandığı yazar. `[
 - [x] Webhook gizli anahtarı istemciye gönderilmiyor — imza sunucuda üretilir (`X-Atolyekart-Signature`, HMAC-SHA256)
 - [x] Git geçmişinde sır yok — tüm geçmiş (`git log --all -p`) webhook adresi, anahtar ve token kalıpları için tarandı; eşleşme yok. Geçmişe giren tek `.env*` dosyası `.env.example`
 - [x] Yerel ve canlı sırlar ayrı — yerel değerler `.env.local` içinde, canlı değerler yalnızca Vercel'de; iki ortam için ayrı anahtar kullanılır
-- [ ] Vercel Environment Variables (Production) tanımlı: `WEBHOOK_URL`, `WEBHOOK_SECRET`, `JWT_SECRET` — değerleri proje sahibi Vercel panelinden girer
+- [x] Vercel Environment Variables (Production) tanımlı: `WEBHOOK_URL`, `WEBHOOK_SECRET`, `JWT_SECRET` — değerleri proje sahibi Vercel panelinden girdi; `vercel env ls production` üç adı "Secret / Hidden" olarak listeliyor
 - [x] Canlıda eksik yapılandırma sessizce geçilmez — `WEBHOOK_URL` ya da `WEBHOOK_SECRET` yoksa talep `502`, `JWT_SECRET` yoksa ya da 32 karakterden kısaysa admin uç noktası `503` döner
 
 ## API ve sunucu tarafı doğrulama
@@ -52,20 +52,25 @@ Her maddenin yanında nerede uygulandığı ve nasıl doğrulandığı yazar. `[
 
 ## Canlı ortam testleri
 
-Sonuçlar deploy sonrasında işlenir.
+6 Ekim 2026, https://atolyekart-tawny.vercel.app üzerinde `curl` ile, tek rate limit penceresinde 11 istek:
 
-- [ ] Geçerli sipariş → `200`
-- [ ] Geçerli stok bildirimi → `200`
-- [ ] Geçersiz e-posta → `400`
-- [ ] Eksik rıza → `400`
-- [ ] Geçersiz adet → `400`
-- [ ] Stokta olmayan ürüne sipariş → `409`
-- [ ] Stokta olan ürüne stok bildirimi → `409`
-- [ ] 11. istek → `429` + `Retry-After`
-- [ ] Token'sız admin isteği → `401`
-- [ ] Geçersiz token → `401`
-- [ ] Canlı pakette sır yok
-- [ ] Webhook alıcısına olay ve imza ulaştı
+- [x] Geçerli sipariş → `200`
+- [x] Geçerli stok bildirimi → `200`
+- [x] Geçersiz e-posta → `400` (`errors.email`)
+- [x] Eksik rıza → `400` (`errors.consent`)
+- [x] Geçersiz adet (0) → `400` (`errors.quantity`)
+- [x] Stokta olmayan ürüne sipariş → `409 out_of_stock`
+- [x] Stokta olan ürüne stok bildirimi → `409 in_stock`
+- [x] `GET /api/order` → `405`, `Allow: POST`
+- [x] 11. istek → `429` + `Retry-After: 56`
+- [x] Token'sız admin isteği → `401` + `WWW-Authenticate: Bearer`
+- [x] Geçersiz token → `401`
+- [x] Canlı pakette sır yok — canlı JS paketinde `webhook.site`, `WEBHOOK`, `JWT_SECRET` araması 0 eşleşme
+- [x] Webhook alıcısına olay ulaştı — webhook.site'ta `order.requested` ve `stock_alert.requested` kayıtları; gövde sözleşmeyle aynı, `X-Atolyekart-Event` ve `X-Atolyekart-Signature: sha256=<64 hex>` başlıkları var
+- [x] `productName` sunucudan — istekte gönderilen sahte `productName` yok sayıldı, webhook'a katalogdaki ad gitti
+- [x] Tarayıcıdan uçtan uca — canlı sayfadaki formda rızasız gönderim engellendi, rıza ile sipariş başarı mesajı verdi
+- [ ] Yanlış rollü token → `403` ve geçerli admin token → `200` — canlı `JWT_SECRET` gerektirir; anahtar yalnızca proje sahibinde olduğu için canlıda proje sahibi dener (README → "Admin uç noktası ve JWT"). Aynı kod yolu `npm test` içinde doğrulanıyor
+- [ ] İmza değerinin doğruluğu alıcıda hesaplanarak doğrulanmadı (webhook.site imza doğrulamaz); başlığın varlığı ve biçimi doğrulandı, üretim mantığı `npm test` içinde sınanıyor
 
 ## Bilinen sınırlar
 
