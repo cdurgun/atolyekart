@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Luna Atelier — El Yapımı Dekorasyon ve Yaşam Ürünleri</title>
   <meta name="description" content="Luna Atelier: el yapımı seramik, doğal mum ve aksesuar atölyesi.">
-  <!-- Webhook adresi. Boşsa mock adapter çalışır; "mock:fail" başarısız teslimatı dener. -->
-  <meta name="atolyekart:webhook-url" content="">
+  <!-- API adresi (ör. https://atolyekart-tawny.vercel.app). Boşsa mock adapter çalışır; "mock:fail" hatayı dener. -->
+  <meta name="atolyekart:api-url" content="">
   <link rel="icon" type="image/png" href="../public/favicon.png">
   <link rel="stylesheet" href="styles.css">
 </head>
@@ -89,7 +89,7 @@
       </div>
     </section>
 
-    <!-- forms.js validates, builds the webhook payload and hands it to the adapter -->
+    <!-- forms.js validates, builds the request body and hands it to the API adapter -->
     <section class="requests" id="siparis">
       <h2>Sipariş ve Bildirim</h2>
       <form class="request-form" novalidate data-request-form="order">
@@ -124,6 +124,11 @@
           <input type="email" autocomplete="email" id="order-email" name="email" value="">
           <p class="request-error" id="order-email-error" hidden></p>
         </div>
+        <div class="request-field request-consent">
+          <input type="checkbox" id="order-consent" name="consent">
+          <label for="order-consent">Kişisel verilerimin, talebimin karşılanması amacıyla <a href="gizlilik.html">Gizlilik Politikası</a>'nda açıklandığı şekilde işlenmesine açık rıza veriyorum.</label>
+          <p class="request-error" id="order-consent-error" hidden></p>
+        </div>
         <button type="submit">Sipariş Ver</button>
         <p class="request-status" role="status"></p>
       </form>
@@ -149,6 +154,11 @@
           <input type="email" autocomplete="email" id="stock-alert-email" name="email" value="">
           <p class="request-error" id="stock-alert-email-error" hidden></p>
         </div>
+        <div class="request-field request-consent">
+          <input type="checkbox" id="stock-alert-consent" name="consent">
+          <label for="stock-alert-consent">Kişisel verilerimin, talebimin karşılanması amacıyla <a href="gizlilik.html">Gizlilik Politikası</a>'nda açıklandığı şekilde işlenmesine açık rıza veriyorum.</label>
+          <p class="request-error" id="stock-alert-consent-error" hidden></p>
+        </div>
         <button type="submit">Stok Bildirimi İste</button>
         <p class="request-status" role="status"></p>
       </form>
@@ -157,6 +167,9 @@
 
   <footer class="site-footer">
     <p>&copy; 2026 Luna Atelier. Tüm ürünler el emeğiyle üretilir.</p>
+    <p>
+      <a href="gizlilik.html">Gizlilik Politikası</a>
+    </p>
   </footer>
 
   <!-- QR code: qrcode-generator 2.0.4 (MIT), pinned and integrity-checked -->

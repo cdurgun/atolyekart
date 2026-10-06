@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { sendEvent } from '../webhook/adapter.js'
-import { buildRequestEvent, productSlug, requestKinds } from '../webhook/payload.js'
+import { sendRequest } from '../webhook/adapter.js'
+import { buildRequestBody, productSlug, requestKinds } from '../webhook/payload.js'
 import { validateRequest } from '../webhook/validation.js'
 
 const labels = {
@@ -18,7 +18,14 @@ const inputs = {
   email: { type: 'email', autoComplete: 'email' },
 }
 
-const defaults = { quantity: '1' }
+// KVKK açık rızası: kutu işaretlenmeden talep gönderilmez; sunucu da aynı kontrolü yapar.
+const consentLabel = (
+  <>
+    Kişisel verilerimin, talebimin karşılanması amacıyla <a href="/gizlilik.html">Gizlilik Politikası</a>'nda açıklandığı şekilde işlenmesine açık rıza veriyorum.
+  </>
+)
+
+const defaults = { quantity: '1', consent: false }
 
 const successTexts = {
   order: 'Sipariş talebiniz alındı. Sizi telefonla arayacağız.',
@@ -28,7 +35,7 @@ const successTexts = {
 const failureText = 'Gönderilemedi. Lütfen yeniden deneyin.'
 
 export default function RequestForm({ kind, title, products }) {
-  const { fields, optional } = requestKinds[kind]
+  const { path, fields, optional } = requestKinds[kind]
   const empty = Object.fromEntries(fields.map((name) => [name, defaults[name] ?? '']))
   const [raw, setRaw] = useState(empty)
   const [errors, setErrors] = useState({})
@@ -36,14 +43,15 @@ export default function RequestForm({ kind, title, products }) {
   const [status, setStatus] = useState('')
 
   function field(name) {
+    const checkbox = name === 'consent'
     return {
       id: `${kind}-${name}`,
       name,
-      value: raw[name],
+      [checkbox ? 'checked' : 'value']: raw[name],
       'aria-invalid': errors[name] ? 'true' : undefined,
       'aria-describedby': errors[name] ? `${kind}-${name}-error` : undefined,
       onChange: (event) => {
-        setRaw({ ...raw, [name]: event.target.value })
+        setRaw({ ...raw, [name]: checkbox ? event.target.checked : event.target.value })
         setErrors({ ...errors, [name]: undefined })
         setStatus('')
       },
@@ -63,25 +71,28 @@ export default function RequestForm({ kind, title, products }) {
     }
 
     const product = products.find((item) => productSlug(item) === result.values.product)
-    const payload = buildRequestEvent(kind, result.values, product, 'react')
+    const body = buildRequestBody(kind, result.values, product, 'react')
 
     setSending(true)
-    const { ok } = await sendEvent(payload)
+    const response = await sendRequest(path, body)
     setSending(false)
-    if (ok) setRaw(empty)
-    setStatus(ok ? successTexts[kind] : failureText)
+    if (response.ok) setRaw(empty)
+    // Sunucu aynı kuralları yeniden uygular; reddederse alan hataları ve mesajı gösterilir.
+    else if (response.errors) setErrors(Object.fromEntries(fields.filter((name) => response.errors[name]).map((name) => [name, response.errors[name]])))
+    setStatus(response.ok ? successTexts[kind] : (response.message ?? failureText))
   }
 
   return (
     <form className="request-form" noValidate onSubmit={handleSubmit}>
       <h3>{title}</h3>
       {fields.map((name) => (
-        <div className="request-field" key={name}>
+        <div className={name === 'consent' ? 'request-field request-consent' : 'request-field'} key={name}>
+          {name === 'consent' && <input type="checkbox" {...field(name)} />}
           <label htmlFor={`${kind}-${name}`}>
-            {labels[name]}
+            {name === 'consent' ? consentLabel : labels[name]}
             {optional.includes(name) && ' (isteğe bağlı)'}
           </label>
-          {name === 'product' ? (
+          {name === 'consent' ? null : name === 'product' ? (
             <select {...field(name)}>
               <option value="">Ürün seçin</option>
               {products.map((product) => (

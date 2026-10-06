@@ -64,6 +64,8 @@
   --type-body: clamp(1rem, 0.95rem + 0.2vw, 1.0625rem);
   --type-label: 0.9375rem;
 
+  --type-page-title: clamp(1.75rem, 3vw, 2.25rem);
+
   /* Boşluk rolleri */
   --gutter: clamp(1.25rem, 5vw, 4rem);
   --edge: max(var(--gutter), calc((100% - 80rem) / 2));
@@ -416,6 +418,48 @@ ul {
   border-bottom: 2px solid var(--ink);
 }
 
+/* Açık rıza: solda keskin köşeli onay kutusu, sağda metin. İşaretliyken içi ink dolar; ikon çizilmez */
+.request-consent {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  column-gap: 0.75rem;
+  align-items: start;
+  margin-top: 1.5rem;
+}
+
+.request-consent input {
+  appearance: none;
+  width: 1.125rem;
+  height: 1.125rem;
+  margin: 0.2rem 0 0;
+  padding: 0;
+  border: 1px solid var(--ink-soft);
+  cursor: pointer;
+}
+
+.request-consent input:checked {
+  padding: 3px;
+  border-color: var(--ink);
+  background: var(--ink) content-box;
+}
+
+.request-consent input[aria-invalid='true'] {
+  padding: 0;
+  border: 2px solid var(--ink);
+}
+
+.request-consent .request-error {
+  grid-column: 2;
+}
+
+.request-consent a,
+.site-footer a,
+.policy a {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+}
+
 .request-form :focus-visible {
   outline: 2px solid var(--ink);
   outline-offset: 2px;
@@ -457,6 +501,81 @@ ul {
   background: var(--umber);
   color: var(--slip);
   font-size: var(--type-label);
+}
+
+.site-footer p + p {
+  margin-top: 0.25rem;
+}
+
+.site-footer :focus-visible,
+.page-header :focus-visible {
+  outline: 2px solid var(--slip);
+  outline-offset: 2px;
+}
+
+/* Gizlilik Politikası sayfası (gizlilik.html): fotoğrafsız umber başlık bandı ve tek okuma sütunu */
+
+.page-header {
+  padding: clamp(1.25rem, 2.5vw, 1.75rem) var(--edge);
+  background: var(--umber);
+  color: var(--slip);
+}
+
+.page-header a {
+  color: inherit;
+  font-family: var(--serif);
+  font-size: var(--type-lead);
+  text-decoration: none;
+}
+
+.policy {
+  padding: var(--section) var(--edge);
+}
+
+.policy > * {
+  max-width: 40rem;
+}
+
+.policy h1 {
+  font-size: var(--type-page-title);
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+}
+
+/* Taslak notu: üstte ve altta çizgi, künye tonunda */
+.policy > p:first-of-type {
+  margin-top: var(--heading-gap);
+  padding-block: 0.75rem;
+  border-block: 1px solid var(--rule);
+  color: var(--ink-soft);
+  font-size: var(--type-label);
+}
+
+.policy h2 {
+  margin-top: var(--section);
+  margin-bottom: 0.5rem;
+  font-size: var(--type-title);
+  line-height: 1.25;
+}
+
+.policy p + p,
+.policy ul,
+.policy ul + p {
+  margin-top: 0.5rem;
+}
+
+.policy ul {
+  padding-left: 1.25rem;
+  list-style-type: '– ';
+}
+
+.policy li {
+  padding: 0.15rem 0;
+}
+
+.policy :focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
 }
 
 @media (min-width: 600px) {

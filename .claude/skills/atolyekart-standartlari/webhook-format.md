@@ -1,8 +1,8 @@
 # AtölyeKart Webhook Formatı
 
-AtölyeKart'tan dışarı giden form bildirimlerinin sözleşmesi. Gövde, ödevde tanımlanan sözleşmeyle birebir aynıdır: yalnızca aşağıdaki alanları taşır, başka alan eklenmez. Gönderen ya da alan her kod bu şekle uyar.
+AtölyeKart sunucusundan (`/api`) dışarı giden form bildirimlerinin sözleşmesi. Gövde yalnızca aşağıdaki alanları taşır. Gönderen ya da alan her kod bu şekle uyar.
 
-Gerçek adres bağlanana kadar mock adapter çalışır; adres verilince aynı gövde HTTP ile gönderilir.
+Webhook'u **tarayıcı değil sunucu** gönderir: form `/api/order` ya da `/api/stock-request` adresine istek atar; sunucu doğrular, olayı üretir, imzalar ve `WEBHOOK_URL` adresine iletir. Adres ve gizli anahtar yalnızca sunucu ortam değişkenlerindedir.
 
 ## İstek
 
@@ -13,17 +13,18 @@ Gerçek adres bağlanana kadar mock adapter çalışır; adres verilince aynı g
 | --- | --- |
 | `Content-Type` | `application/json; charset=utf-8` |
 | `X-Atolyekart-Event` | olay adı, gövdedeki `event` ile aynı |
+| `X-Atolyekart-Signature` | `sha256=<hex>`: ham gövdenin `WEBHOOK_SECRET` ile HMAC-SHA256 özeti |
 
-- **Başarı:** alıcı 5 saniye içinde `2xx` döner. Diğer her yanıt başarısız teslimat sayılır; ziyaretçi formu yeniden gönderebilir.
-- **Tarayıcıdan gelen istekler imzasızdır.** React ve CDN sürümleri isteği doğrudan tarayıcıdan gönderir; gizli anahtar istemci kodunda saklanamayacağı için imza başlığı gönderilmez. İleride araya bir sunucu katmanı girerse imza orada üretilir (server-side signing; `X-Atolyekart-Signature: sha256=<hex>`, ham gövdenin HMAC-SHA256 özeti).
-- **CORS:** özel başlık ve JSON içerik türü ön kontrol (`OPTIONS`) isteği doğurur; alıcı CORS başlıklarını döndürmelidir.
+- **Başarı:** alıcı 5 saniye içinde `2xx` döner. Diğer her yanıt başarısız teslimat sayılır; API ziyaretçiye `502` döner ve ziyaretçi formu yeniden gönderebilir.
+- **İmza doğrulama (alıcıda):** ham gövdenin HMAC-SHA256 özeti aynı gizli anahtarla hesaplanır ve başlıktaki değerle sabit zamanlı karşılaştırılır. Canlıda `WEBHOOK_URL` ya da `WEBHOOK_SECRET` eksikse olay gönderilmez. Yerelde adres boşsa olay sunucu günlüğüne `[webhook:mock]` ile yazılır.
+- **CORS gerekmez:** istek sunucudan sunucuya gider.
 
 ## Olaylar
 
 | `event` | Ne zaman | Gövde alanları (bu sırayla) |
 | --- | --- | --- |
-| `order.requested` | "Sipariş Ver" formu geçerli değerlerle gönderildiğinde | `event`, `name`, `productId`, `productName`, `phone`, `email`, `quantity`, `source` |
-| `stock_alert.requested` | "Stok Bildirimi İste" formu geçerli değerlerle gönderildiğinde | `event`, `name`, `productId`, `productName`, `email`, `source` |
+| `order.requested` | "Sipariş Ver" formu geçerli değerlerle gönderildiğinde | `event`, `name`, `productId`, `productName`, `phone`, `email`, `quantity`, `consent`, `source` |
+| `stock_alert.requested` | "Stok Bildirimi İste" formu geçerli değerlerle gönderildiğinde | `event`, `name`, `productId`, `productName`, `email`, `consent`, `source` |
 
 Gövde düzdür: sarmalayıcı nesne (`data`, `customer`, `product`) ve `id`, `version`, `occurred_at`, `page_url`, kategori, fiyat ya da görsel adresi gibi ek alanlar yoktur.
 
@@ -32,13 +33,14 @@ Gövde düzdür: sarmalayıcı nesne (`data`, `customer`, `product`) ve `id`, `v
 | Alan | Tip | Kural |
 | --- | --- | --- |
 | `event` | metin | `order.requested` ya da `stock_alert.requested` |
-| `name` | metin | Baştaki ve sondaki boşluklar atılmış, ardışık boşluklar teke indirilmiş ad; en az 2 karakter |
-| `productId` | metin | Ürünün slug'ı: görsel dosya adının uzantısız hali (ör. `amber-soya-mum`). Ürün modelinde ayrı bir `id` alanı yoktur |
-| `productName` | metin | Ürün adı, veriden olduğu gibi (Türkçe) |
+| `name` | metin | Baştaki ve sondaki boşluklar atılmış, ardışık boşluklar teke indirilmiş ad; 2–80 karakter |
+| `productId` | metin | Ürünün slug'ı (ör. `amber-soya-mum`). Sunucu kataloğunda (`server/lib/catalog.js`) bulunmalıdır |
+| `productName` | metin | Ürün adı. İstemciden alınmaz; sunucu kataloğundan yazılır |
 | `phone` | metin | Yalnızca siparişte. Türkiye cep numarası, E.164 biçiminde (`+905XXXXXXXXX`); ziyaretçi `0532 123 45 67` yazsa da bu biçimde girer |
-| `email` | metin ya da `null` | Boşlukları atılmış, küçük harfe çevrilmiş adres. Stok bildiriminde zorunludur. Siparişte isteğe bağlıdır; boş bırakılırsa alan atlanmaz, `null` gönderilir |
+| `email` | metin ya da `null` | Boşlukları atılmış, küçük harfe çevrilmiş, yalnızca ASCII adres. Stok bildiriminde zorunludur. Siparişte isteğe bağlıdır; boş bırakılırsa alan atlanmaz, `null` gönderilir |
 | `quantity` | sayı | Yalnızca siparişte. Tam sayı, 1–99; varsayılan 1. Metin değil sayı olarak gönderilir |
-| `source` | metin | İsteği üreten sürüm: `"react"` ya da `"cdn"`. İki sürümün gövdesi arasındaki tek fark budur |
+| `consent` | boolean | Her zaman `true`: ziyaretçi açık rıza kutusunu işaretlemeden olay üretilmez |
+| `source` | metin | İsteği üreten istemci: `"react"`, `"cdn"` ya da `"mobile"` |
 
 Talep başına tek ürün vardır: bir `productId`, bir `productName`, siparişte bir `quantity`.
 
@@ -50,6 +52,7 @@ Sipariş:
 POST /webhooks/atolyekart HTTP/1.1
 Content-Type: application/json; charset=utf-8
 X-Atolyekart-Event: order.requested
+X-Atolyekart-Signature: sha256=<hex>
 
 {
   "event": "order.requested",
@@ -59,6 +62,7 @@ X-Atolyekart-Event: order.requested
   "phone": "+905321234567",
   "email": "ayse@ornek.com",
   "quantity": 3,
+  "consent": true,
   "source": "react"
 }
 ```
@@ -74,14 +78,26 @@ Stok bildirimi:
   "productId": "terra-minimal-kolye",
   "productName": "Terra Minimal Kolye",
   "email": "ayse@ornek.com",
+  "consent": true,
   "source": "cdn"
 }
 ```
 
+## İstemci → API gövdesi
+
+Formların `/api`'ye gönderdiği gövde olayın bir alt kümesidir; `event` ve `productName` taşımaz (istemci gönderse de yok sayılır):
+
+| Uç nokta | Gövde alanları | Stok kuralı |
+| --- | --- | --- |
+| `POST /api/order` | `name`, `productId`, `phone`, `email`, `quantity`, `consent`, `source` | Ürün stokta olmalı; değilse `409 out_of_stock` |
+| `POST /api/stock-request` | `name`, `productId`, `email`, `consent`, `source` | Ürün stokta olmamalı; stoktaysa `409 in_stock` |
+
+Yanıt: başarıda `{ "ok": true }`; hatada `{ "ok": false, "error": "<kod>", "message": "<Türkçe metin>", "errors": { "<alan>": "<metin>" } }` (`errors` yalnızca `400 validation` yanıtında). Yanıtta teknik ayrıntı ya da stack trace bulunmaz.
+
 ## Sözleşmeyi değiştirme
 
-Alan adları, sırası ve kümesi ödev sözleşmesinden gelir; alan eklenmez, silinmez, yeniden adlandırılmaz. Sözleşme yalnızca payload katmanında (`src/webhook/payload.js` içindeki `requestKinds` ve `buildRequestEvent`; CDN'de `cdn/forms.js` içindeki karşılığı) tanımlıdır. Adapter gövdeyi olduğu gibi gönderir, alan üretmez.
+Olay gövdesi yalnızca `server/lib/webhook.js` içinde (`eventBody`, `buildEvent`), istemci gövdesi yalnızca `src/webhook/payload.js` içinde (`requestKinds`, `buildRequestBody`; CDN'de `cdn/forms.js` içindeki karşılığı) tanımlıdır. Adapter gövdeyi olduğu gibi gönderir, alan üretmez.
 
 ## Gizlilik
 
-Kişisel veri yalnızca ziyaretçinin kendi gönderdiği form olaylarında taşınır; görüntüleme olaylarında taşınmaz. Gövde yalnızca ziyaretçinin forma yazdığı alanları (ad, telefon, e-posta) ve seçtiği ürünü içerir. IP adresi ya da cihaz kimliği gönderilmez.
+Kişisel veri yalnızca ziyaretçinin kendi gönderdiği ve açık rıza verdiği form olaylarında taşınır. Gövde yalnızca ziyaretçinin forma yazdığı alanları (ad, telefon, e-posta) ve seçtiği ürünü içerir. IP adresi ya da cihaz kimliği webhook'a gönderilmez; IP yalnızca rate limit için sunucu belleğinde yaklaşık bir dakika tutulur.

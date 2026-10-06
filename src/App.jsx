@@ -3,30 +3,8 @@ import CatalogQR from './components/CatalogQR.jsx'
 import CategoryFilter from './components/CategoryFilter.jsx'
 import ProductList from './components/ProductList.jsx'
 import RequestForm from './components/RequestForm.jsx'
+import { products } from './products.js'
 
-const products = [
-  {
-    name: 'Luna Seramik Kupa',
-    category: 'Seramik',
-    price: '420 TL',
-    description: 'El yapımı, minimalist tasarımlı seramik kupa.',
-    image: '/images/luna-seramik-kupa.jpg',
-  },
-  {
-    name: 'Amber Soya Mum',
-    category: 'Doğal Mumlar',
-    price: '350 TL',
-    description: 'Doğal soya mumundan, amber kokulu el yapımı mum.',
-    image: '/images/amber-soya-mum.jpg',
-  },
-  {
-    name: 'Terra Minimal Kolye',
-    category: 'El Yapımı Aksesuarlar',
-    price: '290 TL',
-    description: 'Toprak tonlarında, sade tasarımlı el yapımı kolye.',
-    image: '/images/terra-minimal-kolye.jpg',
-  },
-]
 
 const categories = [...new Set(products.map((product) => product.category))]
 
@@ -79,6 +57,9 @@ export default function App() {
 
       <footer className="site-footer">
         <p>&copy; 2026 Luna Atelier. Tüm ürünler el emeğiyle üretilir.</p>
+        <p>
+          <a href="/gizlilik.html">Gizlilik Politikası</a>
+        </p>
       </footer>
     </>
   )

@@ -137,6 +137,7 @@ Malzeme renkleri: nötr bir zemin, tek koyu alan, tek vurgu.
 1600px masaüstü / 390px mobil değerleriyle:
 
 - **Display** (500, 88 / 40px, 0.95): Yalnızca header'daki "Luna Atelier".
+- **Page Title** (500, 36 / 28px, 1.1): Yalnızca gizlilik sayfasının başlığı (`--type-page-title`).
 - **Headline** (500, 26 / 22px, 1.15): Bölüm başlıkları (`h2`).
 - **Lead** (400, 22 / 18px, 1.4): Hakkında giriş paragrafı (en çok 30em) ve kategori adları.
 - **Title** (500, 19 / 17px, 1.25): Ürün adı ve fiyat.
@@ -168,7 +169,7 @@ Malzeme renkleri: nötr bir zemin, tek koyu alan, tek vurgu.
   - 600px altı: tek sütun; ürünler yatay çizgiyle ayrılır.
 - Ürün kartında ad ve fiyat aynı satırda (ad solda, fiyat sağda), altında kategori, sonra açıklama. Görsel sıra CSS ile kurulur; DOM sırası değişmez.
 - **Sipariş ve Bildirim:** 600px ve üstünde iki form yan yana, aralarında 1px dikey çizgi (iki sütunlu ürün ızgarasının çizgisiyle aynı yerde); altında alt alta, aralarında `section` boşluğu. Bölümün üst boşluğu yoktur; Ürünler'in alt boşluğu aradaki `section` ritmini verir.
-- Ölçülen sayfa yüksekliği: 1600px'te 2334px, 800px'te 2425px, 390px'te 3535px (formlar boşken).
+- Ölçülen sayfa yüksekliği: 1600px'te 2523px, 800px'te 2606px, 390px'te 3857px (formlar boşken; kategori filtresi, açık rıza satırı ve footer bağlantısı dahil).
 
 ## Elevation & Depth
 
@@ -238,7 +239,7 @@ Yuva `aspect-ratio: 4 / 3` ve `object-fit: cover` ile çalışır. Farklı oranl
 - **Kodlanan adres:** sayfanın kendi adresi + `#urunler`.
 
 ### Request Form
-"Sipariş ve Bildirim" bölümündeki iki form ("Sipariş Ver", "Stok Bildirimi İste") aynı bileşendir; yalnızca alan listesi değişir. Sipariş: ad, ürün, adet, telefon, e-posta (isteğe bağlı). Stok bildirimi: ad, ürün, e-posta. Yan yana durduklarında sipariş formu daha uzundur; aradaki dikey çizgi uzun formun boyunca iner. Her formun üstünde 1px `rule` çizgisi, altında serif `title` başlık vardır.
+"Sipariş ve Bildirim" bölümündeki iki form ("Sipariş Ver", "Stok Bildirimi İste") aynı bileşendir; yalnızca alan listesi değişir. Sipariş: ad, ürün, adet, telefon, e-posta (isteğe bağlı), açık rıza. Stok bildirimi: ad, ürün, e-posta, açık rıza. Yan yana durduklarında sipariş formu daha uzundur; aradaki dikey çizgi uzun formun boyunca iner. Her formun üstünde 1px `rule` çizgisi, altında serif `title` başlık vardır.
 
 - **Alan:** üstte `label` boyutunda `ink-soft` etiket, altında zeminsiz ve kutusuz, yalnızca 1px `ink-soft` alt çizgili giriş. Çizgi `rule` değildir: form denetimi sınırı en az 3:1 kontrast ister (`ink-soft`/`stone` 5,85). Alan genişliği en çok 28rem; yükseklik ~44px.
 - **Ürün seçimi:** tarayıcının kendi `select` öğesi ve oku; özel ok ya da ikon çizilmez.
@@ -246,9 +247,13 @@ Yuva `aspect-ratio: 4 / 3` ve `object-fit: cover` ile çalışır. Farklı oranl
 - **İsteğe bağlı alan:** etiketin sonunda aynı stilde "(isteğe bağlı)" yazar; zorunlu alanlar işaretlenmez.
 - **Hata:** alt çizgi 2px `ink` olur, altında `label` boyutunda 500 ağırlıkta `ink` metin çıkar. Kırmızı ya da başka bir yeni renk yoktur; durum renkle değil çizgi kalınlığı ve metinle anlatılır. İlk hatalı alana odaklanılır.
 - **Buton:** `ink` zemin, `stone` metin, keskin köşe, `label` boyutu 500; yükseklik ~46px. Gönderilirken devre dışıdır ve zemini `ink-soft` olur. Sayfadaki tek dolu düğmedir; umber kullanılmaz (Tek Alan Kuralı).
-- **Durum metni:** butonun altında `label` boyutunda tek satır (başarı ya da "Gönderilemedi"); boşken yer kaplamaz.
+- **Açık rıza:** butonun üstünde, solda 18px keskin köşeli onay kutusu (1px `ink-soft` çerçeve), sağda `label` boyutunda `ink-soft` metin ve altı çizili "Gizlilik Politikası" bağlantısı. İşaretliyken kutunun içi 3px boşlukla `ink` dolar; onay imi ya da ikon çizilmez. Hatada çerçeve 2px `ink` olur ve metin sütununda hata satırı çıkar.
+- **Durum metni:** butonun altında `label` boyutunda tek satır (başarı, "Gönderilemedi" ya da sunucunun mesajı, ör. "Bu ürün şu anda stokta yok. Stok bildirimi isteyebilirsiniz."); boşken yer kaplamaz.
 - **Odak:** 2px `ink` çerçeve, 2px aralıkla.
 - Yer tutucu metin (placeholder), ikon, animasyon ve kutu yoktur.
+
+### Policy Page
+`gizlilik.html` (ve `cdn/gizlilik.html`): fotoğrafsız, alçak bir umber başlık bandında ana sayfaya dönen serif "Luna Atelier" bağlantısı; altında en çok 40rem genişliğinde tek okuma sütunu. Sayfa başlığı `page-title` (`clamp(1.75rem, 3vw, 2.25rem)`), hemen altında üstü ve altı 1px `rule` çizgili, `label` boyutunda `ink-soft` taslak notu. Bölüm başlıkları serif `title`; listeler "– " imli. Bağlantılar metin rengindedir ve altı çizilidir; yeni renk yoktur. Footer ana sayfadakiyle aynıdır, ikinci satırında "Ana sayfa" bağlantısı vardır (ana sayfada "Gizlilik Politikası").
 
 ### Share Image
 Site bağlantısı paylaşıldığında görünen önizleme görseli: `public/images/paylasim-gorseli.png` (1200×630). `umber` zemin, sol altta `slip` renginde "Luna Atelier" (Brygada 1918, 400, 132px, harf aralığı −0,02em) ve altında `amber` slogan (Hanken Grotesk, 34px); kenar boşluğu 96px. Fotoğraf, çizim ya da süs yoktur. Sayfada görünmez; yalnızca `index.html` içindeki `og:` etiketleriyle bağlanır. Metin ya da palet değişirse görsel yeniden üretilir.

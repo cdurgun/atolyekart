@@ -5,6 +5,7 @@ function validateName(raw) {
   const value = raw.trim().replace(/\s+/g, ' ')
   if (!value) return { error: 'Adınızı yazın.' }
   if (value.length < 2) return { error: 'Adınız en az 2 karakter olmalı.' }
+  if (value.length > 80) return { error: 'Adınız en fazla 80 karakter olabilir.' }
   return { value }
 }
 
@@ -42,12 +43,19 @@ function validateEmail(raw) {
   return { value }
 }
 
+// KVKK açık rızası: onay kutusu işaretlenmeden talep gönderilmez. Değer metin değil boolean'dır.
+function validateConsent(raw) {
+  if (raw !== true) return { error: 'Devam etmek için kişisel verilerinizin işlenmesine onay verin.' }
+  return { value: true }
+}
+
 const validators = {
   name: validateName,
   product: validateProduct,
   quantity: validateQuantity,
   phone: validatePhone,
   email: validateEmail,
+  consent: validateConsent,
 }
 
 // fields: formdaki sırayla alan adları. optional: boş bırakılabilen alanlar; boşsa değeri null olur.

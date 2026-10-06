@@ -9,7 +9,7 @@ AtölyeKart'ta kod, stil, görsel veya webhook üzerinde çalışırken bu stand
 
 - **Renk, tipografi, boşluk değerleri ve bileşen görünümü:** `DESIGN.md`. Stil değişikliğinden önce oku, sonra güncelle.
 - **Kapsam, aşama ve proje kuralları:** `CLAUDE.md`.
-- **Webhook payload formatı:** bu klasördeki [`webhook-format.md`](webhook-format.md). Webhook üretirken ya da tüketirken oku.
+- **Webhook ve API gövde formatı:** bu klasördeki [`webhook-format.md`](webhook-format.md). Webhook üretirken ya da tüketirken oku.
 
 ## Bölüm ve bileşen yapısı
 
@@ -83,36 +83,36 @@ Hero ekran genişliğine bağlıdır (`vw` + `clamp`), ekran yüksekliğine bağ
    ```sh
    { sed -n '1,8p' cdn/styles.css; sed -e "s#url('/fonts/#url('fonts/#g" -e "s#url('/images/#url('../public/images/#g" src/styles.css; } > cdn/styles.tmp && mv cdn/styles.tmp cdn/styles.css
    ```
-3. **Davranış:** React bileşenindeki mantığın karşılığı sade JavaScript olarak yazılır: QR kod `cdn/script.js`, formlar ve webhook `cdn/forms.js` içinde. Harici kütüphane yalnızca jsDelivr'den, sürümü sabitlenmiş ve `integrity` (SRI) hash'li `<script>` ile yüklenir.
+3. **Davranış:** React bileşenindeki mantığın karşılığı sade JavaScript olarak yazılır: QR kod `cdn/script.js`, formlar ve API adapter'ı `cdn/forms.js`, kategori filtresi `cdn/filter.js` içinde. Harici kütüphane yalnızca jsDelivr'den, sürümü sabitlenmiş ve `integrity` (SRI) hash'li `<script>` ile yüklenir.
 4. **Karşılaştırma:** iki sürümü üç genişlikte ölç; bölüm yükseklikleri ve sayfa yüksekliği eşit olmalı.
 
 `cdn/` hiçbir zaman `src/`, Vite ya da npm'e bağlanmaz.
 
-## Formlar ve webhook
+## Formlar, API ve webhook
 
-Akış dört katmandır ve her katman yalnızca bir sonrakini bilir: **form → validation → payload → adapter**.
+Akış: **form → validation → istek gövdesi → API adapter → `/api` (sunucu) → webhook**. Her katman yalnızca bir sonrakini bilir.
 
 | Katman | React | CDN (`cdn/forms.js` içinde aynı adlı bölüm) |
 | --- | --- | --- |
 | Form | `src/components/RequestForm.jsx` | Forms |
 | Validation | `src/webhook/validation.js` | Validation |
-| Payload | `src/webhook/payload.js` | Payload |
-| Adapter | `src/webhook/adapter.js` | Webhook adapter |
+| İstek gövdesi | `src/webhook/payload.js` | Request body |
+| API adapter | `src/webhook/adapter.js` | API adapter |
 
-- İki form tek `RequestForm` bileşenidir; fark `kind` (`order` / `stock-alert`) ve `title` prop'larından gelir. Her türün form alanları (`fields`), boş bırakılabilen alanları (`optional`) ve gövde alanları (`body`) `requestKinds` tablosundadır; yeni bir form türü oraya eklenir, bileşen kopyalanmaz.
-- Gövde ödev sözleşmesiyle birebir aynıdır (`webhook-format.md`): düz, yalnızca listelenen alanlar. Sözleşme yalnızca payload katmanında durur; adapter alan üretmez, gövdeyi olduğu gibi gönderir.
-- Talep başına tek ürün: `productId` ürünün slug'ı, `productName` ürün adıdır. `quantity` sayı olarak, boş bırakılan isteğe bağlı alan `null` olarak gönderilir.
-- UI yalnızca `sendEvent(payload)` çağırır; `fetch`, başlık ya da adres bileşene yazılmaz.
-- Webhook adresi koda yazılmaz: React'te `VITE_WEBHOOK_URL`, CDN'de `<meta name="atolyekart:webhook-url">`. Boşsa mock adapter çalışır (payload konsola `[webhook:mock]` ile yazılır), `mock:fail` başarısız teslimatı dener, gerçek adres HTTP adapter'ı açar.
-- Gerçek adres depoya girmez; `.env.local` içinde tutulur.
-- Hata durumu ek sınıfla değil `aria-invalid="true"` ile işaretlenir; hata metni `ink` rengindedir, yeni renk eklenmez.
-- `src/webhook/` içindeki bir değişiklik `cdn/forms.js` içindeki karşılığına aynen taşınır; iki sürüm aynı girdiyle aynı gövdeyi üretmelidir; tek fark `source` değeridir (`react` / `cdn`).
+- İki form tek `RequestForm` bileşenidir; fark `kind` (`order` / `stock-alert`) ve `title` prop'larından gelir. Her türün uç noktası (`path`), form alanları (`fields`), boş bırakılabilen alanları (`optional`) ve gövde alanları (`body`) `requestKinds` tablosundadır; yeni bir form türü oraya eklenir, bileşen kopyalanmaz.
+- UI yalnızca `sendRequest(path, body)` çağırır; `fetch`, başlık ya da adres bileşene yazılmaz.
+- **Sır istemciye girmez.** Webhook adresi, webhook gizli anahtarı ve JWT anahtarı yalnızca sunucu ortam değişkenleridir (`WEBHOOK_URL`, `WEBHOOK_SECRET`, `JWT_SECRET`); hiçbirine `VITE_` öneki verilmez, hiçbiri koda ya da depoya yazılmaz. İstemcinin bildiği tek adres `VITE_API_URL` (CDN'de `<meta name="atolyekart:api-url">`) ve gizli değildir.
+- **Sunucu istemciye güvenmez.** `server/lib/validate.js` aynı kuralları (`src/webhook/validation.js`) yeniden uygular ve türleri denetler; `productName` ve stok durumu `server/lib/catalog.js`'ten gelir; açık rıza (`consent: true`) sunucuda da zorunludur.
+- Doğrulama kuralı değişirse tek yerde değişir: `src/webhook/validation.js` (sunucu ve mobil aynı dosyayı içe aktarır) ve `cdn/forms.js` içindeki karşılığı.
+- Ziyaretçi formları JWT istemez. JWT yalnızca `/api/admin/orders` içindir.
+- Her açık rıza kutusu `request-field request-consent` sınıflı satırdır; hata durumu ek sınıfla değil `aria-invalid="true"` ile işaretlenir; hata metni `ink` rengindedir, yeni renk eklenmez.
+- Sunucu kodu değişince `npm test` çalıştırılır (`server/api.test.js`); yeni kural için önce test yazılır.
 
 ## Bitti sayılması için
 
 Bir değişiklik şu koşulların **hepsi** sağlandığında biter:
 
-- `npm run build` hatasız.
+- `npm run build` ve `npm test` hatasız.
 - 1600 / 800 / 390px'te yatay taşma yok; tüm görseller yükleniyor.
 - React ve CDN sürümlerinde hero, Hakkında ve toplam sayfa yüksekliği eşit.
 - Yeni ya da değişen her metin rengi için kontrast ölçüldü (≥4,5:1).
