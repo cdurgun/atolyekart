@@ -227,6 +227,9 @@ Yuva `aspect-ratio: 4 / 3` ve `object-fit: cover` ile çalışır. Farklı oranl
 - **Dosya:** JPEG, sRGB, kalite ~80; dosya başına ideal olarak 300 KB'ın altında.
 - **Dikey çekim:** seri dikey çekilirse yalnızca `--product-image-ratio` değeri `4 / 5` yapılır; üç fotoğraf aynı oranda olmalıdır.
 
+### Category Filter
+"Ürünler" başlığı ile ürün ızgarası arasında tek satır düz metin düğme: "Tümü" ve üç kategori. Düğmeler `label` boyutunda ve `ink-soft` renkte; zemin, çerçeve ve köşe yuvarlama yok. Seçili düğme `ink` renginde ve 1px `ink` alt çizgilidir; durum ek sınıfla değil `aria-pressed` ile işaretlenir. Dar ekranda satır kırılır. Izgaranın altında `heading-gap` boşluk vardır. Filtre uygulanınca ızgaranın yapısal kuralları aynen çalışır (ör. tablette tek kalan ürün iki sütuna yayılır).
+
 ### Catalog QR
 Ürünler bölümünün sonunda, üstünde tam genişlikte 1px `rule` çizgisi olan sakin bir satır: solda 96px (6rem) QR kod, yanında `label` boyutunda ve `ink-soft` renkte tek satır açıklama. Çizgi ile ürünler arası `section`, çizgi ile QR arası `heading-gap`.
 

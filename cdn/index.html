@@ -45,6 +45,12 @@
 
     <section class="catalog" id="urunler">
       <h2>Ürünler</h2>
+      <div class="category-filter" role="group" aria-label="Kategoriye göre filtrele">
+        <button type="button" aria-pressed="true" data-category="">Tümü</button>
+        <button type="button" aria-pressed="false" data-category="Seramik">Seramik</button>
+        <button type="button" aria-pressed="false" data-category="Doğal Mumlar">Doğal Mumlar</button>
+        <button type="button" aria-pressed="false" data-category="El Yapımı Aksesuarlar">El Yapımı Aksesuarlar</button>
+      </div>
       <ul class="product-list">
         <li>
           <article class="product-card">
@@ -157,5 +163,6 @@
   <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@2.0.4/dist/qrcode.js" integrity="sha384-e9EFD6BGC90bkW9aDV5xbbBfzwN7G8YImHao2lfLVKV/hPB0E0go+H3I64h7oHtA" crossorigin="anonymous"></script>
   <script src="script.js"></script>
   <script src="forms.js"></script>
+  <script src="filter.js"></script>
 </body>
 </html>

@@ -56,15 +56,15 @@ Fotoğraflar 4:3, sRGB JPEG ve aynı çekim serisinin parçasıdır (taş yüzey
 - Vite + React (JSX); bağımlılıklar yalnızca `react`, `react-dom`, `qrcode-generator`, `vite`, `@vitejs/plugin-react`
 - `index.html`: Vite giriş dosyası (`#root` ve `src/main.jsx`)
 - `src/App.jsx`: header, Atölye Hakkında, Kategoriler, Ürünler, Sipariş ve Bildirim, footer ve sabit `products` dizisi
-- `src/components/`: `ProductList`, `ProductCard`, `ProductImage`, `CatalogQR`, `RequestForm`
+- `src/components/`: `ProductList`, `ProductCard`, `ProductImage`, `CatalogQR`, `CategoryFilter`, `RequestForm`
 - `src/webhook/`: `validation.js`, `payload.js`, `adapter.js` (UI'dan bağımsız; aşağıya bakın)
 - `src/styles.css`: tek stil dosyası; `src/main.jsx` içinden import edilir. Tasarım sistemi `DESIGN.md` içinde belgelidir
 - `public/images/`: üç ürün fotoğrafı ve hero fotoğrafları (`hero-atolye.jpg` masaüstü/tablet, `hero-atolye-mobil.jpg` mobil kırpım). Hero fotoğrafı JSX'te değil, `.site-header` için CSS arka planı olarak kullanılır
 - `public/images/paylasim-gorseli.png`: bağlantı önizleme görseli (1200×630, yazı markası + slogan). `index.html` içindeki `og:` etiketleri tam adresle bunu gösterir (`https://atolyekart-tawny.vercel.app/…`); alan adı değişirse etiketler güncellenir. Statik `cdn/` sürümü yayınlanmadığı için orada `og:` etiketi yoktur
 - `public/favicon.png`: sekme simgesi (umber zeminde "L" harfi). Kural 9'daki ikon yasağının bilinçli tek istisnasıdır; sayfa içine ikon eklenmez
 - `public/fonts/`: Brygada 1918 ve Hanken Grotesk (woff2, yerel; CDN yok) ve OFL lisans metinleri
-- `cdn/`: React'siz statik sürüm; `script.js` QR kod, `forms.js` formlar için (aşağıya bakın)
-- State yalnızca `RequestForm` içindeki form state'idir. Veri çekme ve routing yok; stok bilgisi gösterilmez (stok bildirimi her ürün için istenebilir)
+- `cdn/`: React'siz statik sürüm; `script.js` QR kod, `forms.js` formlar, `filter.js` kategori filtresi için (aşağıya bakın)
+- State yalnızca `RequestForm` içindeki form state'i ve `App` içindeki seçili kategoridir. Veri çekme ve routing yok; stok bilgisi gösterilmez (stok bildirimi her ürün için istenebilir)
 
 Bileşenler Stage 1.1 işaretlemesini birebir üretir:
 
@@ -74,6 +74,7 @@ Bileşenler Stage 1.1 işaretlemesini birebir üretir:
 | `ProductCard` | `article.product-card` | Tek ürünün görselini, adını, kategorisini, fiyatını ve açıklamasını gösterir |
 | `ProductImage` | `img.product-image` (görsel yoksa boş `div.product-image`) | `src` ve `alt` alır; `src` varsa görseli, yoksa ekran okuyucudan gizli boş yuvayı render eder |
 | `CatalogQR` | `div.catalog-qr` (SVG QR kod + açıklama) | Katalog adresini QR kod olarak çizer |
+| `CategoryFilter` | `div.category-filter` (`role="group"`, `button[aria-pressed]`) | `categories`, `selected`, `onSelect` alır; "Tümü" ve kategori düğmelerini çizer. Filtreleme `App` içinde yapılır |
 | `RequestForm` | `form.request-form` | `kind` (`order` / `stock-alert`), `title` ve `products` alır; doğrular, payload'u üretir, adapter'a verir |
 
 ### Katalog QR kodu
@@ -108,6 +109,7 @@ Akış: **form → validation → payload → adapter**. Bileşen yalnızca `sen
 
 - `cdn/index.html`: React'in ürettiği HTML'in elle yazılmış kopyası
 - `cdn/forms.js`: `src/webhook/` ve `RequestForm`'un sade JavaScript karşılığı. Ürün verisini sayfadaki kartlardan okur; QR kütüphanesine bağlı değildir
+- `cdn/filter.js`: `CategoryFilter` ve `App` içindeki filtrelemenin sade JavaScript karşılığı. Eşleşmeyen kartları gizlemez, listeden çıkarır (yapısal seçiciler React sürümündeki gibi çalışsın diye); `forms.js`'ten sonra yüklenir
 - `cdn/script.js`: `CatalogQR` bileşeninin sade JavaScript karşılığı. `qrcode-generator` 2.0.4 jsDelivr'den, sürümü sabit ve `integrity` (SRI) hash'li yüklenir; kütüphane yüklenemezse QR satırı gizli kalır, sayfanın geri kalanı etkilenmez
 - `cdn/styles.css`: `src/styles.css`'ten üretilir; yalnızca varlık yolları farklı (`fonts/` ve `../public/images/`). Elle düzenlenmez; üretme komutu Skill'de yazılı
 - `cdn/fonts/`: font kopyaları. `file://` ile açılan sayfalarda Firefox/Safari üst klasörden font yüklemediği için gerekli
@@ -170,6 +172,6 @@ Design decisions should serve the Luna Atelier brand and its products.
 7. Açıkça istenmeyen hiçbir şeyi değiştirme. Kapsamlı işlerde önce kısa bir plan sun ve onay bekle.
 8. Hero bitmiş kabul edildi (1600px'te 500px, `hero-atolye.jpg`, `75% 42%`). Açıkça istenmedikçe yüksekliğine, görseline, konumuna, tipografisine ve renklerine dokunma.
 9. Overlay, gradient, gölge, yuvarlak köşeli kart, ikon, animasyon veya süs öğesi ekleme.
-10. React sürümünde içerik, stil veya davranış değişirse `cdn/index.html`, `cdn/styles.css`, `cdn/script.js` ve `cdn/forms.js` aynı şekilde güncellenir; iki sürüm görsel olarak aynı kalmalı.
+10. React sürümünde içerik, stil veya davranış değişirse `cdn/index.html`, `cdn/styles.css`, `cdn/script.js`, `cdn/forms.js` ve `cdn/filter.js` aynı şekilde güncellenir; iki sürüm görsel olarak aynı kalmalı.
 11. Ürün veya hero fotoğrafı yerine yapay placeholder, SVG veya ikon koyma.
 12. Bileşen, stil, görsel, `cdn/` ya da webhook üzerinde çalışırken `atolyekart-standartlari` Skill'ini kullan.
