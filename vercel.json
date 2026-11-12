@@ -3,5 +3,6 @@
   "framework": "vite",
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
+  "redirects": [{ "source": "/luna-preview", "destination": "/luna-preview/", "permanent": false }],
   "rewrites": [{ "source": "/api/(.*)", "destination": "/api" }]
 }

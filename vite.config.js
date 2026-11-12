@@ -27,6 +27,21 @@ function apiServer() {
   return { name: 'atolyekart-api', configureServer: attach, configurePreviewServer: attach }
 }
 
+// vercel.json'daki /luna-preview → /luna-preview/ yönlendirmesinin yerel karşılığı (dev ve preview sunucusu).
+// Olmazsa Vite'ın SPA yedeği /luna-preview isteğine ana sayfayı (index.html) verir.
+function lunaPreviewSlash() {
+  const attach = (server) => {
+    server.middlewares.use((req, res, next) => {
+      const [path, query] = req.url.split('?')
+      if (path !== '/luna-preview') return next()
+      res.statusCode = 307
+      res.setHeader('Location', `/luna-preview/${query ? `?${query}` : ''}`)
+      res.end()
+    })
+  }
+  return { name: 'luna-preview-slash', configureServer: attach, configurePreviewServer: attach }
+}
+
 export default defineConfig(({ mode }) => {
   // Sunucu sırları (.env.local) yalnızca bu Node sürecine verilir. VITE_ öneki taşımadıkları için
   // Vite bunları tarayıcı paketine koymaz.
@@ -36,9 +51,9 @@ export default defineConfig(({ mode }) => {
   }
 
   return {
-    plugins: [react(), apiServer()],
+    plugins: [react(), apiServer(), lunaPreviewSlash()],
     build: {
-      rolldownOptions: { input: ['index.html', 'gizlilik.html'] },
+      rolldownOptions: { input: ['index.html', 'gizlilik.html', 'luna-preview/index.html'] },
     },
   }
 })

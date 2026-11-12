@@ -7,3 +7,4 @@ dist/
 !.env.example
 .impeccable/hook.cache.json
 .vercel
+design-reference/
