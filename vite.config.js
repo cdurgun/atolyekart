@@ -27,15 +27,15 @@ function apiServer() {
   return { name: 'atolyekart-api', configureServer: attach, configurePreviewServer: attach }
 }
 
-// vercel.json'daki /luna-preview → /luna-preview/ yönlendirmesinin yerel karşılığı (dev ve preview sunucusu).
-// Olmazsa Vite'ın SPA yedeği /luna-preview isteğine ana sayfayı (index.html) verir.
+// vercel.json'daki /luna-preview → /luna-preview/ ve /eski-tasarim → /eski-tasarim/ yönlendirmelerinin
+// yerel karşılığı (dev ve preview sunucusu). Olmazsa Vite'ın SPA yedeği bu isteklere ana sayfayı verir.
 function lunaPreviewSlash() {
   const attach = (server) => {
     server.middlewares.use((req, res, next) => {
       const [path, query] = req.url.split('?')
-      if (path !== '/luna-preview') return next()
+      if (path !== '/luna-preview' && path !== '/eski-tasarim') return next()
       res.statusCode = 307
-      res.setHeader('Location', `/luna-preview/${query ? `?${query}` : ''}`)
+      res.setHeader('Location', `${path}/${query ? `?${query}` : ''}`)
       res.end()
     })
   }
@@ -53,7 +53,7 @@ export default defineConfig(({ mode }) => {
   return {
     plugins: [react(), apiServer(), lunaPreviewSlash()],
     build: {
-      rolldownOptions: { input: ['index.html', 'gizlilik.html', 'luna-preview/index.html'] },
+      rolldownOptions: { input: ['index.html', 'gizlilik.html', 'luna-preview/index.html', 'eski-tasarim/index.html'] },
     },
   }
 })

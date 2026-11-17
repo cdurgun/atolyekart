@@ -3,6 +3,9 @@
   "framework": "vite",
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
-  "redirects": [{ "source": "/luna-preview", "destination": "/luna-preview/", "permanent": false }],
+  "redirects": [
+    { "source": "/luna-preview", "destination": "/luna-preview/", "permanent": false },
+    { "source": "/eski-tasarim", "destination": "/eski-tasarim/", "permanent": false }
+  ],
   "rewrites": [{ "source": "/api/(.*)", "destination": "/api" }]
 }
