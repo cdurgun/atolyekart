@@ -1265,17 +1265,22 @@
 .lp-story-media {
   justify-self: center;
 }
-.lp-story-media img {
-  width: 224px;
-  height: 288px;
+.lp-story-media video {
+  display: block;
+  width: 100%;
+  max-width: 460px;
+  height: auto; /* width/height öznitelikleri aspect-ratio'yu ezmesin */
+  aspect-ratio: 4 / 3;
   object-fit: cover;
+  object-position: 40% 50%;
+  background: var(--lp-surface-dim);
   border: 4px solid rgb(255 255 255 / 0.6);
   border-radius: var(--lp-r-xl);
   box-shadow: var(--lp-shadow-soft);
 }
 @media (min-width: 1024px) {
   .lp-story {
-    grid-template-columns: 8fr 4fr;
+    grid-template-columns: 7fr 5fr;
     align-items: center;
     gap: 40px;
     padding: 64px;
@@ -1640,7 +1645,7 @@
 }
 .lp-notes-media img {
   width: 100%;
-  aspect-ratio: 16 / 10;
+  aspect-ratio: 16 / 9;
   height: auto;
   object-fit: cover;
   border-radius: var(--lp-r-lg);

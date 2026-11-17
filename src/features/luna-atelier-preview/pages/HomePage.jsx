@@ -1,8 +1,8 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Icon from '../components/Icon.jsx'
 import Newsletter from '../components/Newsletter.jsx'
 import ProductTile from '../components/ProductTile.jsx'
-import { images } from '../data.js'
+import { images, videos } from '../data.js'
 import { AMFORA_ID, categories, featuredProducts } from '../products/index.js'
 import { productRoute, routes } from '../routes.js'
 
@@ -16,6 +16,33 @@ const metrics = [
   { value: 'Tek Tek', label: 'Hazırlanan Parçalar' },
   { value: 'Telefonla', label: 'Sipariş Teyidi' },
 ]
+
+// Hareket azaltma tercihi açıksa video kendiliğinden oynamaz; poster görünür, oynatma kullanıcıdadır.
+function StoryVideo() {
+  const [reduced, setReduced] = useState(false)
+  useEffect(() => {
+    const query = window.matchMedia('(prefers-reduced-motion: reduce)')
+    setReduced(query.matches)
+    const onChange = (event) => setReduced(event.matches)
+    query.addEventListener('change', onChange)
+    return () => query.removeEventListener('change', onChange)
+  }, [])
+  return (
+    <video
+      src={videos.atolyeTanitim}
+      poster={images.atolyeEller}
+      width="720"
+      height="1280"
+      muted
+      loop
+      playsInline
+      preload="metadata"
+      autoPlay={!reduced}
+      controls={reduced}
+      aria-label="Atölyede çömlekçi çarkında şekillenen seramik parçaların 10 saniyelik tanıtım videosu"
+    />
+  )
+}
 
 const values = [
   { icon: 'pen', label: 'Elde Şekillendirme' },
@@ -156,7 +183,7 @@ export default function HomePage({ onAdd }) {
             </ul>
           </div>
           <div className="lp-story-media">
-            <img src={images.atolyeEller} alt="Dönen çömlekçi çarkında ıslak kili şekillendiren eller" width="448" height="576" loading="lazy" />
+            <StoryVideo />
           </div>
         </div>
       </section>
