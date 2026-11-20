@@ -1,27 +1,34 @@
 import { useEffect, useId, useRef, useState } from 'react'
 import Icon from './Icon.jsx'
 import {
+  CHAT_PATH,
   ChatError,
-  createSessionId,
   ERROR_TEXTS,
+  getOrCreateSessionId,
+  loadChatHistory,
   MAX_MESSAGE_LENGTH,
+  readStoredSessionId,
   resolveChatUrl,
   sendChatMessage,
   WELCOME_TEXT,
 } from '../chat/chatClient.js'
 
-// Adres derleme sırasında okunur; gizli değildir (bkz. chat/chatClient.js).
-const CHAT_URL = resolveChatUrl(import.meta.env.VITE_N8N_CHAT_URL)
+// Aynı alan adındaki proxy; n8n adresi ve kimlik bilgisi yalnızca sunucudadır (bkz. chat/chatClient.js).
+const CHAT_URL = resolveChatUrl(CHAT_PATH)
 
 // Sağ altta sabit "Asistan" düğmesi ve açılan sohbet penceresi.
-// Pencere kapatılınca bileşen yerinde kalır; sohbet geçmişi ve oturum kimliği sayfa açık olduğu sürece korunur.
+// Oturum kimliği localStorage'da kalır (bkz. chat/chatClient.js). Pencere ilk açıldığında, daha önce
+// kaydedilmiş bir kimlik varsa önceki konuşma n8n'den bir kez yüklenir ve karşılama mesajının altına eklenir.
+// Yükleme başarısız olursa ziyaretçiye hata gösterilmez; pencere yalnızca karşılama ile açılır.
 export default function ChatWidget() {
   const [open, setOpen] = useState(false)
   const [messages, setMessages] = useState([{ id: 0, role: 'bot', text: WELCOME_TEXT }])
   const [draft, setDraft] = useState('')
   const [sending, setSending] = useState(false)
   const [error, setError] = useState(CHAT_URL ? '' : ERROR_TEXTS.config)
+  const [loadingHistory, setLoadingHistory] = useState(false)
   const sessionId = useRef(null)
+  const historyRequested = useRef(false)
   const nextId = useRef(1)
   const logRef = useRef(null)
   const inputRef = useRef(null)
@@ -30,11 +37,26 @@ export default function ChatWidget() {
   const panelId = useId()
 
   useEffect(() => {
-    if (!CHAT_URL) console.warn('[AtölyeKart Asistan] VITE_N8N_CHAT_URL tanımlı değil; sohbet devre dışı.')
-  }, [])
+    if (open) inputRef.current?.focus()
+  }, [open])
 
   useEffect(() => {
-    if (open) inputRef.current?.focus()
+    if (!open || !CHAT_URL || historyRequested.current) return
+    historyRequested.current = true
+    const stored = readStoredSessionId()
+    if (!stored) return // İlk ziyaret: yüklenecek geçmiş yok, ağ isteği yapılmaz.
+    sessionId.current ??= stored
+
+    setLoadingHistory(true)
+    loadChatHistory({ url: CHAT_URL, sessionId: stored })
+      .then((history) => {
+        if (!history.length) return
+        const restored = history.map((message) => ({ ...message, id: nextId.current++ }))
+        // Yükleme sürerken gönderilmiş mesajlar varsa geçmiş onların önüne, karşılamanın hemen altına girer.
+        setMessages(([welcome, ...rest]) => [welcome, ...restored, ...rest])
+      })
+      .catch((err) => console.warn('[AtölyeKart Asistan] geçmiş yüklenemedi', err?.kind, err?.detail))
+      .finally(() => setLoadingHistory(false))
   }, [open])
 
   useEffect(() => {
@@ -52,7 +74,7 @@ export default function ChatWidget() {
     const text = draft.trim()
     if (!text || sending || !CHAT_URL) return
 
-    sessionId.current ??= createSessionId()
+    sessionId.current ??= getOrCreateSessionId()
     const id = nextId.current++
     setMessages((list) => [...list, { id, role: 'user', text }])
     setDraft('')
@@ -99,7 +121,7 @@ export default function ChatWidget() {
           </button>
         </header>
 
-        <ol className="lp-chat-log" ref={logRef} role="log" aria-live="polite" aria-relevant="additions" aria-busy={sending}>
+        <ol className="lp-chat-log" ref={logRef} role="log" aria-live="polite" aria-relevant="additions" aria-busy={sending || loadingHistory}>
           {messages.map((message) => (
             <li key={message.id} className={`lp-chat-message lp-chat-message-${message.role}`}>
               <span className="lp-visually-hidden">{message.role === 'user' ? 'Siz: ' : 'Asistan: '}</span>

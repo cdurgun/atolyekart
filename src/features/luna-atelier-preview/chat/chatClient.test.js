@@ -1,6 +1,20 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { ChatError, ERROR_TEXTS, extractReply, resolveChatUrl, sendChatMessage, TIMEOUT_MS } from './chatClient.js'
+import {
+  CHAT_PATH,
+  ChatError,
+  ERROR_TEXTS,
+  extractReply,
+  getOrCreateSessionId,
+  loadChatHistory,
+  MAX_HISTORY_MESSAGES,
+  parseHistory,
+  readStoredSessionId,
+  resolveChatUrl,
+  sendChatMessage,
+  SESSION_STORAGE_KEY,
+  TIMEOUT_MS,
+} from './chatClient.js'
 
 const URL_OK = 'https://n8n.example.com/webhook/abc/chat'
 
@@ -182,4 +196,164 @@ test('resolveChatUrl yalnızca http(s) kabul eder', () => {
   assert.equal(resolveChatUrl('http://localhost:5678/webhook/x/chat'), 'http://localhost:5678/webhook/x/chat')
   assert.equal(resolveChatUrl('ftp://x'), '')
   assert.equal(resolveChatUrl(null), '')
+})
+
+// --- Oturum kimliği (localStorage) ---
+
+function memoryStorage(initial = {}) {
+  const data = { ...initial }
+  return {
+    data,
+    getItem: (key) => (key in data ? data[key] : null),
+    setItem: (key, value) => {
+      data[key] = String(value)
+    },
+  }
+}
+
+test('oturum kimliği ilk seferde üretilip kaydedilir, sonra aynısı döner', () => {
+  const storage = memoryStorage()
+  assert.equal(readStoredSessionId(storage), null)
+  const first = getOrCreateSessionId(storage)
+  assert.match(first, /^[A-Za-z0-9-]{8,64}$/)
+  assert.equal(storage.data[SESSION_STORAGE_KEY], first)
+  assert.equal(getOrCreateSessionId(storage), first)
+  assert.equal(readStoredSessionId(storage), first)
+})
+
+test('bozuk ya da elle değiştirilmiş kayıtlı kimlik yok sayılır ve yenisi yazılır', () => {
+  for (const bad of ['', 'kisa', 'a b c d e f g h', '<script>x</script>', 'x'.repeat(65)]) {
+    const storage = memoryStorage({ [SESSION_STORAGE_KEY]: bad })
+    assert.equal(readStoredSessionId(storage), null)
+    const id = getOrCreateSessionId(storage)
+    assert.notEqual(id, bad)
+    assert.equal(storage.data[SESSION_STORAGE_KEY], id)
+  }
+})
+
+test('localStorage hata fırlatsa ya da yoksa da kimlik üretilir', () => {
+  const throwing = {
+    getItem() {
+      throw new Error('SecurityError')
+    },
+    setItem() {
+      throw new Error('QuotaExceededError')
+    },
+  }
+  assert.equal(readStoredSessionId(throwing), null)
+  assert.match(getOrCreateSessionId(throwing), /^[A-Za-z0-9-]{8,64}$/)
+  assert.match(getOrCreateSessionId(null), /^[A-Za-z0-9-]{8,64}$/)
+})
+
+// --- Geçmiş (loadPreviousSession) ---
+
+// n8n Chat Trigger'ın döndürdüğü LangChain toJSON() biçimi; Redis'teki gerçek bir tur örnek alındı:
+// ziyaretçi sorusu → araç çağıran boş AI mesajı → Google Sheets satırı içeren araç sonucu → AI yanıtı.
+const lc = (className, kwargs) => ({ lc: 1, type: 'constructor', id: ['langchain_core', 'messages', className], kwargs })
+const N8N_HISTORY = {
+  data: [
+    lc('HumanMessage', { content: 'Adım Deniz. Amber Soya Mum kaç saat yanar?', additional_kwargs: {}, response_metadata: {} }),
+    lc('AIMessage', {
+      content: [],
+      tool_calls: [{ name: 'Products', args: { input: 'Amber' }, id: 'call_1' }],
+      additional_kwargs: {},
+      response_metadata: {},
+    }),
+    lc('ToolMessage', {
+      content: '[{"row_number":3,"product_id":"mum","stock":12,"price":350}]',
+      tool_call_id: 'call_1',
+      additional_kwargs: {},
+      response_metadata: {},
+    }),
+    lc('AIMessage', { content: 'Amber Soya Mum için doğrulanmış bir yanma süresi bulunmuyor.', additional_kwargs: {} }),
+    lc('SystemMessage', { content: 'Sen AtölyeKart asistanısın.' }),
+    lc('HumanMessage', { content: '   ' }),
+    lc('AIMessage', { content: [{ type: 'text', text: 'Başka bir sorunuz var mı?' }] }),
+  ],
+}
+
+test('geçmişte yalnızca boş olmayan ziyaretçi ve asistan metinleri, sırası korunarak gösterilir', () => {
+  assert.deepEqual(parseHistory(N8N_HISTORY), [
+    { role: 'user', text: 'Adım Deniz. Amber Soya Mum kaç saat yanar?' },
+    { role: 'bot', text: 'Amber Soya Mum için doğrulanmış bir yanma süresi bulunmuyor.' },
+    { role: 'bot', text: 'Başka bir sorunuz var mı?' },
+  ])
+  // Araç sonucu (Sheets satırı) hiçbir biçimde pencereye taşınmaz.
+  assert.ok(!JSON.stringify(parseHistory(N8N_HISTORY)).includes('row_number'))
+})
+
+test('Redis saklama biçimi ({ type, data }) de okunur; araç mesajı atlanır', () => {
+  assert.deepEqual(
+    parseHistory([
+      { type: 'human', data: { content: 'Merhaba' } },
+      { type: 'tool', data: { content: '{"stock":3}' } },
+      { type: 'ai', data: { content: '' } },
+      { type: 'ai', data: { content: 'Merhaba, nasıl yardımcı olabilirim?' } },
+    ]),
+    [
+      { role: 'user', text: 'Merhaba' },
+      { role: 'bot', text: 'Merhaba, nasıl yardımcı olabilirim?' },
+    ],
+  )
+})
+
+test('boş, bozuk ya da beklenmeyen geçmiş yanıtı boş liste döner', () => {
+  for (const raw of [{ data: [] }, {}, null, '', 'not json', '{"data":"x"}', [null, 1, 'x', {}]]) {
+    assert.deepEqual(parseHistory(raw), [])
+  }
+})
+
+test('geçmiş en fazla son MAX_HISTORY_MESSAGES mesajla sınırlanır', () => {
+  const many = Array.from({ length: MAX_HISTORY_MESSAGES + 10 }, (_, i) => lc('HumanMessage', { content: `m${i}` }))
+  const parsed = parseHistory({ data: many })
+  assert.equal(parsed.length, MAX_HISTORY_MESSAGES)
+  assert.equal(parsed[0].text, 'm10')
+  assert.equal(parsed.at(-1).text, `m${MAX_HISTORY_MESSAGES + 9}`)
+})
+
+test('loadChatHistory doğru gövdeyi gönderir ve filtrelenmiş mesajları döner', async () => {
+  const fetchImpl = fakeFetch(() => reply(N8N_HISTORY))
+  const history = await loadChatHistory({ url: URL_OK, sessionId: 's-9', fetchImpl })
+  assert.equal(history.length, 3)
+  assert.deepEqual(JSON.parse(fetchImpl.calls[0].init.body), { action: 'loadPreviousSession', sessionId: 's-9' })
+  assert.equal(fetchImpl.calls[0].init.method, 'POST')
+})
+
+test('loadChatHistory adres yoksa istek yapmaz, sunucu hatasında ChatError verir', async () => {
+  const unused = fakeFetch(() => reply(N8N_HISTORY))
+  await assert.rejects(loadChatHistory({ url: '', sessionId: 's', fetchImpl: unused }), { kind: 'config' })
+  assert.equal(unused.calls.length, 0)
+  await assert.rejects(loadChatHistory({ url: URL_OK, sessionId: 's', fetchImpl: async () => reply('Error', 500) }), {
+    kind: 'server',
+  })
+})
+
+// --- /api/chat proxy'si ile çalışma ---
+
+test('aynı alan adındaki /api/chat yolu kabul edilir; // ile başlayan ya da ters bölülü yol reddedilir', () => {
+  assert.equal(resolveChatUrl(CHAT_PATH), '/api/chat')
+  for (const bad of ['//kotu-site.example/chat', '/\\kotu-site.example', '  ']) assert.equal(resolveChatUrl(bad), '')
+})
+
+test('proxy 429 dönerse "rate", 503 dönerse "config", diğer hatalarda "server" hatası verilir', async () => {
+  for (const [status, kind] of [[429, 'rate'], [503, 'config'], [502, 'server'], [504, 'server'], [400, 'server']]) {
+    await assert.rejects(
+      sendChatMessage({ url: CHAT_PATH, sessionId: 's-1234567', message: 'm', fetchImpl: async () => reply({ ok: false }, status) }),
+      (error) => {
+        assert.equal(error.kind, kind)
+        assert.equal(error.message, ERROR_TEXTS[kind])
+        return true
+      },
+    )
+  }
+})
+
+test('istek göreli /api/chat adresine gider ve proxy\'nin geçmiş biçimini okur', async () => {
+  const fetchImpl = fakeFetch(() => reply({ data: [{ type: 'human', data: { content: 'Merhaba' } }, { type: 'ai', data: { content: 'Hoş geldiniz' } }] }))
+  const history = await loadChatHistory({ url: CHAT_PATH, sessionId: 's-1234567', fetchImpl })
+  assert.equal(fetchImpl.calls[0].url, '/api/chat')
+  assert.deepEqual(history, [
+    { role: 'user', text: 'Merhaba' },
+    { role: 'bot', text: 'Hoş geldiniz' },
+  ])
 })

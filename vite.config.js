@@ -46,7 +46,7 @@ export default defineConfig(({ mode }) => {
   // Sunucu sırları (.env.local) yalnızca bu Node sürecine verilir. VITE_ öneki taşımadıkları için
   // Vite bunları tarayıcı paketine koymaz.
   const env = loadEnv(mode, process.cwd(), '')
-  for (const key of ['WEBHOOK_URL', 'WEBHOOK_SECRET', 'JWT_SECRET']) {
+  for (const key of ['WEBHOOK_URL', 'WEBHOOK_SECRET', 'JWT_SECRET', 'N8N_CHAT_URL', 'N8N_CHAT_USER', 'N8N_CHAT_PASSWORD']) {
     if (env[key]) process.env[key] ??= env[key]
   }
 

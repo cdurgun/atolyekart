@@ -13,9 +13,9 @@ export function clientIp(request) {
 }
 
 // Gövdeyi JSON nesnesi olarak okur; okunamıyorsa null döner.
-export async function readJsonObject(request) {
+export async function readJsonObject(request, maxBytes = MAX_BODY_BYTES) {
   const text = await request.text()
-  if (text.length > MAX_BODY_BYTES) return null
+  if (Buffer.byteLength(text) > maxBytes) return null
   try {
     const value = JSON.parse(text)
     return value && typeof value === 'object' && !Array.isArray(value) ? value : null

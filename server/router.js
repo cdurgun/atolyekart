@@ -3,6 +3,7 @@
 import { clientIp, json } from './lib/http.js'
 import { rateLimit } from './lib/rate-limit.js'
 import adminOrders from './routes/admin-orders.js'
+import chat from './routes/chat.js'
 import order from './routes/order.js'
 import stockRequest from './routes/stock-request.js'
 
@@ -10,6 +11,7 @@ const routes = {
   '/api/order': order,
   '/api/stock-request': stockRequest,
   '/api/admin/orders': adminOrders,
+  '/api/chat': chat,
 }
 
 export async function handleApi(request) {
@@ -17,7 +19,8 @@ export async function handleApi(request) {
     const route = routes[new URL(request.url).pathname.replace(/\/$/, '')]
     if (!route) return json(404, { ok: false, error: 'not_found', message: 'Bulunamadı.' })
 
-    const limit = rateLimit(clientIp(request))
+    // /api/chat kendi sayaçlarını kullanır (ownRateLimit); sohbet trafiği formları kilitlemez.
+    const limit = route.ownRateLimit ? { allowed: true } : rateLimit(clientIp(request))
     if (!limit.allowed) {
       return json(
         429,

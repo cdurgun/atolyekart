@@ -10,6 +10,8 @@ Hafta 2 — Güvenli API katmanı, KVKK ve deploy. Formlar artık webhook'a doğ
 
 Hafta 2 kapsamında yapılanlar: e-posta doğrulama hatasının düzeltilmesi, worktree'de geliştirilen kategori filtresi, sunucu API'si (`/api/order`, `/api/stock-request`, `/api/admin/orders`), sunucu tarafı doğrulama ve stok kontrolü, IP bazlı rate limit, admin için JWT, sırların sunucuya taşınması, açık rıza kutusu, örnek gizlilik politikası (`/gizlilik.html`), `GUVENLIK-KONTROL-LISTESI.md`, testler (`node:test`) ve Expo mobil uygulaması (`mobile/`). Build gerektirmeyen statik sürüm (`cdn/`) kullanıcı isteğiyle kaldırıldı.
 
+Hafta 6 kapsamında yapılanlar: AtölyeKart Asistan için sunucu tarafı sohbet proxy'si (`/api/chat`), n8n tarafında Redis sohbet geçmişi ve Qdrant vektör deposu (test kopyalarında; canlı geçiş onay bekliyor), n8n MCP ile workflow yönetimi. Geçiş hazırlığı ve hukuki inceleme listesi `docs/hafta6/` içindedir.
+
 Önceki aşamalardan kalanlar: editoryal/atölye tasarım sistemi (`DESIGN.md`), gerçek ürün fotoğrafları, atölye fotoğraflı hero, proje Skill'i, katalog QR kodu ve alt ajanla yapılan tasarım incelemesi (öneriler `plan.md` içinde).
 
 ## Commands
@@ -60,13 +62,20 @@ Fotoğraflar 4:3, sRGB JPEG ve aynı çekim serisinin parçasıdır (taş yüzey
 - `src/components/`: `ProductList`, `ProductCard`, `ProductImage`, `CatalogQR`, `CategoryFilter`, `RequestForm`
 - `src/webhook/`: `validation.js`, `payload.js`, `adapter.js` (UI'dan bağımsız; aşağıya bakın)
 - `api/index.js`: tek Vercel Function; `vercel.json` içindeki rewrite tüm `/api/*` isteklerini buraya verir
-- `server/`: `router.js`, `routes/` (`order`, `stock-request`, `admin-orders`), `lib/` (`catalog`, `validate`, `rate-limit`, `jwt`, `webhook`, `orders`, `http`) ve `api.test.js`
+- `server/`: `router.js`, `routes/` (`order`, `stock-request`, `admin-orders`, `chat`), `lib/` (`catalog`, `validate`, `rate-limit`, `jwt`, `webhook`, `orders`, `http`), `api.test.js` ve `chat.test.js`
 - `scripts/admin-token.mjs`: yerel admin JWT üretici
 - `mobile/`: ayrı Expo projesi (SDK 57, kendi `package.json`'ı). `App.js`, `RequestForm.js`, `api.js`, `theme.js`. Ürün verisini, doğrulamayı ve istek gövdesini `../src`'ten içe aktarır (`metro.config.js` → `watchFolders`); `source: "mobile"` ile aynı `/api`'yi çağırır. Bu yüzden `src/products.js`, `src/webhook/validation.js` ve `src/webhook/payload.js` tarayıcıya ya da Vite'a özgü API (`import.meta`, `document`) kullanmaz ve npm paketi içe aktarmaz. `.vercelignore` ile deploy dışındadır
 - `src/styles.css`: tek stil dosyası; `src/main.jsx` ve `gizlilik.html` kullanır. Tasarım sistemi `DESIGN.md` içinde belgelidir
 - `public/images/`: üç ürün fotoğrafı ve hero fotoğrafları (`hero-atolye.jpg` masaüstü/tablet, `hero-atolye-mobil.jpg` mobil kırpım). Hero fotoğrafı JSX'te değil, `.site-header` için CSS arka planı olarak kullanılır
 - `public/images/paylasim-gorseli.png`: bağlantı önizleme görseli (1200×630, yazı markası + slogan). `index.html` içindeki `og:` etiketleri tam adresle bunu gösterir (`https://atolyekart-tawny.vercel.app/…`); alan adı değişirse etiketler güncellenir
-- **AtölyeKart Asistan (sohbet):** yalnızca ana sayfadaki yeni Luna tasarımında (`src/features/luna-atelier-preview/`). `components/ChatWidget.jsx` sağ altta sabit düğme ve pencere; `chat/chatClient.js` mevcut n8n Chat Trigger'a doğrudan `POST { action: 'sendMessage', sessionId, chatInput }` gönderir, `{ output }` okur (`@n8n/chat` paketi Vue getirdiği için kullanılmadı; yeni bağımlılık yok). Adres `VITE_N8N_CHAT_URL`: tarayıcı çağırdığı için gizli değildir, `/api` sırlarıyla ilgisi yoktur; boşsa pencere "kullanılamıyor" gösterir. `/api`, sipariş/stok akışı ve n8n workflow'u değişmedi. Testler `chat/chatClient.test.js`
+- **AtölyeKart Asistan (sohbet):** yalnızca ana sayfadaki yeni Luna tasarımında (`src/features/luna-atelier-preview/`). `components/ChatWidget.jsx` sağ altta sabit düğme ve pencere; `chat/chatClient.js` aynı alan adındaki `POST /api/chat`'e n8n Chat Trigger protokolüyle yazar (`sendMessage` → `{ output }`, `loadPreviousSession` → `{ data: [{ type: 'human'|'ai', data: { content } }] }`). Tarayıcı n8n adresini bilmez; `VITE_N8N_CHAT_URL` kullanılmaz (`@n8n/chat` paketi Vue getirdiği için kullanılmadı; yeni bağımlılık yok)
+  - Oturum kimliği `localStorage['atolyekart-chat-session']` içindedir (`/^[A-Za-z0-9-]{8,64}$/`). Pencere ilk açıldığında kayıtlı kimlik varsa geçmiş yüklenir (en fazla 50 mesaj; yalnızca boş olmayan human/ai mesajları). "Yeni sohbet / sohbeti sil" düğmesi yoktur
+  - `server/routes/chat.js` proxy'dir: aynı origin (`Origin` / `Sec-Fetch-Site`) dışındaki istekleri 403, JSON olmayanları 415, geçersiz gövdeyi 400 ile reddeder; gövdeyi yalnızca izinli alanlarla (`action`, `sessionId`, `chatInput`) yeniden kurar, IP'yi n8n'e iletmez; n8n'e Basic Auth ile gider (`redirect: 'error'`, zaman aşımı 85 sn / geçmiş 15 sn). n8n adresi `https` olmalıdır (yalnızca yerel `localhost` / `127.0.0.1` için `http`). Yanıtta araç çağrısı, araç sonucu ve sistem mesajı süzülür. Streaming yoktur
+  - Hatalar: 429 `Retry-After`, 503 yapılandırma eksik, 502 n8n hatası/404, 504 zaman aşımı. Ayrıntı yalnızca sunucu günlüğüne yazılır; günlükte mesaj içeriği bulunmaz
+  - Sohbet sınırları kendi sayaçlarıdır (`ownRateLimit`): IP başına dakikada 20 istek, dakikada 6 ve saatte 60 mesaj. Sayaç bellek içidir ve instance başınadır
+  - n8n tarafı (hedef yapı; test kopyasında doğrulandı, canlı geçiş kullanıcı onayı bekliyor): Chat Trigger Basic Auth ile korunur; konuşmalar Redis Chat Memory'de (`<sessionId>__Redis_Chat_Memory`, 30 gün kayan TTL) ve n8n çalışma kayıtlarında tutulur; ürün dokümanları Qdrant `atolyekart_product_knowledge` koleksiyonundan "Product Documents" aracıyla gelir (`topK` 6). Model `gpt-4.1-mini`, temperature varsayılan. Node adı "Redis Chat Memory" değiştirilmez (anahtar adını belirler)
+  - Bilinen sınırlama: model bazen dokümandaki öneri/olasılık ifadesini cevabın sonuna eklediği bir hükümle kesinleştirir (ör. "artırabilir" → "kaçınılmalıdır"; 14 soruluk testte T14). Ek AI ya da kod kontrolü bilinçli olarak eklenmedi; ayrıntı `docs/hafta6/uretim-hazirlik.md`
+  - Testler `chat/chatClient.test.js`, `server/chat.test.js`
 - `public/favicon.png`: sekme simgesi (umber zeminde "L" harfi). Kural 9'daki ikon yasağının bilinçli tek istisnasıdır; sayfa içine ikon eklenmez
 - `public/fonts/`: Brygada 1918 ve Hanken Grotesk (woff2, yerel; CDN yok) ve OFL lisans metinleri
 - State yalnızca `RequestForm` içindeki form state'i ve `App` içindeki seçili kategoridir. Routing yok. Stok bilgisi sayfada gösterilmez; kartlara stok etiketi eklenmez. Stok kuralını sunucu uygular ve reddederse mesajı form durum satırında görünür
@@ -98,10 +107,10 @@ Akış: **form → validation → istek gövdesi → API adapter → `/api` (sun
 - **Sunucu istemciye güvenmez:** aynı doğrulama kuralları (`src/webhook/validation.js`) sunucuda yeniden uygulanır, türler denetlenir, `productName` ve stok `server/lib/catalog.js`'ten gelir, `consent: true` zorunludur.
 - **Stok:** Terra Minimal Kolye stokta yok, diğer ikisi stokta. Sipariş yalnızca stoktaki ürüne (`409 out_of_stock`), stok bildirimi yalnızca tükenmiş ürüne (`409 in_stock`) kabul edilir.
 - **Webhook'u sunucu gönderir** ve `X-Atolyekart-Signature` (HMAC-SHA256) ile imzalar. Olay gövdesi `webhook-format.md` içindedir.
-- **Sırlar yalnızca sunucudadır:** `WEBHOOK_URL`, `WEBHOOK_SECRET`, `JWT_SECRET`. Hiçbirine `VITE_` öneki verilmez; koda, depoya, terminal çıktısına ya da rapora yazılmaz. Canlı değerleri kullanıcı Vercel panelinden girer; Claude üretmez ve eklemez. Yerelde `.env.local`.
+- **Sırlar yalnızca sunucudadır:** `WEBHOOK_URL`, `WEBHOOK_SECRET`, `JWT_SECRET` ve sohbet proxy'sinin `N8N_CHAT_URL`, `N8N_CHAT_USER`, `N8N_CHAT_PASSWORD` değişkenleri (eksik ya da geçersizse `/api/chat` 503 döner). Hiçbirine `VITE_` öneki verilmez; koda, depoya, terminal çıktısına ya da rapora yazılmaz. Canlı değerleri kullanıcı Vercel panelinden girer; Claude üretmez ve eklemez. Yerelde `.env.local`.
   - Yerelde `WEBHOOK_URL` boşsa olay sunucu günlüğüne `[webhook:mock]` ile yazılır. Canlıda adres ya da anahtar eksikse talep `502` ile reddedilir.
   - `VITE_API_URL` gizli değildir: boşsa aynı alan adı, `mock:` ağ isteği yapmaz, `mock:fail` hatayı dener.
-- **Rate limit:** IP başına dakikada 10 istek, tüm `/api` yolları için ortak; aşılırsa `429` ve `Retry-After`. Sayaç bellek içidir ve Vercel'de instance başınadır (`server/lib/rate-limit.js` içindeki nota bakın). Redis/Upstash eklenmedi.
+- **Rate limit:** formlar ve admin uç noktası için IP başına dakikada 10 istek, ortak sayaç (`/api/chat` kendi sayaçlarını kullanır, yukarıya bakın); aşılırsa `429` ve `Retry-After`. Sayaç bellek içidir ve Vercel'de instance başınadır (`server/lib/rate-limit.js` içindeki nota bakın). Redis/Upstash eklenmedi.
 - **JWT yalnızca admin içindir:** `GET /api/admin/orders`, `Authorization: Bearer <HS256 JWT>`, `role: "admin"` ve geçerli `exp` ister (401 / 403). Ziyaretçi formları JWT ile korunmaz.
 - Son siparişler veritabanında değil, instance belleğinde tutulur (en fazla 50); yalnızca admin uç noktasının gösterimi içindir.
 - API yanıtlarında teknik ayrıntı ya da stack trace bulunmaz; ayrıntı yalnızca sunucu günlüğüne yazılır.
@@ -121,7 +130,7 @@ Akış: **form → validation → istek gövdesi → API adapter → `/api` (sun
 - `.claude/skills/atolyekart-standartlari/` — proje Skill'i: bileşen, adlandırma, görsel, stil, responsive ve form/API standartları (`SKILL.md`) ile webhook ve API gövde formatı (`webhook-format.md`)
   - `evals/evals.json` — Skill'i ölçen senaryolar ve beklentiler. `scripts/degerlendir_dorduncu_urun.py` ve `scripts/duzen_olc.mjs` 1. senaryoyu bir proje kopyasında otomatik notlar. İlk ölçüm (tek çalıştırma, `cdn/` sürümü varken): Skill ile 12/12, Skill'siz 11/12; fark `DESIGN.md` güncellemesi ve tarayıcıda doğrulama. `cdn/` kaldırılınca beklentiler 10'a indi ve yeniden ölçülmedi. Ölçüm projenin kopyasında yapılır, bu depoda değil
 - `GUVENLIK-KONTROL-LISTESI.md` — Hafta 2 güvenlik kontrol listesi ve her maddenin kanıtı
-- `.env.example` — ortam değişkenlerinin adları ve biçimi (`VITE_CATALOG_URL`, `VITE_API_URL`, `WEBHOOK_URL`, `WEBHOOK_SECRET`, `JWT_SECRET`); gerçek değerler `.env.local` ve Vercel'de tutulur, depoya girmez
+- `.env.example` — ortam değişkenlerinin adları ve biçimi (`VITE_CATALOG_URL`, `VITE_API_URL`, `WEBHOOK_URL`, `WEBHOOK_SECRET`, `JWT_SECRET`, `N8N_CHAT_URL`, `N8N_CHAT_USER`, `N8N_CHAT_PASSWORD`); gerçek değerler `.env.local` ve Vercel'de tutulur, depoya girmez
 - `.impeccable/config.json` — tasarım dedektörünün yok sayma kayıtları
 
 ## Future Roadmap
@@ -171,7 +180,7 @@ Design decisions should serve the Luna Atelier brand and its products.
 7. Açıkça istenmeyen hiçbir şeyi değiştirme. Kapsamlı işlerde önce kısa bir plan sun ve onay bekle.
 8. Hero bitmiş kabul edildi (1600px'te 500px, `hero-atolye.jpg`, `75% 42%`). Açıkça istenmedikçe yüksekliğine, görseline, konumuna, tipografisine ve renklerine dokunma.
 9. Overlay, gradient, gölge, yuvarlak köşeli kart, ikon, animasyon veya süs öğesi ekleme.
-10. Sırları (`WEBHOOK_URL`, `WEBHOOK_SECRET`, `JWT_SECRET`, tokenlar) koda, depoya, terminal çıktısına ya da rapora yazma; `VITE_` önekiyle tarayıcıya açma. Canlı sır değerlerini üretme ya da Vercel'e ekleme; eksikse dur ve bildir.
+10. Sırları (`WEBHOOK_URL`, `WEBHOOK_SECRET`, `JWT_SECRET`, `N8N_CHAT_*`, tokenlar) koda, depoya, terminal çıktısına ya da rapora yazma; `VITE_` önekiyle tarayıcıya açma. Canlı sır değerlerini üretme ya da Vercel'e ekleme; eksikse dur ve bildir.
 11. Ürün veya hero fotoğrafı yerine yapay placeholder, SVG veya ikon koyma.
 12. Bileşen, stil, görsel, form/API ya da webhook üzerinde çalışırken `atolyekart-standartlari` Skill'ini kullan.
 13. Ziyaretçi formlarını (`/api/order`, `/api/stock-request`) JWT ile koruma. Açıkça istenmeden `git push` yapma.
