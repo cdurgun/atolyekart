@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import SiteHeader from './components/SiteHeader.jsx'
 import CheckoutHeader from './components/CheckoutHeader.jsx'
 import SiteFooter from './components/SiteFooter.jsx'
+import ChatWidget from './components/ChatWidget.jsx'
 import HomePage from './pages/HomePage.jsx'
 import CatalogPage from './pages/CatalogPage.jsx'
 import ProductDetailPage from './pages/ProductDetailPage.jsx'
@@ -116,6 +117,7 @@ export default function LunaPreviewApp() {
         tagline={isCheckout ? 'Zanaat, toprak ve zamansız estetiğin buluşma noktası.' : undefined}
         signature={isCheckout ? 'El emeğiyle, sana özel.' : undefined}
       />
+      <ChatWidget />
     </div>
   )
 }
