@@ -3154,6 +3154,42 @@ fieldset.lp-checkout-main {
   line-height: 26px;
   font-weight: 600;
 }
+/* "Yeni sohbet": başlık satırında, kapatma düğmesinin solunda küçük metin düğmesi. */
+.lp-chat-new {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 36px;
+  padding: 0 12px 0 8px;
+  border: 0;
+  border-radius: var(--lp-r-full);
+  background: transparent;
+  color: var(--lp-primary);
+  font-size: 13px;
+  line-height: 18px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.lp-chat-new:hover:not(:disabled) {
+  background: var(--lp-surface-high);
+}
+.lp-chat-new:disabled {
+  color: var(--lp-outline);
+  cursor: default;
+}
+
+/* Yeni sohbet bilgilendirmesi: hata kutusuyla aynı ölçüde, nötr renkte. */
+.lp-chat-notice {
+  margin: 0 16px 8px;
+  padding: 10px 14px;
+  border: 1px solid var(--lp-outline-variant);
+  border-radius: var(--lp-r);
+  background: var(--lp-surface-low);
+  color: var(--lp-on-surface-variant);
+  font-size: 13px;
+  line-height: 19px;
+}
 
 .lp-chat-log {
   flex: 1;

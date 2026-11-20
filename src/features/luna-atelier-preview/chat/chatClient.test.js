@@ -8,11 +8,13 @@ import {
   getOrCreateSessionId,
   loadChatHistory,
   MAX_HISTORY_MESSAGES,
+  NEW_CHAT_NOTICE,
   parseHistory,
   readStoredSessionId,
   resolveChatUrl,
   sendChatMessage,
   SESSION_STORAGE_KEY,
+  startNewSession,
   TIMEOUT_MS,
 } from './chatClient.js'
 
@@ -243,6 +245,60 @@ test('localStorage hata fırlatsa ya da yoksa da kimlik üretilir', () => {
   assert.equal(readStoredSessionId(throwing), null)
   assert.match(getOrCreateSessionId(throwing), /^[A-Za-z0-9-]{8,64}$/)
   assert.match(getOrCreateSessionId(null), /^[A-Za-z0-9-]{8,64}$/)
+})
+
+// --- Yeni sohbet ---
+
+test('yeni sohbet eski kimliği tarayıcıdan siler, farklı yeni bir kimlik üretip kaydeder', () => {
+  const old = 'eski-oturum-12345678'
+  const storage = memoryStorage({ [SESSION_STORAGE_KEY]: old })
+  storage.removeItem = (key) => delete storage.data[key]
+  const removed = []
+  const spy = { ...storage, removeItem: (key) => (removed.push(key), storage.removeItem(key)) }
+
+  const fresh = startNewSession(spy)
+  assert.deepEqual(removed, [SESSION_STORAGE_KEY])
+  assert.notEqual(fresh, old)
+  assert.match(fresh, /^[A-Za-z0-9-]{8,64}$/)
+  assert.equal(storage.data[SESSION_STORAGE_KEY], fresh)
+  assert.equal(readStoredSessionId(storage), fresh)
+})
+
+test('yeni sohbet ağ isteği yapmaz (sunucudaki kayıt silinmez)', () => {
+  const realFetch = globalThis.fetch
+  let calls = 0
+  globalThis.fetch = async () => {
+    calls += 1
+    throw new Error('beklenmeyen istek')
+  }
+  try {
+    startNewSession(memoryStorage({ [SESSION_STORAGE_KEY]: 'eski-oturum-12345678' }))
+  } finally {
+    globalThis.fetch = realFetch
+  }
+  assert.equal(calls, 0)
+})
+
+test('yeni sohbet depolama hata fırlatsa ya da yoksa da yeni kimlik döner', () => {
+  const throwing = {
+    getItem() {
+      throw new Error('SecurityError')
+    },
+    setItem() {
+      throw new Error('QuotaExceededError')
+    },
+    removeItem() {
+      throw new Error('SecurityError')
+    },
+  }
+  assert.match(startNewSession(throwing), /^[A-Za-z0-9-]{8,64}$/)
+  assert.match(startNewSession(null), /^[A-Za-z0-9-]{8,64}$/)
+})
+
+test('yeni sohbet bilgilendirmesi sunucudaki kaydın silinmediğini açıkça söyler', () => {
+  assert.match(NEW_CHAT_NOTICE, /bu cihazdan/)
+  assert.match(NEW_CHAT_NOTICE, /sunucu[^.]*silinmedi/)
+  assert.doesNotMatch(NEW_CHAT_NOTICE, /sunucudan silindi|kalıcı olarak silindi|tamamen silindi/)
 })
 
 // --- Geçmiş (loadPreviousSession) ---

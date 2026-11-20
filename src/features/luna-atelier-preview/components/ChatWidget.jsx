@@ -7,9 +7,11 @@ import {
   getOrCreateSessionId,
   loadChatHistory,
   MAX_MESSAGE_LENGTH,
+  NEW_CHAT_NOTICE,
   readStoredSessionId,
   resolveChatUrl,
   sendChatMessage,
+  startNewSession,
   WELCOME_TEXT,
 } from '../chat/chatClient.js'
 
@@ -20,11 +22,14 @@ const CHAT_URL = resolveChatUrl(CHAT_PATH)
 // Oturum kimliği localStorage'da kalır (bkz. chat/chatClient.js). Pencere ilk açıldığında, daha önce
 // kaydedilmiş bir kimlik varsa önceki konuşma n8n'den bir kez yüklenir ve karşılama mesajının altına eklenir.
 // Yükleme başarısız olursa ziyaretçiye hata gösterilmez; pencere yalnızca karşılama ile açılır.
+// "Yeni sohbet" kimliği yalnızca tarayıcıda yeniler (bkz. startNewSession); sunucudaki eski kayıt silinmez
+// ve ziyaretçiye bu açıkça söylenir.
 export default function ChatWidget() {
   const [open, setOpen] = useState(false)
   const [messages, setMessages] = useState([{ id: 0, role: 'bot', text: WELCOME_TEXT }])
   const [draft, setDraft] = useState('')
   const [sending, setSending] = useState(false)
+  const [notice, setNotice] = useState('')
   const [error, setError] = useState(CHAT_URL ? '' : ERROR_TEXTS.config)
   const [loadingHistory, setLoadingHistory] = useState(false)
   const sessionId = useRef(null)
@@ -50,7 +55,8 @@ export default function ChatWidget() {
     setLoadingHistory(true)
     loadChatHistory({ url: CHAT_URL, sessionId: stored })
       .then((history) => {
-        if (!history.length) return
+        // Yükleme sürerken "Yeni sohbet" seçildiyse eski konuşma yeni pencereye taşınmaz.
+        if (!history.length || sessionId.current !== stored) return
         const restored = history.map((message) => ({ ...message, id: nextId.current++ }))
         // Yükleme sürerken gönderilmiş mesajlar varsa geçmiş onların önüne, karşılamanın hemen altına girer.
         setMessages(([welcome, ...rest]) => [welcome, ...restored, ...rest])
@@ -69,6 +75,17 @@ export default function ChatWidget() {
     toggleRef.current?.focus()
   }
 
+  function startNewChat() {
+    if (sending) return // Bekleyen yanıt eski oturuma aittir; yeni pencereye düşmesin.
+    historyRequested.current = true // Eski kimliğin geçmişi bu sayfada bir daha istenmez.
+    sessionId.current = startNewSession()
+    setMessages([{ id: nextId.current++, role: 'bot', text: WELCOME_TEXT }])
+    setLoadingHistory(false)
+    setError('')
+    setNotice(NEW_CHAT_NOTICE)
+    inputRef.current?.focus()
+  }
+
   async function onSubmit(event) {
     event.preventDefault()
     const text = draft.trim()
@@ -79,6 +96,7 @@ export default function ChatWidget() {
     setMessages((list) => [...list, { id, role: 'user', text }])
     setDraft('')
     setError('')
+    setNotice('')
     setSending(true)
     try {
       const reply = await sendChatMessage({ url: CHAT_URL, sessionId: sessionId.current, message: text })
@@ -116,6 +134,12 @@ export default function ChatWidget() {
           <h2 id={titleId} className="lp-chat-title">
             AtölyeKart Asistan
           </h2>
+          {CHAT_URL && (
+            <button type="button" className="lp-chat-new" onClick={startNewChat} disabled={sending}>
+              <Icon name="plus" size={16} />
+              <span>Yeni sohbet</span>
+            </button>
+          )}
           <button type="button" className="lp-icon-button lp-chat-close" onClick={close} aria-label="Sohbeti kapat">
             <Icon name="close" />
           </button>
@@ -139,6 +163,12 @@ export default function ChatWidget() {
             </li>
           )}
         </ol>
+
+        {notice && (
+          <p className="lp-chat-notice" role="status">
+            {notice}
+          </p>
+        )}
 
         {error && (
           <p className="lp-chat-error" role="alert">

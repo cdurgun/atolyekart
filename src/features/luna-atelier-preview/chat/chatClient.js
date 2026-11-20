@@ -87,6 +87,29 @@ export function getOrCreateSessionId(storage = defaultStorage()) {
   return id
 }
 
+// "Yeni sohbet": kayıtlı kimliği yalnızca bu tarayıcıdan siler ve yeni bir kimlik üretip kaydeder.
+// Ağ isteği yapmaz; eski konuşma sunucuda (n8n / Redis) kalır ve oradaki saklama süresi dolunca silinir.
+export const NEW_CHAT_NOTICE =
+  'Yeni sohbet başladı. Önceki konuşma yalnızca bu cihazdan kaldırıldı; sunucudaki kaydı silinmedi. ' +
+  'Asistanın konuşma geçmişi, son mesajınızdan 30 gün sonra sunucudan otomatik olarak silinir.'
+
+export function startNewSession(storage = defaultStorage()) {
+  const previous = readStoredSessionId(storage)
+  try {
+    storage?.removeItem(SESSION_STORAGE_KEY)
+  } catch {
+    // Depolama kapalı: aşağıda yeni kimlik yine üretilir.
+  }
+  let id = createSessionId()
+  while (id === previous) id = createSessionId()
+  try {
+    storage?.setItem(SESSION_STORAGE_KEY, id)
+  } catch {
+    // Kayıt başarısız: kimlik bu sayfa açıkken bellekte kullanılır.
+  }
+  return id
+}
+
 // Aynı alan adındaki yol (/api/chat) ya da http(s) adresi kabul edilir; boş ya da bozuk değer
 // "yapılandırılmamış" sayılır. "//" ile başlayan yol başka bir alan adına gider; reddedilir.
 export function resolveChatUrl(value) {
