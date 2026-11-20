@@ -3,6 +3,27 @@
 Durum: hazırlık. Production deploy, canlı RAG değişikliği, canlı yükleme workflow'u ve Production değişkenleri **onay bekliyor**.
 Ayrıntılı geçiş/geri dönüş planı ve yedekler: n8n sunucusundaki yerel yedek klasörü (`yedekler/20261120-canli-oncesi/GECIS-PLANI.md`). Bu klasör repoya girmez.
 
+## 0. Kapsam güncellemesi (21.11.2026)
+
+AtölyeKart bir bootcamp/ödev projesidir, ticari SaaS değildir. n8n bağlantısı yaklaşık 2–3 hafta sonra kapatılacak.
+
+**Korunanlar:**
+- Vercel `/api/chat` proxy'si.
+- n8n Chat Trigger Basic Auth.
+- Production için tek WAF kuralı.
+- Basit Preview Protection.
+- Mevcut Redis ve Qdrant (Mac üzerinde).
+- Yedekler ve geri dönüş yolları.
+
+**Çıkarılanlar:**
+- Ayrı OpenAI projesi, anahtarı ve bütçesi; harcama limiti testi.
+- Başka sunucuya taşıma ya da ücretli altyapı.
+- Dağıtık/paylaşımlı rate limit.
+- Docker yeniden başlatma gerektiren n8n kayıt budama ayarı.
+- Automation bypass anahtarı.
+
+n8n'i kapatma planı: bölüm 7.
+
 ## 1. RAG model ayarı (karar: 21.11.2026)
 
 | Ayar | Production için karar |
@@ -43,7 +64,7 @@ Temperature 0'da T05, T06 ve T08 dört çalıştırmada da doğru cevap verdi. T
   | Sen (tarayıcı) | Vercel hesabınla giriş yapılmış tarayıcıda Preview adresini açarsın, otomatik geçersin |
   | Başka bir kişi | Hobby'de hesap başına en fazla bir dış kullanıcı ("Request Access" / paylaşılabilir bağlantı) |
   | Komut satırı testleri | `vercel curl /api/chat --deployment <preview-url>`. CLI korumayı kendi hesabınla aşar; sır gerekmez |
-  | Otomasyon (CI, betik) | "Protection Bypass for Automation": proje ayarlarından bir gizli değer üretilir, isteklere `x-vercel-protection-bypass: <değer>` başlığı eklenir. Değer bir sırdır: koda ya da rapora yazılmaz. Gerekirse kullanıcı üretir |
+  | Otomasyon (CI, betik) | Kapsam dışı. Bypass anahtarı üretilmez; gerekirse `vercel curl` yeterlidir |
 
 - **Proxy ile uyum:** Sayfa ve `/api/chat` aynı korumalı alan adında olduğu için tarayıcıdaki sohbet çalışır. Vercel'e göre aynı alan adına giden isteklerde bypass gerekmez.
 - **Etkinleştirdikten sonra kontrol listesi:**
@@ -71,36 +92,32 @@ Temperature 0'da T05, T06 ve T08 dört çalıştırmada da doğru cevap verdi. T
 
 **Production kuralı önerisi (uygulanmadı):**
 - Mevcut test kuralı düzenlenir: host koşulu kaldırılır, path = `/api/chat` ve method = POST kalır. Sayım aynı: 60 saniyede 30 istek, IP başına, aşılınca 429.
+- Host koşulu kaldırılınca kural production alan adını **ve** tüm Preview adreslerini birlikte kapsar. Preview'ı korumak için ayrı bir kurala gerek kalmaz; Hobby'deki tek rate limit kuralı ikisine de yeter.
 - Hobby planında en fazla 3 özel kural var ve bunlardan yalnızca biri rate limit olabilir. Bu yüzden test kuralı **düzenlenir ya da silinir**; yanına ikinci bir rate limit kuralı eklenemez.
 - Not: CLI firewall değişikliğini "publish to production" diye yayınlar; bu, proje düzeyindeki firewall ayarının etkinleşmesidir. Test kuralı host koşuluyla sınırlı olduğu için production alan adını etkilemez.
 
-## 4. OpenAI maliyet kontrolü planı (uygulanmadı)
+## 4. OpenAI maliyet takibi (21.11 kapsam güncellemesiyle sadeleştirildi)
 
-**Mevcut durum:** AtölyeKart RAG, yükleme ve test workflow'ları "OpenAI account 2" credential'ını kullanıyor. Kullanıcı kararıyla **diğer workflow'ların credential'ları değiştirilmeyecek.**
+**Karar:** Yeni OpenAI projesi, API anahtarı ya da ek bütçe oluşturulmaz. Mevcut `gpt-4.1-mini` credential'ı ("OpenAI account 2") kullanılmaya devam eder.
 
-**Plan:**
-1. **Kullanıcı:** OpenAI panelinde yeni proje "AtolyeKart Asistan" açar.
-   - Proje → Limits → Model usage: yalnızca `gpt-4.1-mini` ve `text-embedding-3-small`. Embeddings node'u varsayılan modeli kullanıyor; bu model adı geçişten önce doğrulanmalı.
-   - Proje → Limits → Spend: aylık limit 10 USD, **"Enforce a hard limit" açık**, uyarılar %50 ve %80 (%100 uyarısı varsayılan olarak gelir).
-2. **Kullanıcı:** Bu projede, mümkünse yalnızca "Model capabilities"/gerekli uç noktalara yetkili (Restricted) bir API anahtarı üretir. n8n'de yeni bir OpenAI credential'ı oluşturur, örneğin "OpenAI AtolyeKart Asistan".
-   - Anahtar değeri sohbete, koda ya da rapora yazılmaz.
-3. **Onayla:** Yeni credential yalnızca AtölyeKart RAG'in iki OpenAI node'una ve Qdrant yükleme workflow'unun Embeddings node'una bağlanır. Diğer workflow'lara dokunulmaz.
+**Durum:** Ön ödemeli bakiye yaklaşık 2 USD; otomatik yükleme (Auto Top-up) kapalı.
 
-**Bütçe dolunca ne olur** (OpenAI belgelerine göre; deneyle doğrulanmadı):
-- Varsayılan spend limit yalnızca izler, istekleri durdurmaz. Durdurması için **"Enforce a hard limit"** açılmalıdır. Açıkken API, `429` ve `error.code = project_spend_limit_exceeded` döner.
-- Uygulama anında değildir: harcama limiti bir miktar aşabilir. Belgede gecikme süresi verilmiyor.
-- Kaynak: https://developers.openai.com/api/docs/guides/spend-limits ve https://help.openai.com/en/articles/9186755.
-- %50 ve %80 eşikleri belgede açıkça yazmıyor ("Add Alert" ile başka eşik eklenebildiği belirtiliyor, örnek %90). Panelde kontrol edilmeli.
+**Bakiye bitince ne olur:**
+- OpenAI `429 credit_balance_exhausted` hatası döner.
+- n8n çalışması hata verir, `/api/chat` 502 döner.
+- Ziyaretçi "Asistan şu anda yanıt veremiyor" mesajını görür.
+- Ek harcama oluşmaz. Bakiye pratikte bir harcama tavanı işlevi görür.
 
-**Gerçek davranışı doğrulama testi** (kullanıcı onayı ve paneli gerekir):
-1. Ayrı bir geçici "AtolyeKart-SpendTest" projesi aç; panelin izin verdiği en düşük hard limit'i koy; bu projeye ait geçici bir anahtar üret.
-2. Test kopyasını geçici bir n8n credential'ı ile yalnızca bu test için çalıştır, ya da doğrudan küçük istekler gönder. Limite ulaşınca `429 project_spend_limit_exceeded` bekleniyor.
-3. Asistan tarafında beklenen zincir: n8n çalışması hata verir → proxy 502 döner → ziyaretçi "Asistan şu anda yanıt veremiyor" mesajını görür.
-4. Test bitince geçici anahtarı ve projeyi sil.
+**Tahmini tüketim** (test kopyası, çalışma #316, n8n'in token tahmini):
+- Mesaj başına iki model çağrısı yapılır: yaklaşık 1,5 bin + 3,4 bin girdi token'ı ve yaklaşık 100 çıktı token'ı. Buna ek olarak tek bir embedding çağrısı.
+- Fiyatlar burada doğrulanmadı. `gpt-4.1-mini` için 1M girdi token'ı 0,40 USD, 1M çıktı token'ı 1,60 USD varsayılırsa mesaj başına yaklaşık 0,002–0,003 USD tutar. Konuşma uzadıkça geçmiş de modele gittiği için maliyet artar.
+- 2 USD yaklaşık 600–900 mesaja yeter. 14 soruluk tam test seti yaklaşık 0,03–0,04 USD tutar.
 
-Alternatif: limiti mevcut harcamanın altına çekerek hemen 429 alınıp alınmadığına bakmak. Bu yöntem daha ucuzdur ama yalnızca proje boşken anlamlıdır.
-
-**Maliyet tahmini** (fiyatlar doğrulanmadı): Mesaj başına yaklaşık 8–10 bin girdi token'ı. 10 USD birkaç bin mesaja yeter. Uygulama sınırı IP başına saatte 60 mesajdır; kötüye kullanımda bütçe günler içinde dolabilir. Hard limit bu yüzden önemli.
+**Takip:**
+- OpenAI panelindeki Billing (bakiye) ve Usage (günlük tüketim) sayfalarına her test turundan önce ve sonra bakılır *(kullanıcı)*.
+- Her test turunda kaç model çağrısı yapıldığı raporda belirtilir. Gereksiz tekrar testi yapılmaz.
+- Değerlendirme ya da sunum öncesinde bakiyenin bittiği durumda asistanın nasıl göründüğü önceden bilinmeli (yukarıdaki 502 mesajı).
+- Kötüye kullanım sınırları: uygulama IP başına saatte en fazla 60 mesaja izin verir (yaklaşık 0,15 USD/saat); WAF ayrıca dakikada 30 isteği sınırlar. Bir saldırgan bakiyeyi en kötü durumda birkaç saatte bitirebilir. Bunun sonucu yalnızca asistanın durmasıdır; ek borç oluşmaz.
 
 ## 5. Canlı RAG endpoint incelemesi ve Basic Auth değişiklik planı
 
@@ -156,3 +173,34 @@ Alternatif: limiti mevcut harcamanın altına çekerek hemen 429 alınıp alınm
 **Workflow yedekleri:** Canlı RAG ve yükleme workflow'larının bugünkü export'u, 20.11'deki yedeklerle bayt bayt aynı (SHA-256 eşleşti). Yedek alındığından beri canlı workflow'lar değişmedi.
 
 **Geçiş öncesi tekrar:** Geçiş günü sırasıyla yeni snapshot alınır, workflow export'unun SHA-256'sı karşılaştırılır ve n8n'in yeniden başlamadığı (`docker inspect`) kontrol edilir.
+
+## 7. n8n bağlantısını kapatma planı (yaklaşık 2–3 hafta sonra; onayla yapılır)
+
+Sıra önemlidir: önce ziyaretçinin gördüğü taraf, sonra veri.
+
+1. **Site:**
+   - Kullanıcı Vercel Production'dan `N8N_CHAT_URL`, `N8N_CHAT_USER` ve `N8N_CHAT_PASSWORD` değişkenlerini siler.
+   - Ardından yeniden deploy yapılır (onayla).
+   - `/api/chat` 503 döner, pencere "Asistan şu anda kullanılamıyor" gösterir. Kod değişikliği gerekmez.
+   - İstenirse daha sonra sohbet penceresi koddan da kaldırılabilir; bu ayrı bir karardır.
+2. **n8n:**
+   - Canlı RAG yayından kaldırılır (unpublish); endpoint 404 döner.
+   - Kapatmadan önce workflow'ların son hali export edilip yedek klasörüne eklenir.
+3. **Veri:**
+   - Redis'teki `*__Redis_Chat_Memory` anahtarları silinir. Silmeden önce anahtar sayısı raporlanır; işlem geri alınamaz, onay gerekir. Silinmezse anahtarlar en geç 30 günde kendiliğinden silinir.
+   - AtölyeKart RAG çalışma kayıtları silinir. Bunlar sohbet mesajlarını içerir.
+4. **Qdrant:**
+   - Koleksiyon silinebilir ya da bırakılabilir. Silinirse snapshot ve PDF kopyaları yedekte kalır.
+5. **Sırlar ve dosyalar:**
+   - Test ve canlı Basic Auth credential'ları ile RTF dosyası silinir (onayla).
+   - `.env.local` içindeki eski `VITE_N8N_CHAT_URL` satırı kaldırılır.
+6. **WAF:**
+   - `/api/chat` kuralı silinebilir; uç nokta 503 döndüğü için gerek kalmaz.
+7. **Belgeler:**
+   - CLAUDE.md'de asistanın "kapalı" olduğu yazılır.
+   - Gizlilik metni sohbet artık yokmuş gibi güncellenir. Hukuki maddelerin çoğu bu durumda düşer.
+8. **Dokunulmayacaklar:**
+   - Cloudflare tüneli ve n8n'in kendisi, diğer bootcamp workflow'ları kullandığı için ayrı karardır.
+   - Yedek klasörü korunur.
+
+**Geri dönüş:** Değişkenler yeniden girilip deploy edilir, workflow yeniden yayınlanır. Redis verisi silindiyse geri gelmez; Qdrant snapshot'tan geri yüklenir.

@@ -1,6 +1,6 @@
 # AtölyeKart Asistan: hukukçu değerlendirmesi gereken konular
 
-Bu liste teknik gözlemlere dayanır; hukuki görüş değildir. Her madde hukukçu tarafından yanıtlanana kadar açık kalır. Metin önerileri için `gizlilik-taslagi.md` dosyasına bakın. `gizlilik.html` bu inceleme bitmeden değiştirilmez.
+Bu liste teknik gözlemlere dayanır; hukuki görüş değildir. **Kapsam (21.11.2026):** AtölyeKart bir bootcamp/ödev projesidir. Asistan yaklaşık 2–3 hafta açık kalacak; n8n bağlantısı kapatılınca sohbet verisi (Redis anahtarları ve n8n çalışma kayıtları) silinecek (`uretim-hazirlik.md` bölüm 7). Hukukçuya bu kısa süre de belirtilmeli. Her madde hukukçu tarafından yanıtlanana kadar açık kalır. Metin önerileri için `gizlilik-taslagi.md` dosyasına bakın. `gizlilik.html` bu inceleme bitmeden değiştirilmez.
 
 | # | Konu | Teknik gerçek | Hukukçuya soru | Durum |
 |---|---|---|---|---|
