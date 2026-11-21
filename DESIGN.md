@@ -282,3 +282,18 @@ Header ile aynı koyu alan; tek satır, `label` boyutunda.
 - **Don't** bölüm boşluklarını `section` ritminin dışına çıkarma; hero'yu ekran yüksekliğine (`vh`/`svh`) bağlama.
 - **Don't** animasyon veya süs öğesi ekleme.
 - **Don't** fontları CDN'den yükleme.
+
+## Luna Tasarımı Notu
+
+Bu belge `src/styles.css` ile uygulanan sistemi anlatır. Ana sayfadaki yeni Luna tasarımı (`src/features/luna-atelier-preview/`) kendi stil dosyasını (`styles/luna-preview.css`) ve `--lp-*` token'larını kullanır; yukarıdaki kurallar o sayfaya uygulanmaz. Luna tarafında belgelenen bileşenler:
+
+### Cart Toast
+Sepete her eklemede görünen "Ürün sepetinize eklendi." bildirimi (`components/CartToast.jsx`, `.lp-toast`).
+
+- **Konum:** `position: fixed`, yatayda ortalı; üstten 96px (767px altında 76px) ve güvenli alan payı. Sayfa kaydırılsa da görünür kalır; tıklamayı engellemez (`pointer-events: none`). En geniş hali `100vw` eksi iki yan boşluk.
+- **Görünüm:** tam yuvarlak hap; `--lp-on-surface` zemin, `--lp-surface` metin (16,3:1), 14px / 600; solda 18px onay ikonu (`--lp-primary-fixed`), `--lp-shadow-lift` gölgesi.
+- **Davranış:** 2,5 sn görünür; art arda eklemede süre baştan başlar, bildirimler üst üste binmez. Canlı bölge (`role="status"`, `aria-live="polite"`) hep DOM'dadır.
+- 1600 / 800 / 390px'te yatay taşma yoktur.
+
+### Sipariş Talebi Durum Satırı
+Sepet sayfasında gönder düğmesinin altındaki durum metni (`.lp-checkout-status`). Doğrulama hatasında eksik alanı adıyla yazar ("Açık rıza kutusunu işaretleyin: …" ya da "Eksik ya da hatalı alanlar: İsim Soyisim, …"), çünkü hatalı alan düğmeden uzakta kalabilir. Alanların altındaki hata metinleri ayrıca görünür.
