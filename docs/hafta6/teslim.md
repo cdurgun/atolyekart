@@ -41,7 +41,10 @@ Sipariş sayımı: ham kayıt 1 | gerçek olduğu doğrulanmış 0 | test olma i
   - Canlı yükleme workflow'u Qdrant'a geçti, iki PDF yeniden yüklendi (21 parça, çift kayıt yok) ve workflow yayından kaldırıldı.
   - Canlı RAG `7126796b`: Basic Auth (kimliksiz 401, yanlış kimlik 403), Redis bellek, Qdrant ve v4 sistem mesajı. 14 soruluk test: 11 geçti, 3 kısmi (biçim), 0 başarısız.
   - Yerel uçtan uca test (`/api/chat`, aynı `sessionId`, 200, geçmiş hatırlandı) geçti.
-- Kalan Production adımları ayrıca onay bekler: Vercel Production değişkenleri (`N8N_CHAT_*`, kullanıcı girer), push ve Production deploy. Değişkenler girilmeden push edilirse production `/api/chat` 503 döner.
+- Production'a geçildi (21.11.2026; `uretim-hazirlik.md` bölüm 6, "Production deploy"):
+  - Vercel Production değişkenleri (`N8N_CHAT_*`) kullanıcı tarafından girildi; `855a533` push edildi; GitHub entegrasyonunun başlattığı deploy READY.
+  - Production testleri geçti: geçersiz gövde 400; aynı oturumla iki gerçek mesaj 200 ve test kodu hatırlandı; geçmiş yükleme 4 mesaj; Redis TTL ≈ 30 gün; arayüz, "Yeni sohbet" ve 390px; runtime günlüğünde hata ve sır yok. Rollback gerekmedi.
+  - WAF rate limit kuralının host koşulu kaldırıldı; `/api/chat` POST için IP başına dakikada 30 istek sınırı artık production ve Preview'da geçerli (bölüm 3, doğrulandı).
 - n8n API anahtarı 28.11.2026 00:00 (İstanbul) itibarıyla geçersiz olur; ödevden sonra silinmesi ve `.env.local` içindeki `N8N_API_*` satırlarının kaldırılması önerilir.
 - Hukuki maddeler (`hukuki-degerlendirme.md`) açık; `gizlilik.html` değiştirilmedi.
 - n8n bağlantısını kapatma planı: `uretim-hazirlik.md` bölüm 7.

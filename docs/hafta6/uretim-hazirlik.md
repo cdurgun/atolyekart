@@ -1,6 +1,6 @@
 # AtölyeKart Asistan: Production geçiş hazırlığı (Hafta 6)
 
-Durum (21.11.2026): **n8n tarafı canlıya geçti** (bölüm 6). Canlı RAG Basic Auth ile korunuyor; Redis bellek, Qdrant ve v4 sistem mesajı canlıda; yerel `/api/chat` üzerinden uçtan uca test geçti. Vercel Production değişkenleri (`N8N_CHAT_*`), push ve Production deploy **onay bekliyor**.
+Durum (21.11.2026): **AtölyeKart Asistan production'da yayında** (bölüm 6, "Production deploy"). n8n tarafı canlıya geçti: canlı RAG Basic Auth ile korunuyor; Redis bellek, Qdrant ve v4 sistem mesajı canlıda. Vercel Production değişkenleri (`N8N_CHAT_*`) kullanıcı tarafından girildi, `855a533` push edildi ve GitHub entegrasyonunun başlattığı Production deploy testleri geçti. WAF rate limit kuralı production ve Preview'ı kapsayacak şekilde genişletildi (bölüm 3).
 Ayrıntılı geçiş/geri dönüş planı ve yedekler: n8n sunucusundaki yerel yedek klasörleri (`yedekler/20261120-canli-oncesi/GECIS-PLANI.md`, `yedekler/20261121-yukleme-qdrant/`). Bu klasörler repoya girmez.
 
 ## 0. Kapsam güncellemesi (21.11.2026)
@@ -79,7 +79,7 @@ Kullanıcı Vercel panelinden etkinleştirdi; ayar `ssoProtection.deploymentType
 
 ## 3. Vercel WAF rate limit
 
-**Preview testi (21.11.2026; kural etkin, yalnızca test Preview'ına uygulanıyor):**
+**Preview testi (21.11.2026; kuralın ilk hâli, yalnızca test Preview'ına uygulanıyordu; güncel hâli aşağıda):**
 - **Kural:** "Preview test - api/chat rate limit".
   - Koşullar: host = ana test Preview adresi, path = `/api/chat`, method = POST.
   - Sayım: fixed window, IP başına 60 saniyede 30 istek; aşılınca 429.
@@ -95,7 +95,21 @@ Kullanıcı Vercel panelinden etkinleştirdi; ayar `ssoProtection.deploymentType
 - **Negatif kontrol:** Başka bir Preview adresine aynı 34 istek gönderildi; hiçbirine WAF müdahale etmedi, yalnızca uygulamanın 429'u görüldü. Pencere dolduktan sonra test Preview'ı yeniden 400 döndü, yani engel kalktı.
 - **İstemci davranışı:** WAF'ın 429'unda `Retry-After` yok ve gövde farklı. `chatClient.js` yalnızca durum koduna baktığı için ziyaretçi yine Türkçe "Çok sık mesaj gönderdiniz…" mesajını görür. Bu davranış kod okunarak çıkarıldı; tarayıcıda denenmedi.
 
-**Production kuralı önerisi (uygulanmadı):**
+**Production kuralı (uygulandı, 21.11.2026; kullanıcı onayıyla, Production deploy testlerinden sonra):**
+- Mevcut kuraldan yalnızca host koşulu kaldırıldı (firewall yapılandırması sürüm 1 → 2). Koşullar artık path = `/api/chat` ve method = POST; sayım değişmedi (fixed window, IP başına 60 saniyede 30 istek, aşılınca 429). CRS ve diğer firewall ayarları değişmedi.
+- Ardından, ayrı onayla, yalnızca kuralın adı ve açıklaması güncellendi (sürüm 2 → 3): ad "api/chat rate limit (production + preview)", açıklama tüm alan adlarını kapsadığını söylüyor. Kural kimliği (`rule_preview_test_…`) Vercel'de sabittir ve değişmedi; koşullar ve sayım aynı kaldı.
+- Değişiklik Vercel CLI ile yapıldı (`vercel api … --method PATCH`); MCP isteği yetki hatası verdi ve hiçbir şeyi değiştirmedi.
+- Doğrulama (geçersiz gövdeyle, n8n ve OpenAI çağrılmadan; tarayıcıdan, çünkü production alan adı curl'e Vercel Security Checkpoint gösteriyor):
+
+  | Adres | 1–30 | 31 ve sonrası |
+  |---|---|---|
+  | Production `atolyekart-tawny.vercel.app` | 1–20: 400 `invalid_body`; 21–30: uygulamanın 429 `rate_limited` yanıtı | 429, `x-vercel-mitigated: deny` (WAF) |
+  | Preview `atolyekart-5th1yk5nw-…` (kuralın eski hâlinde kapsam dışıydı) | 404 (bu eski deploy'da `/api/chat` yok) | 429, `x-vercel-mitigated: deny` (WAF) |
+
+- WAF engeli sürerken ana sayfa 200, `/api/order` normal yanıt (400) verdi; kural yalnızca `/api/chat` POST'u etkiliyor.
+- WAF sayacı IP başına ve alan adından bağımsız: production testinden hemen sonra Preview'a giden istekler ilk istekten itibaren 429 aldı. Temiz ölçüm pencere dolduktan sonra yapıldı.
+
+**Production kuralı önerisi (uygulama öncesi not):**
 - Mevcut test kuralı düzenlenir: host koşulu kaldırılır, path = `/api/chat` ve method = POST kalır. Sayım aynı: 60 saniyede 30 istek, IP başına, aşılınca 429.
 - Host koşulu kaldırılınca kural production alan adını **ve** tüm Preview adreslerini birlikte kapsar. Preview'ı korumak için ayrı bir kurala gerek kalmaz; Hobby'deki tek rate limit kuralı ikisine de yeter.
 - Hobby planında en fazla 3 özel kural var ve bunlardan yalnızca biri rate limit olabilir. Bu yüzden test kuralı **düzenlenir ya da silinir**; yanına ikinci bir rate limit kuralı eklenemez.
@@ -228,6 +242,29 @@ Aynı oturumla geçmiş testi MCP ile yapılamadı: manuel çalıştırma her se
 - Canlı RAG: `restore_workflow_version` → `433691ae`, ardından yeniden yayın. Eski bellek içi depo n8n yeniden başlayana kadar doludur; başlarsa iki PDF eski formdan yeniden yüklenmelidir.
 - Yükleme workflow'u: `cc36024a` (şu an yayında değil).
 - Qdrant: `…10-06-32-1` snapshot'ı ya da iki PDF'in yeniden yüklenmesi (silme adımı çift kaydı önler).
+
+### Production deploy (21.11.2026)
+
+- Vercel Production değişkenleri (`N8N_CHAT_URL`, `N8N_CHAT_USER`, `N8N_CHAT_PASSWORD`; sensitive, yalnızca Production) kullanıcı tarafından girildi. Değerler hiçbir çıktıya yazılmadı.
+- `git push origin main` (`fa84552..855a533`). Deploy'u GitHub entegrasyonu başlattı (`vercel deploy --prod` kullanılmadı): `dpl_8iMS5DYB36MPDk776HZpFycdPfFU` (`atolyekart-2559z363x`), READY.
+- Production alan adı curl isteklerine Vercel Security Checkpoint (403, `x-vercel-mitigated: challenge`) gösterdi; tarayıcı doğrulamayı otomatik geçti. Bu yüzden testler tarayıcıdan yapıldı. Ayar değiştirilmedi.
+
+| Test | Sonuç |
+|---|---|
+| Site erişimi | Sayfa açıldı; yeni paket yayında ("Yeni sohbet" var) |
+| Paket içeriği | JS'te n8n alan adı ya da webhook adresi yok; tarayıcı yalnızca `/api/chat`'i biliyor |
+| Geçersiz gövde | 400 `invalid_body` |
+| Farklı origin | JSON isteğinin CORS ön kontrolü (OPTIONS) 403 aldı, POST gönderilmedi. Ön kontrolsüz basit istek Vercel kenar katmanından 503 aldı (uygulama günlüğü boş, n8n çalışması ve Redis anahtarı oluşmadı). Uygulamanın kendi `403 forbidden_origin` yanıtı production'da doğrudan görülemedi; `server/chat.test.js` kapsıyor |
+| Gerçek mesaj, aynı oturum (`h6-prod-…`) | 1. mesaj 200; 2. mesaj 200 ve ilk mesajdaki test kodu ("YEŞİL-83") hatırlandı; `loadPreviousSession` 200 ve 4 mesaj |
+| Redis | Yalnızca `h6-prod-…__Redis_Chat_Memory`; 4 mesajlık liste; TTL 2.591.994 sn (≈ 30 gün) |
+| Arayüz | Yenileme sonrası geçmiş yüklendi; "Soya mumu nasıl saklamalıyım?" sorusu doküman kaynaklı yanıt aldı (`soy-candle-care-guide`, sürüm 1.2) |
+| Yeni sohbet | Yeni kimlik üretildi, pencerede yalnızca karşılama kaldı, uyarı metni göründü; ağ isteği yok |
+| Ağ trafiği | Tüm istekler aynı alan adına (`/api/chat`, 200); n8n'e doğrudan istek yok |
+| 390px | Pencere tam ekran, yatay taşma yok (`scrollWidth` 390), "Yeni sohbet" düğmesi 36px |
+| Runtime günlüğü ve sır sızıntısı | Deploy'da runtime günlük kaydı yok (yapılandırma ya da n8n hatası oluşmadı); yanıtlarda ve sayfada kimlik bilgisi yok |
+| n8n | Production testlerinden 3 webhook çalışması (#352–354), hepsi başarılı |
+
+- Rollback gerekmedi. Gerekirse Vercel Instant Rollback ile önceki production deploy'u `atolyekart-2sjgcx3w9` (`dpl_7DGhPCifcECkFMFdHpEHd5cPbtjT`) seçilir.
 
 ## 7. n8n bağlantısını kapatma planı (yaklaşık 2–3 hafta sonra; onayla yapılır)
 
