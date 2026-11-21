@@ -1,7 +1,7 @@
 # AtölyeKart Asistan: Production geçiş hazırlığı (Hafta 6)
 
-Durum: hazırlık. Production deploy, canlı RAG değişikliği, canlı yükleme workflow'u ve Production değişkenleri **onay bekliyor**.
-Ayrıntılı geçiş/geri dönüş planı ve yedekler: n8n sunucusundaki yerel yedek klasörü (`yedekler/20261120-canli-oncesi/GECIS-PLANI.md`). Bu klasör repoya girmez.
+Durum (21.11.2026): **n8n tarafı canlıya geçti** (bölüm 6). Canlı RAG Basic Auth ile korunuyor; Redis bellek, Qdrant ve v4 sistem mesajı canlıda; yerel `/api/chat` üzerinden uçtan uca test geçti. Vercel Production değişkenleri (`N8N_CHAT_*`), push ve Production deploy **onay bekliyor**.
+Ayrıntılı geçiş/geri dönüş planı ve yedekler: n8n sunucusundaki yerel yedek klasörleri (`yedekler/20261120-canli-oncesi/GECIS-PLANI.md`, `yedekler/20261121-yukleme-qdrant/`). Bu klasörler repoya girmez.
 
 ## 0. Kapsam güncellemesi (21.11.2026)
 
@@ -40,8 +40,11 @@ n8n'i kapatma planı: bölüm 7.
 | Başlangıç (eski kısa prompt) | 9 | 3 | 2 |
 | v4, varsayılan temperature | 13 | 0 | 1 (T14) |
 | v4, temperature 0 | 12 | 1 (T04) | 1 (T14) |
+| **Canlı RAG** (`7126796b`, v4, varsayılan temperature; 21.11, #336–349) | 11 | 3 (T04, T09, T11; biçim) | 0 |
 
 Temperature 0'da T05, T06 ve T08 dört çalıştırmada da doğru cevap verdi. T14'te 1 geçti, 2 kısmi, 1 başarısız.
+
+Canlı çalıştırmada hiçbir yanıtta uydurma sayı, süre, hacim ya da malzeme yok; koşullu ifadeler korundu. T14 bu kez geçti ("artırabilir" korundu, hüküm cümlesi eklenmedi). Kısmi olanlar yalnızca biçim kuralını ihlal ediyor: T04 sonuna "… önemlidir" ekledi; T09 soruyla ilgisiz güvenli yakma bilgisi ve "Bu bilgiler ışığında…" özeti ekledi; T11 "bilgi bulamadım" dedikten sonra kaynak satırı yazdı. Temperature varsayılan olduğu için sonuçlar çalıştırmadan çalıştırmaya değişebilir.
 
 ### Bilinen sınırlama (T14), bilinçli olarak kabul edildi
 
@@ -51,7 +54,9 @@ Temperature 0'da T05, T06 ve T08 dört çalıştırmada da doğru cevap verdi. T
 - **Alınmayan önlemler** (kullanıcı kararıyla): ikinci bir AI kontrol adımı ya da son cümleyi dokümanla karşılaştıran kod kontrolü eklenmedi.
 - **İzleme önerisi:** Canlıda n8n çalışma kayıtlarından ayda bir örnek yanıt incelenmeli. Aynı 14 soru her prompt ya da model değişikliğinden sonra yeniden çalıştırılmalı.
 
-## 2. Preview Deployment Protection (hazırlık; etkinleştirilmedi)
+## 2. Preview Deployment Protection (etkin; Standard Protection)
+
+Kullanıcı Vercel panelinden etkinleştirdi; ayar `ssoProtection.deploymentType = "all_except_custom_domains"` olarak doğrulandı. Aşağıdaki not etkinleştirme öncesi hazırlıktır.
 
 - **Plan:** Hobby. Vercel Authentication tüm planlarda var ve ek ücret gerektirmiyor. Password Protection Hobby'de yok.
 - **Etkinleştirme** (kullanıcı, panelden): Vercel → atolyekart → Settings → Deployment Protection → Vercel Authentication → **Enabled**, kapsam **Standard Protection** → Save.
@@ -137,7 +142,9 @@ Temperature 0'da T05, T06 ve T08 dört çalıştırmada da doğru cevap verdi. T
 
 - **Sonuç:** Bilinen başka bir tüketici yok. Endpoint adres bilen herkese açık ve kimlik doğrulama istemiyor (`allowedOrigins: *`).
 
-**Basic Auth değişiklik planı (uygulanmadı; Production geçişinden ayrı, daha önce yapılabilir):**
+**Uygulandı (21.11.2026):** Basic Auth, aşağıdaki plandan farklı olarak tek başına değil, tam geçişin parçası olarak uygulandı: Trigger ile birlikte Redis bellek, Qdrant ve v4 sistem mesajı da canlıya alındı. Kayıt ve test sonuçları bölüm 6'dadır. Aşağıdaki plan tarihçe için korunuyor.
+
+**Basic Auth değişiklik planı (ilk taslak):**
 1. Kullanıcı n8n'de yeni bir credential oluşturur, örneğin "AtolyeKart CANLI Basic Auth". Değerleri kullanıcı üretir; testtekinden farklı ve güçlü olmalı.
 2. Yedek doğrulanır (`mYsRTCYniOggXfSJ.json`, SHA-256 `0324…9d9a6`).
 3. Canlı RAG'de **yalnızca** Chat Trigger değişir:
@@ -174,6 +181,54 @@ Temperature 0'da T05, T06 ve T08 dört çalıştırmada da doğru cevap verdi. T
 
 **Geçiş öncesi tekrar:** Geçiş günü sırasıyla yeni snapshot alınır, workflow export'unun SHA-256'sı karşılaştırılır ve n8n'in yeniden başlamadığı (`docker inspect`) kontrol edilir.
 
+### Canlı geçiş kaydı (21.11.2026)
+
+Yedekler: `yedekler/20261121-yukleme-qdrant/` (iki workflow'un önce/sonra export'u ve iki Qdrant snapshot'ı, `SHA256SUMS` ile). Export'larda kullanıcı adı ya da parola yoktur.
+
+**Ön kontrol:** İki canlı workflow'un export'u 20.11 yedekleriyle aynıydı (`0324…`, `b9e2…`). Değişiklik öncesi snapshot `…2026-11-21-10-06-32-1.snapshot` (checksum `7abba5c9…`, kopyayla eşleşti; 21 nokta).
+
+**1. Canlı yükleme workflow'u (`hkc6PGrM6o0aAvo8`): `cc36024a` → `4b41a863`**
+- Simple Vector Store ve manuel tetikleyici kaldırıldı. Yerine: "Eski parçaları sil" (aynı `document_id`) → "Form verisini geri al" → Qdrant Vector Store (`atolyekart_product_knowledge`).
+- TEST kopyasından farkı: silme adımı hata verirse akış durur (TEST'te `continueRegularOutput` idi). Code node silme yanıtında `status: ok` ve `result.status: completed` görmezse ya da PDF yoksa akışı durdurur; böylece silme başarısızken çift kayıt eklenmez.
+- Sürüm farkında değişen node yok: form adresi (`webhookId c34c4d08…`), alanlar, metadata, 500/50 bölme, embeddings ve `binaryMode: separate` korundu.
+- Pin testleri (Qdrant ve OpenAI çağrılmadan): #331 PDF verisi `separate` modunda Qdrant node'una ulaştı; #332 başarısız silmede akış durdu.
+
+**2. PDF'lerin yeniden yüklenmesi (canlı formdan, yedekteki SHA-256'sı doğrulanmış kopyalarla)**
+
+| Çalışma | Doküman | Silme | Sonuç |
+|---|---|---|---|
+| #333 | `ceramic-mug-care-guide` 1.0 | `completed` | başarılı |
+| #334 | `soy-candle-care-guide` 1.2 | `completed` | başarılı |
+
+- Qdrant sonrası: toplam 21 (ceramic 10, soy 11); aynı içerikli tekrar 0; eksik metadata 0; durum green. Sonraki snapshot `…2026-11-21-10-09-24-2.snapshot` (`e9db51ef…`).
+- Yükleme workflow'u hemen **yayından kaldırıldı**: form adresi GET ve POST'ta 404 döner.
+
+**3. Canlı RAG (`mYsRTCYniOggXfSJ`): `433691ae` → `7126796b` (yayında)**
+- Değişiklikten önce eski Simple Vector Store'un dolu ve çalıştığı doğrulandı (#335; rehberden parça döndü). Geri dönüş yolu bu sayede gerçek.
+- Sürüm farkı: eklenen Redis Chat Memory (30 gün TTL, pencere 10) ve Product Documents (Qdrant, `topK` 6, metadata dahil); kaldırılan eski vektör aracı, Simple Vector Store ve ikinci LLM; değişen yalnızca Chat Trigger ve AI Agent sistem mesajı.
+- Chat Trigger: `basicAuth` ("AtolyeKart CANLI Basic Auth"), `allowedOrigins` = `https://atolyekart-tawny.vercel.app`, `loadPreviousSession: memory`. **`webhookId 541ab5e6` ve adres değişmedi.**
+- Sistem mesajı TEST v4 ile birebir aynı (SHA-256 `fe5d212d…`). Model `gpt-4.1-mini`, Google Sheets aracı ve `binaryMode` değişmedi.
+
+**4. Testler**
+
+| Test | Sonuç |
+|---|---|
+| Kimliksiz POST | 401 |
+| Uydurma kullanıcı/parola | 403 |
+| Kimliksiz geçmiş yükleme | 401 |
+| Reddedilen istekler | n8n çalışma kaydı ve Redis anahtarı oluşmadı |
+| 14 soruluk RAG testi (MCP manuel, #336–349) | 11 geçti, 3 kısmi (biçim), 0 başarısız; bölüm 1. Her oturum kendi Redis anahtarına yazıldı, TTL ≈ 30 gün |
+| Uçtan uca, yerel `npm run dev` → `/api/chat` → Basic Auth → canlı n8n | Aynı `sessionId` (`h6-e2e-…`) ile iki mesaj: ikisi de **200**. İlk mesajdaki uydurma test kodu ("MAVİ-47") ikinci mesajda doğru hatırlandı. `loadPreviousSession` 200 ve 4 mesaj (human, ai, human, ai) döndü |
+| Redis | Yalnızca `h6-e2e-…__Redis_Chat_Memory` anahtarı; 4 mesajlık liste; TTL 2.591.992 sn (≈ 30 gün) |
+| Sır sızıntısı | Sunucu günlüğünde ve yanıtlarda kullanıcı adı, parola, Basic Auth başlığı ve webhook adresi yok |
+
+Aynı oturumla geçmiş testi MCP ile yapılamadı: manuel çalıştırma her seferinde yeni bir `mcp-session-…` kimliği veriyor. Bu yüzden test, kullanıcı `.env.local`'e canlı değerleri girdikten sonra `/api/chat` üzerinden yapıldı; değerler yalnızca proxy'de kaldı ve hiçbir çıktıya yazılmadı. Toplam OpenAI kullanımı: 17 sohbet çalışması (#335, #336–349 ve uçtan uca testin iki mesajı) ve iki PDF'in embedding'i, tahminen 0,05 USD'nin altında.
+
+**Geri dönüş:**
+- Canlı RAG: `restore_workflow_version` → `433691ae`, ardından yeniden yayın. Eski bellek içi depo n8n yeniden başlayana kadar doludur; başlarsa iki PDF eski formdan yeniden yüklenmelidir.
+- Yükleme workflow'u: `cc36024a` (şu an yayında değil).
+- Qdrant: `…10-06-32-1` snapshot'ı ya da iki PDF'in yeniden yüklenmesi (silme adımı çift kaydı önler).
+
 ## 7. n8n bağlantısını kapatma planı (yaklaşık 2–3 hafta sonra; onayla yapılır)
 
 Sıra önemlidir: önce ziyaretçinin gördüğü taraf, sonra veri.
@@ -185,6 +240,7 @@ Sıra önemlidir: önce ziyaretçinin gördüğü taraf, sonra veri.
    - İstenirse daha sonra sohbet penceresi koddan da kaldırılabilir; bu ayrı bir karardır.
 2. **n8n:**
    - Canlı RAG yayından kaldırılır (unpublish); endpoint 404 döner.
+   - Canlı yükleme workflow'u 21.11.2026'dan beri zaten yayında değil.
    - Kapatmadan önce workflow'ların son hali export edilip yedek klasörüne eklenir.
 3. **Veri:**
    - Redis'teki `*__Redis_Chat_Memory` anahtarları silinir. Silmeden önce anahtar sayısı raporlanır; işlem geri alınamaz, onay gerekir. Silinmezse anahtarlar en geç 30 günde kendiliğinden silinir.

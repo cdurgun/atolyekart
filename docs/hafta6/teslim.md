@@ -3,6 +3,7 @@
 Zorunlu teknik maddeler (ödev PDF'si) tamamlandı. MCP bağlantısı PDF'de ileri seviye ve zorunlu olmayan pratik olarak geçer; projede ayrıca kullanıldı.
 
 - [x] **1. Redis ile ziyaretçi bazlı Chat History**: n8n Redis Chat Memory, anahtar `<sessionId>__Redis_Chat_Memory`, 30 gün kayan TTL. Oturum kimliği tarayıcıda (`localStorage['atolyekart-chat-session']`); pencere açılınca geçmiş yüklenir, "Yeni sohbet" yeni kimlik üretir. Testler: `src/features/luna-atelier-preview/chat/chatClient.test.js`, `server/chat.test.js`. Commit'ler: `fa84552`, `6430b94`, `af7fae7`.
+  - Canlıda doğrulandı (21.11.2026): yerel `/api/chat` → Basic Auth → canlı n8n; aynı `sessionId` ile iki mesaj 200 döndü, ikinci mesajda ilk mesajdaki test kodu hatırlandı, `loadPreviousSession` 4 mesaj döndürdü, Redis anahtarının TTL'i ≈ 30 gün. Ayrıntı: `uretim-hazirlik.md` bölüm 6.
 - [x] **2. n8n API ile haftalık sipariş sorgusu**: `scripts/haftalik-siparis-api.mjs` (yalnızca GET). Sonuç aşağıda.
 - [x] **3. CLAUDE.md güncellemesi**: Hafta 6 kapsamı, Asistan bölümü ve script komutu.
 
@@ -36,7 +37,11 @@ Sipariş sayımı: ham kayıt 1 | gerçek olduğu doğrulanmış 0 | test olma i
 
 ## Kapanış notları (zorunlu maddelerin dışında)
 
-- Canlı Basic Auth ve Vercel Production değişkenleri (`N8N_CHAT_*`) ayrı Production hazırlığıdır (`uretim-hazirlik.md` bölüm 5). Canlı workflow kullanıcının açık onayı olmadan değiştirilmez. Bu tamamlanmadan push edilirse production `/api/chat` 503 döner.
+- n8n canlı geçişi tamamlandı (21.11.2026; `uretim-hazirlik.md` bölüm 6):
+  - Canlı yükleme workflow'u Qdrant'a geçti, iki PDF yeniden yüklendi (21 parça, çift kayıt yok) ve workflow yayından kaldırıldı.
+  - Canlı RAG `7126796b`: Basic Auth (kimliksiz 401, yanlış kimlik 403), Redis bellek, Qdrant ve v4 sistem mesajı. 14 soruluk test: 11 geçti, 3 kısmi (biçim), 0 başarısız.
+  - Yerel uçtan uca test (`/api/chat`, aynı `sessionId`, 200, geçmiş hatırlandı) geçti.
+- Kalan Production adımları ayrıca onay bekler: Vercel Production değişkenleri (`N8N_CHAT_*`, kullanıcı girer), push ve Production deploy. Değişkenler girilmeden push edilirse production `/api/chat` 503 döner.
 - n8n API anahtarı 28.11.2026 00:00 (İstanbul) itibarıyla geçersiz olur; ödevden sonra silinmesi ve `.env.local` içindeki `N8N_API_*` satırlarının kaldırılması önerilir.
 - Hukuki maddeler (`hukuki-degerlendirme.md`) açık; `gizlilik.html` değiştirilmedi.
 - n8n bağlantısını kapatma planı: `uretim-hazirlik.md` bölüm 7.
