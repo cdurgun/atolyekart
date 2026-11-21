@@ -63,7 +63,11 @@ Köşeli parantezler mevcut sayfadaki gibi yer tutucudur.
 - Satır 51 "Süre dolduğunda ya da rızanızı geri aldığınızda verileriniz silinir." ⚖️ Sohbet için açık rıza yoksa "rızanızı geri aldığınızda" ifadesi sohbete uymaz.
 
 ## 7. "Haklarınız" — ⚖️ operasyonel boşluk
-- Ziyaretçi sohbetinin silinmesini isterse sohbeti bulabilmemiz için oturum kimliğini bilmemiz gerekir; arayüz bu kimliği göstermiyor ve "sohbeti sil / yeni sohbet" düğmesi yok. Öneri (onay gerektirir, kod değişikliği): sohbet penceresine "Sohbeti sil" düğmesi ya da başvuru için kimliği gösteren bir alan. Hukukçu, silme talebinin nasıl karşılanacağını metinde nasıl anlatacağımızı belirlemeli.
+- Sohbet penceresinde "Yeni sohbet" düğmesi var. Düğme:
+  - eski oturum kimliğini yalnızca bu tarayıcıdan siler ve yeni bir kimlik oluşturur; eski konuşma pencereden ve bu cihazdan kaldırılır;
+  - sunucuya istek göndermez. Eski konuşmanın Redis kaydı **hemen silinmez**; son mesajdan itibaren 30 gün sonra otomatik olarak silinir (`sessionTTL` 30 gün, her yeni mesajda yenilenir). n8n çalışma kayıtlarındaki kopya ayrıca n8n'in saklama süresine tabidir (H5);
+  - ziyaretçiye bu durumu pencerede açıkça yazar: "Önceki konuşma yalnızca bu cihazdan kaldırıldı; sunucudaki kaydı silinmedi. Asistanın konuşma geçmişi, son mesajınızdan 30 gün sonra sunucudan otomatik olarak silinir." (`NEW_CHAT_NOTICE`).
+- Sunucu tarafında silme düğmesi yoktur; ek n8n uç noktası bilinçli olarak yazılmadı. Ziyaretçi kaydının hemen silinmesini isterse sohbeti bulabilmemiz için oturum kimliğini bilmemiz gerekir; arayüz bu kimliği göstermiyor. Hukukçu, silme talebinin nasıl karşılanacağını ve metinde nasıl anlatılacağını belirlemeli (H6). n8n bağlantısı kapatıldığında tüm sohbet kayıtları silinecek (`uretim-hazirlik.md` bölüm 7).
 
 ## Doğrulanan teknik dayanak
 - Redis Chat Memory `sessionTTL` = 2592000 sn (30 gün), her yazmada yenilenir; ölçülen anahtarların tamamında TTL var.

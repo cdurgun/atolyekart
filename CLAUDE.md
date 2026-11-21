@@ -10,7 +10,7 @@ Hafta 2 — Güvenli API katmanı, KVKK ve deploy. Formlar artık webhook'a doğ
 
 Hafta 2 kapsamında yapılanlar: e-posta doğrulama hatasının düzeltilmesi, worktree'de geliştirilen kategori filtresi, sunucu API'si (`/api/order`, `/api/stock-request`, `/api/admin/orders`), sunucu tarafı doğrulama ve stok kontrolü, IP bazlı rate limit, admin için JWT, sırların sunucuya taşınması, açık rıza kutusu, örnek gizlilik politikası (`/gizlilik.html`), `GUVENLIK-KONTROL-LISTESI.md`, testler (`node:test`) ve Expo mobil uygulaması (`mobile/`). Build gerektirmeyen statik sürüm (`cdn/`) kullanıcı isteğiyle kaldırıldı.
 
-Hafta 6 kapsamında yapılanlar: AtölyeKart Asistan için sunucu tarafı sohbet proxy'si (`/api/chat`), n8n tarafında Redis sohbet geçmişi ve Qdrant vektör deposu (test kopyalarında; canlı geçiş onay bekliyor), n8n MCP ile workflow yönetimi. Geçiş hazırlığı ve hukuki inceleme listesi `docs/hafta6/` içindedir.
+Hafta 6 kapsamında yapılanlar: AtölyeKart Asistan için sunucu tarafı sohbet proxy'si (`/api/chat`), n8n tarafında Redis sohbet geçmişi ve Qdrant vektör deposu (test kopyalarında; canlı geçiş onay bekliyor), n8n MCP ile workflow yönetimi. Geçiş hazırlığı ve hukuki inceleme listesi `docs/hafta6/` içindedir. Ödevin zorunlu teknik maddeleri (Redis Chat History, n8n API ile haftalık sipariş sorgusu, CLAUDE.md güncellemesi) tamamlandı; kanıtlar `docs/hafta6/teslim.md`. Canlı Basic Auth ve Vercel Production değişkenleri ayrı Production hazırlığıdır ve onay bekler.
 
 Önceki aşamalardan kalanlar: editoryal/atölye tasarım sistemi (`DESIGN.md`), gerçek ürün fotoğrafları, atölye fotoğraflı hero, proje Skill'i, katalog QR kodu ve alt ajanla yapılan tasarım incelemesi (öneriler `plan.md` içinde).
 
@@ -22,6 +22,7 @@ Hafta 6 kapsamında yapılanlar: AtölyeKart Asistan için sunucu tarafı sohbet
 - `npm test` — `node:test` ile doğrulama ve API testleri
 - `cd mobile && npx expo start` — mobil uygulama (Expo Go)
 - `node --env-file=.env.local scripts/admin-token.mjs` — yerel/test amaçlı admin JWT üretir
+- `node --env-file=.env.local scripts/haftalik-siparis-api.mjs` — n8n REST API'den (yalnızca GET) 16–22 Kasım 2026 (Europe/Istanbul) haftasının başarılı `atolyekart-siparis` çalışmalarını listeler (tarih aralığı script içinde sabittir); `.env.local` içinde `N8N_API_URL` ve `N8N_API_KEY` ister, anahtarı ve adresi yazdırmaz
 
 ## Project Purpose
 
