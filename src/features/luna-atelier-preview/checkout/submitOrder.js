@@ -36,6 +36,26 @@ export function validateContact(raw) {
   return validateRequest(raw, contactSpec, [])
 }
 
+// Gönder düğmesinin yanındaki özet: hangi alanın eksik olduğunu adıyla söyler (alan formun uzağında kalabilir).
+// Tek hata varsa alanın kendi mesajı da yazılır; birden fazlaysa alan adları form sırasıyla sıralanır.
+export const contactFieldNames = {
+  name: 'İsim Soyisim',
+  phone: 'Telefon Numarası',
+  email: 'E-posta Adresi',
+  consent: 'Açık rıza kutusu',
+}
+
+export function contactErrorSummary(errors) {
+  const invalid = contactFields.filter((name) => errors[name])
+  if (invalid.length === 0) return ''
+  if (invalid.length === 1) {
+    const [name] = invalid
+    const lead = name === 'consent' ? 'Açık rıza kutusunu işaretleyin' : `${contactFieldNames[name]} alanını düzeltin`
+    return `${lead}: ${errors[name]}`
+  }
+  return `Eksik ya da hatalı alanlar: ${invalid.map((name) => contactFieldNames[name]).join(', ')}.`
+}
+
 // Tahmini toplam: fiyat src/products.js'ten gelir, yalnızca bilgi amaçlıdır.
 export function cartTotals(lines) {
   return lines.reduce(

@@ -5,6 +5,7 @@ import { clearOrders, listOrders } from '../../../../server/lib/orders.js'
 import { resetRateLimit } from '../../../../server/lib/rate-limit.js'
 import {
   cartTotals,
+  contactErrorSummary,
   FAILURE_TEXT,
   isOrderable,
   NOT_ORDERABLE_TEXT,
@@ -147,4 +148,20 @@ test('gerçek sunucu kodu: stoktaki satırlar kabul edilir, Terra Minimal Kolye 
     listOrders().map((o) => [o.productId, o.quantity, o.source]),
     [[mum.id, 1, 'react'], [kupa.id, 2, 'react']],
   )
+})
+
+test('contactErrorSummary: eksik alanın kendi mesajını, form sırasıyla verir', () => {
+  const consentOnly = validateContact({ name: 'Ahmet Balkan', phone: '05321231212', email: '', consent: false })
+  assert.equal(
+    contactErrorSummary(consentOnly.errors),
+    'Açık rıza kutusunu işaretleyin: Devam etmek için kişisel verilerinizin işlenmesine onay verin.',
+  )
+
+  const many = validateContact({ name: '', phone: '123', email: 'x@', consent: false })
+  assert.equal(
+    contactErrorSummary(many.errors),
+    'Eksik ya da hatalı alanlar: İsim Soyisim, Telefon Numarası, E-posta Adresi, Açık rıza kutusu.',
+  )
+
+  assert.equal(contactErrorSummary({}), '')
 })

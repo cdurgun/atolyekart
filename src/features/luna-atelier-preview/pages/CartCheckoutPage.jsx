@@ -3,7 +3,7 @@ import Icon from '../components/Icon.jsx'
 import QuantityStepper from '../components/QuantityStepper.jsx'
 import { orderMode } from '../checkout/environment.js'
 import { canSubmit } from '../checkout/orderMode.js'
-import { cartTotals, contactFields, submitOrder, validateContact } from '../checkout/submitOrder.js'
+import { cartTotals, contactErrorSummary, contactFields, submitOrder, validateContact } from '../checkout/submitOrder.js'
 import { formatPrice } from '../data.js'
 import { productRoute, routes } from '../routes.js'
 import { sendRequest } from '../../../webhook/adapter.js'
@@ -86,7 +86,7 @@ export default function CartCheckoutPage({ cart, sent, onQty, onRemove, onSent, 
     setErrors(found)
     const invalid = contactFields.find((name) => found[name])
     if (invalid) {
-      setStatus('Lütfen işaretli alanları düzeltin.')
+      setStatus(contactErrorSummary(found))
       form.elements[invalid].focus()
       return
     }
@@ -155,12 +155,16 @@ export default function CartCheckoutPage({ cart, sent, onQty, onRemove, onSent, 
                   </li>
                 ))}
               </ul>
-              <p className="lp-body-sm lp-muted">Bu parçalar yeniden gönderilmez. Sepette kalanları gönderdiğinizde tüm talebin özetini göreceksiniz.</p>
+              <p className="lp-body-sm lp-muted">
+                {cart.length > 0
+                  ? 'Bu parçalar atölyeye başarıyla iletildi ve yeniden gönderilmez. Gönderilemeyen parçalar aşağıda sepette duruyor; nedenini satırında görüp yeniden gönderebilirsiniz.'
+                  : 'Bu parçalar atölyeye başarıyla iletildi; atölye sizi arayarak talebinizi teyit edecek. Sepette gönderilecek başka parça kalmadı.'}
+              </p>
               {cart.length === 0 && (
-                <button type="button" className="lp-button lp-button-ghost lp-button-medium" onClick={() => onComplete([])}>
-                  <span>Talep Özetini Gör</span>
+                <a className="lp-button lp-button-ghost lp-button-medium" href={routes.catalog}>
+                  <span>Alışverişe Devam Et</span>
                   <Icon name="arrowRight" size={16} />
-                </button>
+                </a>
               )}
             </section>
           )}

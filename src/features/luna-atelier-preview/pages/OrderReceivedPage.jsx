@@ -1,14 +1,13 @@
 import Icon from '../components/Icon.jsx'
 import { orderMode } from '../checkout/environment.js'
-import { cartTotals } from '../checkout/submitOrder.js'
-import { formatPrice } from '../data.js'
 import { routes } from '../routes.js'
 
 // Sipariş talebi /api/order üzerinden atölyeye iletildikten sonra gösterilir.
 // Bu bir ödeme onayı değildir: kesin tutar, teslimat adresi ve notlar atölye tarafından telefonla teyit edilir.
-// Sayfa doğrudan açılırsa (gönderilmiş satır yoksa) koleksiyona yönlendiren boş durum görünür.
-export default function OrderReceivedPage({ lines }) {
-  if (lines.length === 0) {
+// Yalnızca talebin alındığı bilgisi gösterilir; ürün listesi ve tutar tutulmaz (sepet o anda temizlenir).
+// Sayfa doğrudan ya da geri tuşuyla açılırsa koleksiyona yönlendiren boş durum görünür.
+export default function OrderReceivedPage({ received }) {
+  if (!received) {
     return (
       <main className="lp-main">
         <section className="lp-container lp-section">
@@ -28,7 +27,6 @@ export default function OrderReceivedPage({ lines }) {
     )
   }
 
-  const { count, total } = cartTotals(lines)
   // Test modunda (mock/yerel) sonuç gerçek sipariş gibi sunulmaz.
   const test = orderMode !== 'live'
 
@@ -55,24 +53,9 @@ export default function OrderReceivedPage({ lines }) {
             </>
           )}
 
-          <ul className="lp-received-list" aria-label="İletilen parçalar">
-            {lines.map((line) => (
-              <li key={line.id}>
-                <img src={line.image} alt="" width="56" height="56" />
-                <span className="lp-received-name">{line.name}</span>
-                <span className="lp-muted">{line.qty} adet</span>
-                <span className="lp-received-price">{formatPrice(line.price * line.qty)}</span>
-              </li>
-            ))}
-          </ul>
-          <p className="lp-received-total">
-            <span>Tahmini toplam · {count} parça</span>
-            <strong>{formatPrice(total)}</strong>
-          </p>
-
           <div className="lp-pending-actions">
             <a className="lp-button lp-button-primary" href={routes.catalog}>
-              <span>Koleksiyona Dön</span>
+              <span>Alışverişe Devam Et</span>
               <Icon name="arrowRight" size={18} />
             </a>
           </div>

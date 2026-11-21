@@ -1,8 +1,10 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import SiteHeader from './components/SiteHeader.jsx'
 import CheckoutHeader from './components/CheckoutHeader.jsx'
 import SiteFooter from './components/SiteFooter.jsx'
 import ChatWidget from './components/ChatWidget.jsx'
+import CartToast from './components/CartToast.jsx'
+import { addLine } from './checkout/cart.js'
 import HomePage from './pages/HomePage.jsx'
 import CatalogPage from './pages/CatalogPage.jsx'
 import ProductDetailPage from './pages/ProductDetailPage.jsx'
@@ -20,21 +22,31 @@ import {
 } from './routes.js'
 
 // /luna-preview: Stitch Luna Atelier tasarımının bağımsız önizlemesi.
-// Sepet yalnızca bu sayfanın belleğindedir, boş başlar ve yalnızca gerçek ürünleri (src/products.js) kabul eder.
-// Sipariş talebi mevcut POST /api/order akışıyla, her satır için ayrı istek olarak gönderilir
-// (checkout/submitOrder.js). Özel sipariş sayfası bu akışa bağlı değildir.
+// Sepet yalnızca bu sayfanın belleğindedir (tarayıcıda saklanmaz), boş başlar ve yalnızca gerçek ürünleri
+// (src/products.js) kabul eder. Sipariş talebi mevcut POST /api/order akışıyla, her satır için ayrı istek
+// olarak gönderilir (checkout/submitOrder.js). Özel sipariş sayfası bu akışa bağlı değildir.
 export default function LunaPreviewApp() {
   const [route, setRoute] = useState(currentRoute)
   const [cart, setCart] = useState([])
-  // Bu ödemede gönderilmiş satırlar (kısmi başarıda birikir) ve son tamamlanan talebin özeti.
+  // Bu ödemede gönderilmiş satırlar (kısmi başarıda birikir).
   const [sent, setSent] = useState([])
-  const [received, setReceived] = useState([])
+  // Talep tamamlandı mı: onay ekranı yalnızca bunu gösterir; ürün listesi ve tutar tutulmaz.
+  const [received, setReceived] = useState(false)
+  // Sepete her eklemede artar; CartToast bildirimi gösterir.
+  const [toastSignal, setToastSignal] = useState(0)
+  const previousRoute = useRef(route)
 
   useEffect(() => {
     const onHashChange = () => setRoute(currentRoute())
     window.addEventListener('hashchange', onHashChange)
     return () => window.removeEventListener('hashchange', onHashChange)
   }, [])
+
+  // Onay ekranından ayrılınca bayrak sıfırlanır; geri tuşuyla dönülürse boş durum görünür.
+  useEffect(() => {
+    if (previousRoute.current === routes.orderReceived && route !== routes.orderReceived) setReceived(false)
+    previousRoute.current = route
+  }, [route])
 
   useEffect(() => {
     document.title = pageTitle(route)
@@ -47,23 +59,8 @@ export default function LunaPreviewApp() {
   function addToCart(product, qty = 1) {
     // Konsept ürünler sepete giremez; arayüz düğme göstermese de burada da engellenir.
     if (!isReal(product)) return
-    setCart((items) => {
-      const existing = items.find((item) => item.id === product.id)
-      if (existing) {
-        return items.map((item) => (item.id === product.id ? { ...item, qty: Math.min(item.qty + qty, 12) } : item))
-      }
-      return [
-        ...items,
-        {
-          id: product.id,
-          name: product.name,
-          label: product.category,
-          price: product.price,
-          qty,
-          image: product.image,
-        },
-      ]
-    })
+    setCart((items) => addLine(items, product, qty))
+    setToastSignal((n) => n + 1)
   }
 
   const setQty = (id, qty) => setCart((items) => items.map((item) => (item.id === id ? { ...item, qty } : item)))
@@ -76,11 +73,13 @@ export default function LunaPreviewApp() {
     setSent((items) => [...items, ...lines])
   }
 
-  // Sepette gönderilmemiş satır kalmayınca onay ekranına geçilir.
-  function completeOrder(lines) {
-    setReceived([...sent, ...lines])
+  // Yalnızca tüm satırlar başarıyla iletildiğinde çağrılır: sepet ve gönderilenler listesi tamamen
+  // temizlenir, onay ekranına geçilir. Form, sepet sayfası kapandığı için kendiliğinden sıfırlanır.
+  // Hata durumunda bu fonksiyon çağrılmaz; sepet ve form olduğu gibi kalır.
+  function completeOrder() {
+    setCart([])
     setSent([])
-    setCart((items) => items.filter((item) => !lines.some((line) => line.id === item.id)))
+    setReceived(true)
     window.location.hash = routes.orderReceived
   }
   const cartCount = cart.reduce((sum, item) => sum + item.qty, 0)
@@ -110,7 +109,7 @@ export default function LunaPreviewApp() {
         {isCart && (
           <CartCheckoutPage cart={cart} sent={sent} onQty={setQty} onRemove={remove} onSent={markSent} onComplete={completeOrder} />
         )}
-        {route === routes.orderReceived && <OrderReceivedPage lines={received} />}
+        {route === routes.orderReceived && <OrderReceivedPage received={received} />}
         {route === routes.customOrder && <CustomOrderPage />}
       </div>
       <SiteFooter
@@ -118,6 +117,7 @@ export default function LunaPreviewApp() {
         signature={isCheckout ? 'El emeğiyle, sana özel.' : undefined}
       />
       <ChatWidget />
+      <CartToast signal={toastSignal} />
     </div>
   )
 }

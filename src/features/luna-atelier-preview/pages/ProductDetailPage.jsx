@@ -67,13 +67,10 @@ function Gallery({ product }) {
 
 function RealBuyBox({ product, onAdd }) {
   const [qty, setQty] = useState(1)
-  const [added, setAdded] = useState(false)
   const total = formatPrice(product.price * qty)
 
-  function addToCart() {
-    onAdd(product, qty)
-    setAdded(true)
-  }
+  // Geri bildirim ortak CartToast bildirimidir (LunaPreviewApp).
+  const addToCart = () => onAdd(product, qty)
 
   return (
     <>
@@ -89,10 +86,6 @@ function RealBuyBox({ product, onAdd }) {
           <span>Sepete Ekle • {total}</span>
         </button>
       </div>
-      <p className="lp-form-note" role="status">
-        {added ? <>Sepete eklendi. <a href={routes.cart}>Sepete git</a></> : ''}
-      </p>
-
       <div className="lp-sticky-buy" aria-label="Hızlı satın alma">
         <QuantityStepper value={qty} onChange={setQty} label="Adet" />
         <button type="button" className="lp-button lp-button-primary lp-button-block" onClick={addToCart}>
