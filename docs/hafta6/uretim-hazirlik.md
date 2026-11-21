@@ -266,6 +266,31 @@ Aynı oturumla geçmiş testi MCP ile yapılamadı: manuel çalıştırma her se
 
 - Rollback gerekmedi. Gerekirse Vercel Instant Rollback ile önceki production deploy'u `atolyekart-2sjgcx3w9` (`dpl_7DGhPCifcECkFMFdHpEHd5cPbtjT`) seçilir.
 
+### Sipariş akışı düzeltmesi (21.11.2026)
+
+**Belirti:** Production sepetinden sipariş talebi gönderilemedi; ekranda "Talebiniz şu anda iletilemedi. Lütfen yeniden deneyin." göründü.
+
+**Neden:**
+- `POST /api/order` doğrulama, açık rıza ve stok kontrolünü geçti; webhook teslimi hedef adresten **404** aldığı için API **502 `delivery_failed`** döndü (`server/routes/order.js`).
+- Vercel runtime günlüğü (deploy `dpl_8iMS5DYB…`, 11:21 ve 11:28 UTC): `[webhook] teslim edilemedi, durum: 404`. Değişken eksik değildi (o durumda günlük "tanımlı değil" derdi).
+- Production `WEBHOOK_URL` en son 06.10.2026'da güncellenmişti; canlı sipariş workflow'u `atolyekart-siparis` (`UwG1w0v0h9ekh8u6`, yol `/webhook/siparis-hafta4`) ise 11.11.2026'da oluşturuldu. Değişken bu workflow'dan önceki, artık yanıt vermeyen bir adresi gösteriyordu. Yerel `.env.local` doğru canlı yolu gösterdiği için sorun yerelde görülmedi.
+- n8n'de o iki deneme için çalışma ve Sheets satırı oluşmadı; temizlik gerekmedi.
+- WAF ile ilgisi yoktu: istek fonksiyona ulaştı, 502'yi uygulama kodu üretti, yanıtta `x-vercel-mitigated` yoktu. Preview'da `WEBHOOK_*` tanımlı olmadığı ve sepet gönderimi kapalı olduğu (`orderMode` → `preview`) için hata orada görünmez.
+
+**Düzeltme:**
+1. Kullanıcı Vercel Production `WEBHOOK_URL` değerini canlı sipariş webhook adresiyle (`/webhook/…`, test yolu değil) güncelledi. Değer hiçbir çıktıya yazılmadı. `WEBHOOK_SECRET` ve `JWT_SECRET` değiştirilmedi (n8n imzayı doğrulamıyor; JWT yalnızca admin uç noktası içindir).
+2. Kod değişmeden aynı commit'ten (`855a533`) redeploy yapıldı (`vercel redeploy`, kullanıcı onayıyla): `dpl_ANofKaUWKfFonKumU7hV5hyvZ2Aw` (`atolyekart-qr8j36bjg`), READY; production alan adları bu deploy'a bağlandı. Önceki deploy'a rollback eski adresi geri getireceği için sipariş akışını yeniden bozar.
+
+**Doğrulama (kullanıcının gönderdiği tek test siparişi):**
+- Arayüz: "Sipariş talebiniz alındı" sayfası göründü.
+- n8n çalışması **#355** (11:37 UTC) başarılı: webhook → doğrulama alt workflow'u (`isValid: true`) → `If` → **Google Sheets'e test siparişi satırı yazıldı** (Luna Seramik Kupa, 1 adet; telefon sunucuda `+905…` biçiminde) → **AI e-posta taslağı oluşturuldu** → `Convert to File`.
+- Yeni deploy'da `[webhook]` hata kaydı yok.
+- Sheets'teki satır test siparişidir; gerçek siparişlerle karışmaması için kullanıcı tarafından işaretlenmelidir.
+
+**Kapsam dışı bulgular (düzeltilmedi):**
+- **AI e-posta taslağı:** #355'te Türkçe metnin içine Japonca bir sözcük ("確認", onay) karıştı ve formda olmayan kargo takibi bilgisinden söz edildi. Workflow'daki model ayarı `auto`. E-posta gönderilmediği için şu an ziyaretçiye etkisi yok.
+- **Webhook imza doğrulaması:** Sunucu olayları `X-Atolyekart-Signature` (HMAC-SHA256) ile imzalıyor, ancak n8n sipariş workflow'u imzayı doğrulamıyor. Webhook adresini bilen biri Sheets'e satır ekleyebilir.
+
 ## 7. n8n bağlantısını kapatma planı (yaklaşık 2–3 hafta sonra; onayla yapılır)
 
 Sıra önemlidir: önce ziyaretçinin gördüğü taraf, sonra veri.
