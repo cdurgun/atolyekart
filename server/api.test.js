@@ -4,9 +4,9 @@ import { productSlug } from '../src/webhook/payload.js'
 import { products } from '../src/products.js'
 import { findProduct, productIds } from './lib/catalog.js'
 import { signJwt, verifyJwt } from './lib/jwt.js'
-import { clearOrders } from './lib/orders.js'
+import { clearOrders, listOrders } from './lib/orders.js'
 import { LIMIT, rateLimit, resetRateLimit } from './lib/rate-limit.js'
-import { sign } from './lib/webhook.js'
+import { sign, WEBHOOK_TIMEOUT_MS } from './lib/webhook.js'
 import { handleApi } from './router.js'
 
 const JWT_SECRET = 'test-icin-uydurma-anahtar-0123456789abcdef'
@@ -158,6 +158,37 @@ test('webhook teslim edilemezse 502 döner ve ayrıntı sızmaz', async () => {
   const text = await response.text()
   assert.equal(response.status, 502)
   assert.doesNotMatch(text, /ECONNREFUSED|gizli|stack|webhook\.test/)
+})
+
+test('n8n 2xx dışı yanıt verirse talep başarı sayılmaz: 502, sipariş kaydedilmez', async () => {
+  // n8n'in planlanan yanıtları: 400 doğrulama, 422 geçersiz sipariş, 502 Sheets kaydı başarısız, 500 iş akışı hatası.
+  for (const status of [400, 404, 422, 500, 502, 503]) {
+    resetRateLimit()
+    mock.method(globalThis, 'fetch', async () => new Response('{"ok":false,"error":"sheets_write_failed"}', { status }))
+    const response = await call('/api/order', { body: order })
+    const body = await response.json()
+    assert.equal(response.status, 502, `n8n ${status}`)
+    assert.equal(body.ok, false)
+    assert.equal(body.error, 'delivery_failed')
+    assert.doesNotMatch(JSON.stringify(body), /sheets_write_failed/)
+    assert.equal(listOrders().length, 0, `n8n ${status}: sipariş kaydedilmemeli`)
+
+    const stockResponse = await call('/api/stock-request', { body: stock })
+    assert.equal(stockResponse.status, 502, `stok bildirimi, n8n ${status}`)
+  }
+})
+
+test('n8n zaman aşımına uğrarsa 502 döner; sınır 15 sn ve isteğe iptal sinyali verilir', async () => {
+  assert.equal(WEBHOOK_TIMEOUT_MS, 15_000)
+  let signal
+  mock.method(globalThis, 'fetch', async (url, init) => {
+    signal = init.signal
+    throw new DOMException('The operation was aborted due to timeout', 'TimeoutError')
+  })
+  const response = await call('/api/order', { body: order })
+  assert.equal(response.status, 502)
+  assert.ok(signal instanceof AbortSignal)
+  assert.equal(listOrders().length, 0)
 })
 
 test('beklenmeyen hata 500 döner, yanıtta teknik bilgi yoktur', async () => {

@@ -2,7 +2,9 @@
 // Webhook adresi ve gizli anahtar burada yoktur: ikisi de yalnızca sunucudadır (server/lib/webhook.js).
 // VITE_API_URL boşsa istek sayfanın kendi alan adına gider; "mock:" ağ isteği yapmaz, "mock:fail" hatayı dener.
 
-const TIMEOUT_MS = 8000
+// Sunucu n8n yanıtını en fazla 15 sn bekler (server/lib/webhook.js → WEBHOOK_TIMEOUT_MS). İstemci bundan
+// uzun beklemeli; yoksa sipariş kaydedildiği hâlde ziyaretçi hata görüp yeniden gönderebilir. Mobil de aynı değeri kullanır.
+export const REQUEST_TIMEOUT_MS = 20_000
 
 export function createMockAdapter({ fail = false, delay = 400 } = {}) {
   return {
@@ -13,7 +15,7 @@ export function createMockAdapter({ fail = false, delay = 400 } = {}) {
   }
 }
 
-export function createHttpAdapter(base) {
+export function createHttpAdapter(base, { timeoutMs = REQUEST_TIMEOUT_MS } = {}) {
   return {
     async send(path, body) {
       try {
@@ -21,7 +23,7 @@ export function createHttpAdapter(base) {
           method: 'POST',
           headers: { 'Content-Type': 'application/json; charset=utf-8' },
           body: JSON.stringify(body),
-          signal: AbortSignal.timeout(TIMEOUT_MS),
+          signal: AbortSignal.timeout(timeoutMs),
         })
         // Sunucunun Türkçe mesajı ve alan hataları varsa forma taşınır.
         const data = await response.json().catch(() => ({}))
@@ -38,7 +40,8 @@ export function createAdapter(url = '') {
   return createHttpAdapter(url.replace(/\/$/, ''))
 }
 
-const adapter = createAdapter(import.meta.env.VITE_API_URL)
+// `?.`: Vite dışında (node --test) import.meta.env tanımsızdır; tarayıcı derlemesinde davranış aynıdır.
+const adapter = createAdapter(import.meta.env?.VITE_API_URL)
 
 export function sendRequest(path, body) {
   return adapter.send(path, body)

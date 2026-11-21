@@ -3,7 +3,10 @@
 import { createHmac } from 'node:crypto'
 import { requestKinds } from '../../src/webhook/payload.js'
 
-const TIMEOUT_MS = 5000
+// n8n sipariş workflow'u yanıtı Google Sheets kaydından sonra verecek (~4 sn ölçüldü). 5 sn sınırı
+// satır yazıldığı hâlde "iletilemedi" dönüp yeniden gönderime (çift kayıt) yol açabileceği için 15 sn.
+// Yalnızca 2xx başarı sayılır; diğer her yanıt ve zaman aşımı { ok: false } olur (route 502 döner).
+export const WEBHOOK_TIMEOUT_MS = 15_000
 
 // Gövde sözleşmesi: .claude/skills/atolyekart-standartlari/webhook-format.md
 const eventBody = {
@@ -41,7 +44,7 @@ export async function deliverEvent(event) {
   if (secret) headers['X-Atolyekart-Signature'] = sign(body, secret)
 
   try {
-    const response = await fetch(url, { method: 'POST', headers, body, signal: AbortSignal.timeout(TIMEOUT_MS) })
+    const response = await fetch(url, { method: 'POST', headers, body, signal: AbortSignal.timeout(WEBHOOK_TIMEOUT_MS) })
     if (!response.ok) console.error('[webhook] teslim edilemedi, durum:', response.status)
     return { ok: response.ok }
   } catch (error) {
