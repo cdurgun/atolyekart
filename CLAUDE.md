@@ -139,6 +139,9 @@ Akış: **form → validation → istek gövdesi → API adapter → `/api` (sun
 - `GUVENLIK-KONTROL-LISTESI.md` — Hafta 2 güvenlik kontrol listesi ve her maddenin kanıtı
 - `.env.example` — ortam değişkenlerinin adları ve biçimi (`VITE_CATALOG_URL`, `VITE_API_URL`, `WEBHOOK_URL`, `WEBHOOK_SECRET`, `JWT_SECRET`, `N8N_CHAT_URL`, `N8N_CHAT_USER`, `N8N_CHAT_PASSWORD`); gerçek değerler `.env.local` ve Vercel'de tutulur, depoya girmez
 - `.impeccable/config.json` — tasarım dedektörünün yok sayma kayıtları
+- `docs/final/` — final görevi (n8n + Claude, "BizCard Asistanı"; son teslim 3.12.2026, ≤ 5 dk video: Demo → Mimari → Kararlar, geliştirme süreci de anlatılır). Ödev metni: `docs/final/Final_Gorevi_BizCard.pdf`; kapsam ve plan: `kapsam-ve-plan.md`; aşama sonuçları: `asama-*-plan.md`
+  - Zorunlu parçalar: Webhook, AI adımı, RAG, Hafıza, Hata ağı (hata yakalama, bildirim, yeniden deneme). Serbest bölge: sektöre özel bir özellik
+  - BizCard bağlantısı PDF'in parça tablosunda "Önerilen ek"tir (zorunlu değil); ancak puanlamanın 4. sorusu ("BizCard işlevi ve tasarımı") ve teslim kontrol listesi ("Botun BizCard bağlantısı", "BizCard tasarımı ve işlevi") onu ayrıca sayar
 
 ## Future Roadmap
 
