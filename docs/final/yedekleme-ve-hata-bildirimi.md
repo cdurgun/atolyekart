@@ -134,10 +134,32 @@ Kurallar: hata mesajı 200 karakterde kesilir; adres, anahtar, e-posta, telefon 
 | Chat ID (kullanıcı) | Kullanıcı chat ID'yi n8n arayüzünde girip kaydetti (taslak `88e8f4d4`). Salt okuma: dolu, sayısal, ifade değil; başka düğüm, bağlantı ve credential değişmedi. Editör kaydederken varsayılan değerli `resource`, `operation`, `replyMarkup` anahtarlarını kaldırdı ve `binaryMode: separate` ayarını ekledi. Claude test sırasında workflow veya canlı yapılandırma değiştirmedi. Telegram mesajının ulaşması kullanıcı bildirimi ve ekran görüntüsüyle doğrulandı; gönderim sürecine ilişkin ayrıca nedensel bir değerlendirme yapılmadı. |
 | Gönderim (kullanıcı) | Kullanıcı arayüzden bir kez çalıştırdı. **Mesaj kullanıcının Telegram'ına ulaştı** (kullanıcı bildirimi ve ekran görüntüsü). Düğümün yeşil/kırmızı durumu ayrıca doğrulanmadı. |
 | Kayıt | Test workflow'una ait kalıcı execution kaydı bulunmadı (çalışma listesi, yalnızca metadata). `saveManualExecutions: false` ayarı mevcut olmakla birlikte, kayıt bulunmaması tek başına bu ayarın davranışını kesin olarak kanıtlamaz. Gönderimin kanıtı kullanıcı bildirimi ve ekran görüntüsüdür. |
-| Son durum | Test workflow'u yayında değil, arşivlenmemiş. IlJ0 `53b87907`, Telegram düğümü devre dışı, chat ID boş; ruOv, 14IY, Q8hr değişmedi. n8n'de 39 workflow. |
+| Son durum | Test workflow'u yayında değil, arşivlenmemiş. IlJ0 `53b87907`, Telegram düğümü devre dışı, chat ID boş; ruOv, 14IY, Q8hr değişmedi. n8n'de 39 workflow. *(T1 sonundaki durum; IlJ0 aynı gün değişti, aşağıda T2.)* |
 
 **Kanıtlanan:** bot token geçerli, credential çalışıyor, chat ID doğru, bot bu sohbete yazabiliyor.
 
 **Kanıtlanmayan:** IlJ0'ın ürettiği gerçek hata mesajının Telegram'a gitmesi (HTML kaçışlı metin, 10 dakikalık sınırla birlikte). Bunun için IlJ0'da chat ID girilip düğüm etkinleştirilmeli ve IlJ0 yeniden yayınlanmalı (T2, ayrı karar).
 
 **Chat ID'nin bulunduğu yerler:** test workflow'unun taslağı ve n8n sürüm geçmişi. Belgeye, depoya ve rapora yazılmadı. Test workflow'unun akıbeti (alanın boşaltılması, arşiv) ayrı karar; alan boşaltılsa da değer sürüm geçmişinde kalır.
+
+### T2: IlJ0'da Telegram etkin (25.11.2026)
+
+Kullanıcı canlı IlJ0'da (`atolyekart-final-hata-yakalayici`) chat ID'yi n8n arayüzünde girdi, Telegram düğümünü etkinleştirdi ve yeni sürümü yayınladı. Claude IlJ0'ı değiştirmedi; aşağıdakiler salt okumayla belirlendi.
+
+| Konu | Durum |
+| --- | --- |
+| Sürüm | `b619fa06` yayında (taslak = yayındaki sürüm, `active: true`). Önceki yayın `53b87907`. n8n sürüm geçmişinde 25.11 18:31–18:32 (İstanbul) arasında 6 kayıt var; Telegram düğümü bunların beşincisinde etkinleşiyor. |
+| Telegram düğümü | Etkin; chat ID dolu (değer yazılmadı). Metin ifadesi `={{ $json.mesajTelegram }}` ve ek alanlar (HTML, imza ve önizleme kapalı) 22.11'deki yapılandırmayla aynı. Credential değişmedi. Editör varsayılan değerli `resource`, `operation`, `replyMarkup` anahtarlarını kaldırdı. |
+| Diğer düğümler | "Hata tetikleyici", "Hata mesajını kur" (Code) ve bağlantılar, 25.11'deki 6 sürümün hepsinde aynı. |
+| `53b87907` ile karşılaştırma | **Doğrudan yapılamadı:** bu sürüm n8n sürüm geçmişinde artık yok (geçmişte yalnızca 25.11 kayıtları var). Dolaylı kanıt: Code düğümünün güncel metni, 22.11'de bu düğümün yazıldığı oturum kaydındaki metinle birebir aynı. Bu resmi bir sürüm karşılaştırması değildir. |
+| Ayarlar | `binaryMode: separate` eklendi (editör kaydı). `saveManualExecutions: true`, `Europe/Istanbul` ve `errorWorkflow` yokluğu 22.11'den beri aynı. |
+| Test | Kullanıcı IlJ0'ı editörde, n8n'in Error Trigger örnek verisiyle bir kez çalıştırdı: **#525**, `manual`, `success`, 18:32:46, 0,4 sn. Mesaj kullanıcının Telegram'ına ulaştı (kullanıcı bildirimi ve ekran görüntüsü); biçim bu belgedeki taslakla aynı. İçerik örnek veriydi ("Example Workflow", "Node With Error"); **gerçek bir production hatası değildi**. |
+| #525 kaydı | Tutuldu (`saveManualExecutions: true`). İçeriği okunmadı; Telegram'ın yanıtını içerebilir. Silinmesi kullanıcının kararı. |
+
+**Kanıtlanan:** IlJ0'ın Code düğümünün ürettiği HTML mesaj, etkin Telegram düğümüyle kullanıcının sohbetine ulaşıyor.
+
+**Kanıtlanmayan:** Gerçek bir production hatasının (ör. ruOv'un 503 yolu) Telegram bildirimine dönüşmesi ve 10 dakikalık sınırın gerçek gönderimle birlikte çalışması. Uçtan uca deneme ayrı plan ve onay gerektirir.
+
+**Değişmeyen:** Alt workflow hatalarında bildirim gelmez (`asama-7-hata-agi-plan.md` bulgu 4). jcH8 yayında olmadığı için onun hataları da bildirim üretmez.
+
+**Açık:** IlJ0'ın n8n'deki açıklama alanı hâlâ "Telegram node'u DEVRE DIŞI, chat ID boş; mesaj gönderilmez" diyor; güncellenmesi ayrı karar. Chat ID artık IlJ0'ın taslağında, yayındaki sürümde ve sürüm geçmişinde de bulunuyor; jcH8'in B1 kodu (`13ed8808`, yayınlanmadı) yedekte gizler.
