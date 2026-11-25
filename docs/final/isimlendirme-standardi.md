@@ -84,6 +84,32 @@ Bu değişiklikten sonra REST script'i yeniden çalıştırılmadı; 23.11'deki 
 
 **Arşivlenmiş workflow'lar** (`My workflow 5` `pdpXzrUza88JBszR`, `My workflow 6` `A7nYNsV6wAirjDnF`) çalışmaz ve editör listesinde görünmez; MCP listesinde de yoktular. Script bunları "arşiv (kontrol dışı)" olarak ayrı sayar.
 
+### Test klasörü `atolyekart-test` (25.11.2026)
+
+Personal projenin kökünde `atolyekart-test` klasörü oluşturuldu. AtölyeKart'a ait, yayınlanmayan 13 test workflow'u bu klasörde tutulur. Adlar değişmedi; yukarıdaki istisna tablosu geçerli.
+
+| ID | Ad | Grup |
+| --- | --- | --- |
+| `M8TdawbecXcQW08v` | `atolyekart-final-telegram-test` | Final testi |
+| `u9KeREnfXQNCZtyx` | `atolyekart-final-asistan-hata-test` | Final testi |
+| `4UcIHjoOUajs7ibB` | `atolyekart-final-alt-hata-test` | Final testi |
+| `I8sSwpc77L9RtvaG` | `atolyekart-final-prim-hesapla-cagri-test` | Final testi |
+| `kpYBMnrvm0Xy8sJA` | `atolyekart-final-sigorta-asistan-test` | Final testi |
+| `jV30G6tjeTLF9342` | `atolyekart-final-sigorta-arama-test` | Final testi |
+| `E3LF02Ao0leg1frw` | `atolyekart-final-sigorta-yukleme-test` | Final testi |
+| `dL9N60ouLvJNnyoA` | `atolyekart-siparis-TEST` | Önceki hafta testi (istisna) |
+| `LbnmEn2CroBuIAHA` | `Atolyekart-Validation-TEST` | Önceki hafta testi (istisna) |
+| `FTvhjRLIm4JnHut8` | `Atolyekart-Products-OKUMA-TEST` | Önceki hafta testi (istisna) |
+| `MUjsDvhrYo1SaD3R` | `Atolyekart-Siparis-Dosyasi-YEDEK-OKUMA-TEST` | Önceki hafta testi (istisna) |
+| `PPj1rHXLx5B0CLDw` | `Atolyekart-Product-Knowledge-QDRANT-TEST` | Önceki hafta testi (istisna) |
+| `PxbJha0DZvRy66wI` | `AtolyeKart-RAG-Product-Knowledge-REDIS-TEST` | Önceki hafta testi (istisna) |
+
+Klasör dışında kalanlar: canlı workflow'lar; `-test` adlı ama yayında oldukları için `14IYDf3MyS889v0b` ve `Q8hrWLrDUCixAEfn`; `00 - Kurulum Testi`; açık istisna olarak `Pt4WqTG46owMGZ4x` (`atolyekart-final-sigorta-sartlari-cagri-test`, yayınlanmamış test çağırıcısı).
+
+- Taşıma önce tek workflow'la denendi (`atolyekart-final-telegram-test`), sonra kalan 12 workflow iki grupta taşındı. Birbirini ID ile çağıran test çiftleri (`atolyekart-final-asistan-hata-test` → `atolyekart-final-alt-hata-test`, `atolyekart-siparis-TEST` → `Atolyekart-Validation-TEST`) aynı işlemde taşındı.
+- Yerel n8n dışa aktarımıyla önce/sonra karşılaştırması: workflow tanımı (düğümler, bağlantılar, ayarlar), sürüm ve yayın durumu değişmedi; yalnızca klasör konumu ve `updatedAt` değişti. Taşınmayan workflow'larda fark yok; toplam 39. Taşıma sırasında çalışma oluşmadı.
+- ID ile workflow çağrılarının taşımadan sonra da çalıştığı henüz bir çalıştırmayla doğrulanmadı.
+
 ## Kanıt: REST API ile workflow listesi (DoD)
 
 22.11.2026, kullanıcı terminalinde: `node --env-file=.env.local scripts/n8n-workflow-listesi.mjs`. Çıktıda anahtar ve n8n adresi yoktur.
