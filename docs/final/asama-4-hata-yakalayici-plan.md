@@ -105,5 +105,5 @@ Telegram node'u devre dışıdır; ayrıca `test_workflow` credential kullanan n
 - 10 dakikalık bildirim sınırı (static data yalnızca production çalışmalarında kaydedilir). **✅ 7. aşama: #518 zamanı yazdı, #520 boş çıktı verdi.**
 - Gerçek Error Trigger verisinin alanları (testlerde elle yazılmış örnek veri kullanıldı). **✅ 7. aşama: #518'de tüm alanlar dolu.**
 - Zaman satırı hatanın değil mesajın oluştuğu anı gösterir (Error Trigger verisinde hata zamanı yok); fark birkaç saniye.
-- Gerçek Telegram gönderimi: kullanıcı chat ID'yi n8n'e girer, node ayrı onayla etkinleştirilir. **Açık: karar bekliyor.**
+- Gerçek Telegram gönderimi: kullanıcı chat ID'yi n8n'e girer, node ayrı onayla etkinleştirilir. **Açık: karar bekliyor.** *(25.11.2026: bot, credential ve chat ID ayrı bir test workflow'unda doğrulandı (T1); IlJ0'daki düğüm hâlâ devre dışı, chat ID boş. `yedekleme-ve-hata-bildirimi.md` → "T1: Telegram bağlantı testi".)*
 - Maskeleme sezgiseldir: listede olmayan uzun uzantılar (ör. `.example`) ve port'suz tek kelimelik servis adları maskelenmez.

@@ -123,3 +123,21 @@ Kurallar: hata mesajı 200 karakterde kesilir; adres, anahtar, e-posta, telefon 
 2. n8n'de error workflow yalnızca otomatik (tetiklenmiş) çalışmalardaki hatalarda devreye girer; editörde elle çalıştırılan bir workflow'un hatası handler'ı tetiklemez. Bu yüzden ilk test, handler'da Error Trigger'a sabitlenmiş (pin) örnek hata verisiyle yapılır; hiçbir workflow yayınlanmaz. Uçtan uca deneme (yayınlanmış bir workflow'da bilerek hata) ayrı onaya bağlıdır.
 3. Code çıktısı yukarıdaki taslakla karşılaştırılır.
 4. Gerçek gönderim, ayrı onayla Telegram node etkinleştirilerek yapılır.
+
+### T1: Telegram bağlantı testi (25.11.2026)
+
+**Amaç:** Bot, credential ve chat ID'yi canlı IlJ0'a dokunmadan doğrulamak. IlJ0'ın kopyası alınmadı; mesajın hata verisine bağlı olmaması için ayrı ve iki düğümlü bir test workflow'u kuruldu.
+
+| Adım | Sonuç |
+| --- | --- |
+| Kurulum (Claude, kullanıcı onayıyla) | `atolyekart-final-telegram-test` (`M8TdawbecXcQW08v`): Manual Trigger → Telegram v1.2 `sendMessage`. Sabit metin: "AtölyeKart final – Telegram bağlantı testi. Bu bir test mesajıdır; işlem gerekmez." HTML, n8n imzası ve bağlantı önizlemesi kapalı (IlJ0 ile aynı). Credential IlJ0'daki ile aynı (yerel karşılaştırma; ID yazılmadı). `errorWorkflow` yok; hiçbir workflow çağırmıyor; yayınlanmadı. Elle çalıştırma kaydı kapalı (`saveManualExecutions: false`). |
+| Chat ID (kullanıcı) | Kullanıcı chat ID'yi n8n arayüzünde girip kaydetti (taslak `88e8f4d4`). Salt okuma: dolu, sayısal, ifade değil; başka düğüm, bağlantı ve credential değişmedi. Editör kaydederken varsayılan değerli `resource`, `operation`, `replyMarkup` anahtarlarını kaldırdı ve `binaryMode: separate` ayarını ekledi. Claude test sırasında workflow veya canlı yapılandırma değiştirmedi. Telegram mesajının ulaşması kullanıcı bildirimi ve ekran görüntüsüyle doğrulandı; gönderim sürecine ilişkin ayrıca nedensel bir değerlendirme yapılmadı. |
+| Gönderim (kullanıcı) | Kullanıcı arayüzden bir kez çalıştırdı. **Mesaj kullanıcının Telegram'ına ulaştı** (kullanıcı bildirimi ve ekran görüntüsü). Düğümün yeşil/kırmızı durumu ayrıca doğrulanmadı. |
+| Kayıt | Test workflow'una ait kalıcı execution kaydı bulunmadı (çalışma listesi, yalnızca metadata). `saveManualExecutions: false` ayarı mevcut olmakla birlikte, kayıt bulunmaması tek başına bu ayarın davranışını kesin olarak kanıtlamaz. Gönderimin kanıtı kullanıcı bildirimi ve ekran görüntüsüdür. |
+| Son durum | Test workflow'u yayında değil, arşivlenmemiş. IlJ0 `53b87907`, Telegram düğümü devre dışı, chat ID boş; ruOv, 14IY, Q8hr değişmedi. n8n'de 39 workflow. |
+
+**Kanıtlanan:** bot token geçerli, credential çalışıyor, chat ID doğru, bot bu sohbete yazabiliyor.
+
+**Kanıtlanmayan:** IlJ0'ın ürettiği gerçek hata mesajının Telegram'a gitmesi (HTML kaçışlı metin, 10 dakikalık sınırla birlikte). Bunun için IlJ0'da chat ID girilip düğüm etkinleştirilmeli ve IlJ0 yeniden yayınlanmalı (T2, ayrı karar).
+
+**Chat ID'nin bulunduğu yerler:** test workflow'unun taslağı ve n8n sürüm geçmişi. Belgeye, depoya ve rapora yazılmadı. Test workflow'unun akıbeti (alanın boşaltılması, arşiv) ayrı karar; alan boşaltılsa da değer sürüm geçmişinde kalır.

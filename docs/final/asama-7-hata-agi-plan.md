@@ -109,7 +109,7 @@ H7-4'te üretilen mesaj:
 - Bulgu 1'in düzeltilmesi (ruOv yeni sürüm + yeniden yayın).
 - Bulgu 2: çalışma kayıtlarında gizleme ve saklama süresi.
 - Bulgu 4: karar 25.11.2026'da verildi (düzeltme yok, bilinen sınırlama). Bölüm 8'deki iki test workflow'u yayınlanmamış ve arşivlenmemiş halde tutuluyor; arşivlenmeleri ayrı karar.
-- Gerçek Telegram gönderimi: kullanıcı chat ID'yi n8n'e girer; düğüm etkinleştirilir; IlJ0 yeniden yayınlanır.
+- Gerçek Telegram gönderimi: kullanıcı chat ID'yi n8n'e girer; düğüm etkinleştirilir; IlJ0 yeniden yayınlanır. *(25.11.2026: bağlantı testi T1 ayrı test workflow'unda geçti; IlJ0 değişmedi. `yedekleme-ve-hata-bildirimi.md` → "T1: Telegram bağlantı testi".)*
 - Uçtan uca hata gösteriminin bizcard2 proxy'si üzerinden testi (6. aşama adım E, K3–K6).
 - `asama-4-hata-yakalayici-plan.md` bölüm 5'teki "7. aşamaya kalanlar" ile `kapsam-ve-plan.md` §5'teki ölçüt 4 durumunun güncellenmesi: 8. aşamada, diff ve onayla.
 
