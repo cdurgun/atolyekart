@@ -44,7 +44,7 @@ BizCard kartvizitindeki sohbet, AtölyeKart'ın ürün bilgisi asistanına bağl
 | AI adımı | AI Agent + araç seçimi + teklif özeti | Desen var | ✅ n8n elle çalıştırmada: AI Agent (gpt-4.1-mini), regresyon R1–R6 geçti (`asama-5-final-asistan-plan.md` §8) |
 | RAG | İki Qdrant koleksiyonu | Ürün koleksiyonu var; sigorta koleksiyonu yok | ✅ n8n elle çalıştırmada: Product Documents (Qdrant) R1 #516'da kullanıldı; Sigorta Şartları alt workflow'u (Q8hr) 5. aşama testlerinde çağrıldı. Q8hr yanıt kalitesindeki sınırlar §8'de. |
 | Hafıza | Redis Chat Memory (oturum kimliği BizCard'dan) | Desen var | ✅ Redis Chat Memory (`atolyekart-final:<sessionId>`, 7 gün). Önceki testlerin anahtarları Redis'te liste türünde (7. aşama H7-0). Hafıza sorusunun içerik ölçütü elle regresyonda (`asama-5-final-asistan-plan.md` §8). |
-| Hata ağı | Retry + Respond to Webhook hata yanıtı + error workflow + bildirim | Kısmen (bildirim ve retry yok) | ◐ Gerçek production isteğinde doğrulananlar: retry (Agent 3 × 2 sn), 503 yanıtı, `errorWorkflow` → IlJ0, bildirim metni, 10 dakikalık sınır (7. aşama). **Bildirim gönderilmiyor:** Telegram düğümü devre dışı (karar bekliyor). |
+| Hata ağı | Retry + Respond to Webhook hata yanıtı + error workflow + bildirim | Kısmen (bildirim ve retry yok) | ◐ Gerçek production isteğinde doğrulananlar: retry (Agent 3 × 2 sn), 503 yanıtı, `errorWorkflow` → IlJ0, bildirim metni, 10 dakikalık sınır (7. aşama). **Bildirim gönderilmiyor:** Telegram düğümü devre dışı (karar bekliyor). **Bilinen sınırlama:** Alt workflow hatasında Agent hatayı yakalar; "Yanıt (200)" düğümündeki metin güvenli ve prim tutarı içermiyor (elle test, 25.11; gerçek ziyaretçi yoktu). Production'da IlJ0 bildirimi beklenmez; bu, production testiyle doğrulanmadı (`asama-7-hata-agi-plan.md` bulgu 4). |
 | Sektöre özel | Kargo sigortası örnek teklifi | Yok | ✅ n8n elle çalıştırmada: Prim Hesapla (14IY) ve Sigorta Şartları (Q8hr) yayında; prim tutarları regresyonda doğrulandı (`asama-5-final-asistan-plan.md` §8) |
 | BizCard bağlantısı | bizcard2 → `/api/chat` → n8n | Arayüz var, bağlantı yok | ⏸ İsteğe bağlı (PDF: "Önerilen ek"). Yapılmadı; adım E beklemede. |
 | BizCard tasarımı/işlevi | Mevcut kart + sohbet + demo uyarısı | Kart yayında; sohbet bağlı değil | Bağlantıdan ayrı bir puanlama maddesi. Bu aşamalarda BizCard'da çalışılmadı; değerlendirilmedi. |
@@ -60,10 +60,12 @@ BizCard kartvizitindeki sohbet, AtölyeKart'ın ürün bilgisi asistanına bağl
 
 Durum (23.11.2026):
 - **Hata ağının n8n tarafı doğrulandı (24.11.2026):** Gerçek production isteğinde 503 ve sabit yanıt metni gözlendi; IlJ0 tetiklendi, bildirim metni üretildi ve 10 dakikalık sınır doğrulandı (`asama-7-hata-agi-plan.md`). BizCard arayüzünden uçtan uca demo yapılmadı; Telegram gönderimi kapalı.
+  - Ek test (25.11.2026, elle çalıştırma; HTTP durum kodu ölçülmedi, gerçek ziyaretçi yoktu): Alt workflow hatasında "Yanıt (200)" düğümündeki metin güvenliydi ve prim tutarı içermiyordu; IlJ0 tetiklenmedi. Production'da bildirim üretilmemesi bilinen sınırlama olarak kaldı (`asama-7-hata-agi-plan.md` §8 ve bulgu 4).
 - **Kabul ölçütü 1 açık:** Ölçüt "BizCard'da" demoyu tarif ediyor; BizCard bağlantısı isteğe bağlı olduğu için ölçütün kendisi de buna bağlı. Bağlantı yapılmazsa provaların hangi yoldan yapılacağı ve bu ölçütün nasıl yeniden yazılacağı ayrıca kararlaştırılır.
 - **Kabul ölçütleri 2 ve 3:** Bu belgede ayrı bir durum kaydı yok. İlgili testler `asama-5-final-asistan-plan.md` dosyasında; burada karşılandı olarak işaretlenmedi.
 - **Kabul ölçütü 5 karşılandı:** REST listesi 36 workflow, 10 final workflow'unun hepsi "uygun" (`isimlendirme-standardi.md` → "Kanıt").
 - **Kabul ölçütü 6 karşılandı:** Yedek #514'te 36 workflow var, REST listesiyle aynı (`yedekleme-ve-hata-bildirimi.md` → "Uygulama sonucu").
+- **Workflow sayısı (25.11.2026):** n8n'de 38 workflow var; 25.11'de yayınlanmamış iki test workflow'u eklendi (`asama-7-hata-agi-plan.md` §8). Ölçüt 5 ve 6'nın kanıtları 23.11 tarihlidir (36) ve o tarih için geçerlidir. REST script'i ve yedek 25.11'den sonra yeniden çalıştırılmadı.
 - Yedekleme workflow'u yayınlanmadığı için günlük otomatik yedek henüz çalışmıyor (6. aşama).
 
 ## 6. İki haftalık plan
@@ -91,6 +93,8 @@ Durum (23.11.2026):
 - **AtölyeKart production'ı Vercel Authentication ile korunuyor** (`ssoProtection: all`): giriş yapmamış ziyaretçi Vercel giriş sayfasına yönlenir. Final demosu bizcard2 üzerinden ve n8n'e doğrudan proxy ile yapıldığı için bu koruma demoyu engellemez.
 - **T14 tipi model davranışı:** öneriyi kesin hükme çevirme; sigorta yanıtlarında kesin ifade riskine karşı sabit uyarı satırı ve RAG soru setinde ayrı kontrol.
 - **Hukuki:** sigorta satışı lisansa tabidir; sabit demo uyarısı hem her sigorta yanıtının sonunda (workflow şablonu) hem BizCard arayüzünde görünür.
+- **Alt workflow hatası sessiz kalır:** Prim Hesapla alt workflow'u hata verirse ya da yayından kalkarsa asistan "hesaplanamıyor" türünde bir yanıt verir ve bildirim gelmez (bilinen sınırlama; elle testten ve n8n davranışından çıkarım, `asama-7-hata-agi-plan.md` bulgu 4). Sigorta Şartları için aynı davranış test edilmedi.
+- **Prova öncesi kontrol:** 14IY (`atolyekart-final-prim-hesapla-test`) ve Q8hr (`atolyekart-final-sigorta-sartlari-test`) yayında mı (salt okuma). Bu yalnızca bir kontrol maddesidir; workflow'larda değişiklik ya da yayınlama içermez.
 - **Katalog sabitleri iki yerde:** `atolyekart-final-prim-hesapla` ürün ID, ad, kategori, fiyat ve stok bilgisini Code node içinde sabit taşır (`server/lib/catalog.js` ve `src/products.js` ile aynı). Sitede fiyat ya da stok değişirse alt workflow'daki Code node da elle güncellenmeli; aksi halde teklif eski değerle hesaplanır.
 
 ## 8. Gelecek çalışma (backlog)

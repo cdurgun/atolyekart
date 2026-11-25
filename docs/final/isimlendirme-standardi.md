@@ -116,3 +116,5 @@ Kalıba uyan 12 ad:
 - `atolyekart-siparis` ve `atolyekart-siparisver`.
 
 Aktif 10, MCP listesiyle aynı: 22.11'deki 8'e ek olarak yayınlanan `14IYDf3MyS889v0b` ve `Q8hrWLrDUCixAEfn`. Kabul ölçütü 5 karşılandı: bütün final workflow'ları "uygun". Yerel testler aynı gün 8/8 geçti (`node --test scripts/n8n-workflow-listesi.test.mjs`).
+
+**25.11.2026 notu:** Yayınlanmamış iki test workflow'u eklendi: `atolyekart-final-alt-hata-test` ve `atolyekart-final-asistan-hata-test` (`asama-7-hata-agi-plan.md` §8). n8n'de toplam 38 workflow var (yerel n8n dışa aktarımından sayıldı). Adlar kalıpla elle karşılaştırıldı ve uyuyor. REST script'i yeniden çalıştırılmadı; yukarıdaki 23.11 sonuçları o tarih için geçerli.

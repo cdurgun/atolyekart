@@ -1,6 +1,6 @@
 # 7. aşama planı ve sonucu: hata ağı uçtan uca
 
-> Hazırlandı: 23.11.2026. **Durum: H7-0 – H7-6 uygulandı ve geçti; test anahtarı TTL ile kendiliğinden silindi (23:49'da doğrulandı).** Önceki aşamalar: `asama-4-hata-yakalayici-plan.md` (handler ve pin verili testler H1–H6), `asama-6-yayin-ve-uctan-uca-plan.md` (yayın, `errorWorkflow` bağlantısı, K1/K2/K7). Tasarım: `yedekleme-ve-hata-bildirimi.md` bölüm 2. Genel plan: `kapsam-ve-plan.md`.
+> Hazırlandı: 23.11.2026. **Durum: H7-0 – H7-6 uygulandı ve geçti; test anahtarı TTL ile kendiliğinden silindi (23:49'da doğrulandı).** **Ek test (25.11.2026): alt workflow hatası, test kopyalarıyla elle çalıştırıldı (bölüm 8); bulgu 4 bilinen sınırlama olarak kaldı.** Önceki aşamalar: `asama-4-hata-yakalayici-plan.md` (handler ve pin verili testler H1–H6), `asama-6-yayin-ve-uctan-uca-plan.md` (yayın, `errorWorkflow` bağlantısı, K1/K2/K7). Tasarım: `yedekleme-ve-hata-bildirimi.md` bölüm 2. Genel plan: `kapsam-ve-plan.md`.
 
 ## 1. Amaç ve sınır
 
@@ -87,6 +87,11 @@ H7-4'te üretilen mesaj:
    - Kayıtlarda gizleme kapalı (`redaction.production: false`). Ziyaretçi mesajı (`chatInput`) ve oturum kimliği ruOv kayıtlarında açık duruyor (#517, #519: "Merhaba").
    - Bu kayıtlar yalnızca n8n veritabanındadır; yedekleme workflow'u çalışma kayıtlarını almaz. Gizlemenin açılması ya da kayıt saklama süresinin kısaltılması ayrı bir karar.
 3. **`ai.agent.execution.succeeded: true` iz alanı yanıltıcı.** #517 ve #519'da Agent'ın iz verisinde `ai.agent.items.failed: 1` ve `iteration.count: 0` olduğu halde `ai.agent.execution.succeeded: true` yazıyor. Alanın n8n'in kendi metriği olduğu düşünülüyor; anlamı doğrulanmadı. Test raporlarında başarı ölçütü olarak bu alan değil, çalışma durumu ve çalışan dallar kullanılmalı.
+4. **Alt workflow hatası bildirim üretmiyor (bilinen sınırlama; production'da test edilmedi).**
+   - Gözlenen (bölüm 8, AH-1 ve AH-2; sohbette S3 / S3b olarak konuşuldu; elle çalıştırma): Prim Hesapla aracı alt workflow hatasını yakalayıp modele metin olarak veriyor; Agent hata fırlatmıyor ve başarılı çıkıştan devam ediyor. "Yanıt (200)" düğümündeki metin (elle testte gerçek ziyaretçi yoktu) güvenli ve prim tutarı içermiyor. Bu, hem alt workflow'un kendi çalışma zamanı hatasında (AH-2) hem de alt workflow yayında olmadığında (AH-1) aynı.
+   - Çıkarım: Ana çalışma başarılı bittiği için ruOv'un `errorWorkflow` ayarı devreye girmez; 14IY ve Q8hr'de `errorWorkflow` yok. Bu yüzden production'da da IlJ0 bildirimi **beklenmiyor**. Bu sonuç production testiyle doğrulanmadı; n8n'in hata workflow'unu yalnızca başarısız production çalışmalarında tetiklemesinden ve elle testlerde gözlenen davranıştan çıkarılmıştır.
+   - 14IY yayından kaldırılırsa da aynı sessiz yol beklenir (AH-1 bunu test kopyasında gösterdi). Sigorta Şartları aracı (Q8hr) test edilmedi; onun için aynı davranış yalnızca "Yanıtı tamamla" kodunun incelenmesine dayanan bir çıkarımdır.
+   - **Karar (25.11.2026):** Düzeltme yapılmaz; canlı workflow'lar değişmez. Değerlendirilip uygulanmayan seçenekler: yanıt gönderildikten sonra araç hatası varsa çalışmayı hatayla bitirmek; alt workflow'lara `errorWorkflow` bağlamak.
 
 ## 6. Elenen senaryolar
 
@@ -94,7 +99,7 @@ H7-4'te üretilen mesaj:
 | --- | --- |
 | Redis ya da Qdrant konteynerini durdurmak | AtölyeKart production asistanı ve canlı RAG aynı konteynerlere bağlı |
 | OpenAI credential'ını bozmak ya da değiştirmek | Credential tanımları değiştirilmez |
-| 14IY'de (Prim Hesapla) teknik hata | 14IY değiştirilmeden tetiklenemez. Araç hataları genelde modele geri verilir; 503 yoluna düşmeyebilir. OpenAI maliyeti oluşur. Sınırlama olarak kalır. |
+| 14IY'de (Prim Hesapla) teknik hata | 14IY değiştirilmeden tetiklenemez. Araç hataları genelde modele geri verilir; 503 yoluna düşmeyebilir. OpenAI maliyeti oluşur. Sınırlama olarak kalır. *(25.11.2026: 14IY'ye dokunmadan, test kopyalarıyla elle denendi; bölüm 8.)* |
 | jcH8'de (yedekleme) hata | Credential değişikliği ya da Drive'a yazma gerektirir |
 | S2: Webhook + Stop and Error içeren yeni test workflow'u | Yeni workflow ve geçici yayın gerektirir; ziyaretçinin 503 yolunu sınamaz. S1 kabul edildiği için gerekmedi. |
 | MCP ile elle çalıştırma | Elle çalıştırma hata workflow'unu tetiklemez; gerçek HTTP isteği gerekir |
@@ -103,6 +108,39 @@ H7-4'te üretilen mesaj:
 
 - Bulgu 1'in düzeltilmesi (ruOv yeni sürüm + yeniden yayın).
 - Bulgu 2: çalışma kayıtlarında gizleme ve saklama süresi.
+- Bulgu 4: karar 25.11.2026'da verildi (düzeltme yok, bilinen sınırlama). Bölüm 8'deki iki test workflow'u yayınlanmamış ve arşivlenmemiş halde tutuluyor; arşivlenmeleri ayrı karar.
 - Gerçek Telegram gönderimi: kullanıcı chat ID'yi n8n'e girer; düğüm etkinleştirilir; IlJ0 yeniden yayınlanır.
 - Uçtan uca hata gösteriminin bizcard2 proxy'si üzerinden testi (6. aşama adım E, K3–K6).
 - `asama-4-hata-yakalayici-plan.md` bölüm 5'teki "7. aşamaya kalanlar" ile `kapsam-ve-plan.md` §5'teki ölçüt 4 durumunun güncellenmesi: 8. aşamada, diff ve onayla.
+
+## 8. Ek test (25.11.2026): alt workflow hatası
+
+Sohbette "S3" ve "S3b" olarak konuşuldu. Bölüm 2'deki S1 (bozuk hafıza anahtarı) ile karışmaması için burada AH-1 ve AH-2 adları kullanılır.
+
+**Soru:** Prim Hesapla aracının çağırdığı alt workflow hata verirse yanıt düğümüne ne gider ve hata ağı ne yapar? Bölüm 6'da 14IY'de teknik hata elenmişti. Bu test 14IY'ye ve canlı workflow'lara dokunmadan, iki test workflow'uyla yapıldı.
+
+**Test workflow'ları** (ikisi de yayınlanmamış ve arşivlenmemiş; tutuluyor):
+
+| Workflow | ID | Rol |
+| --- | --- | --- |
+| `atolyekart-final-alt-hata-test` | `4UcIHjoOUajs7ibB` | 14IY ile aynı girdi (`productId`, `quantity`); "Bilerek hata" Code düğümü sabit bir hata fırlatır. Tek tetikleyici alt workflow girişi; webhook yok. Credential ve `errorWorkflow` yok. Taslak `3fe2363c`. |
+| `atolyekart-final-asistan-hata-test` | `u9KeREnfXQNCZtyx` | ruOv'un kullanıcı tarafından arayüzden alınmış kopyası. Farklar: webhook yolu `atolyekart-final-asistan-hata-test`; Redis anahtarı `atolyekart-final-hatatest:<sessionId>`, TTL 3600 sn; Prim Hesapla aracı `atolyekart-final-alt-hata-test`'e bağlı; açıklama. Diğer 12 düğüm, bağlantılar, ayarlar ve credential ID'leri ruOv ile aynı (yerel karşılaştırma). `errorWorkflow` = IlJ0 (kopyalamayla geldi). Taslak `d9a24d15`. |
+
+**Yöntem:**
+- Kopya, MCP `execute_workflow` ile `manual` modda çalıştırıldı; her test bir kez. Yeniden çalıştırma ya da düzeltme yapılmadı.
+- Bu gerçek bir HTTP isteği değildir: Basic Auth denetlenmedi, **HTTP durum kodu ölçülmedi** ve gerçek bir ziyaretçi yoktu. Hangi yanıt düğümünün çalıştığı çalışma kaydından okundu.
+- Girdi: `{"sessionId":"hatatest-s3-000N","chatInput":"3 adet Luna Seramik Kupa için kargo sigortası primi ne kadar?"}`.
+- n8n hata workflow'unu yalnızca production çalışmalarında tetikler (n8n MCP aracının açıklaması). Bu yüzden bu testler IlJ0'ın production davranışını sınamaz.
+- Çalışma kayıtlarından yalnızca gereken düğümler okundu; credential, adres ve şifre yazdırılmadı.
+- OpenAI maliyeti ölçülmedi. Her testte model düğümünün 2 alt çalışması gözlendi.
+
+| # | Adım | Sonuç |
+| --- | --- | --- |
+| AH-1 | Kopya **#521** (25.11.2026 16:40:58, İstanbul); `atolyekart-final-alt-hata-test` yayında değil | Prim Hesapla aracı `error`: "Workflow is not active and cannot be executed." Alt workflow **çalışmadı** (çalışma kaydı yok). Agent'ın başarılı çıkışı → "Yanıtı tamamla" → "Yanıt (200)" düğümü (durum kodu ölçülmedi). `aracHatasi: true`, `durum: yok`. "Yanıt (200)" düğümündeki metin (elle testte gerçek ziyaretçi yoktu): "Şu anda prim hesaplama işlemi yapılamıyor. Başka bir konuda yardımcı olabilir miyim?" + "Prim hesabının sonucu okunamadığı için tutar gösterilmiyor." + demo uyarısı. Rakam yok. Çalışma `success`, 3,8 sn. IlJ0'da çalışma yok. |
+| AH-2 hazırlık | `atolyekart-final-alt-hata-test`, `3fe2363c` sürümüyle yayınlandı (kullanıcı onayı) | ✅ `active: true`; yayındaki sürüm = taslak. |
+| AH-2 | Kopya **#522** (16:52:32 – 16:52:36) → alt workflow **#523** (`integrated`, `error`, 26 ms) | #523: "Bilerek hata" düğümü, satır 2. Test çıktısındaki sabit hata metni: `TEST S1: prim alt workflow'u bilerek hata verdi.` (Buradaki "S1", bölüm 2'deki senaryo değil, sohbetteki test workflow'unun kısa adıdır; workflow'daki sabit metin değiştirilmedi.) Prim Hesapla aracı `error`, modele `{error: …}` döndü; Agent hata fırlatmadı. Başarılı çıkış → "Yanıt (200)" düğümü (durum kodu ölçülmedi). `aracHatasi: true`, `durum: yok`, `yerTutucuVardi: true`, silinen cümle 0. "Yanıt (200)" düğümündeki metin (elle testte gerçek ziyaretçi yoktu): "Üzgünüm, şu anda Luna Seramik Kupa için kargo sigortası primi hesaplanamıyor. Prim hesabının sonucu okunamadığı için tutar gösterilmiyor." + demo uyarısı. **Prim tutarı yok.** #522 `success`. IlJ0'da çalışma yok. |
+| AH-2 geri alma | #522 biter bitmez `atolyekart-final-alt-hata-test` yayından kaldırıldı | ✅ `active: false`; yayındaki sürüm yok. |
+| Redis | Kullanıcı terminali (`read -s`) | ✅ `atolyekart-final-hatatest:` önekinde iki anahtar (`…-0001` TTL 2730, `…-0002` TTL 3424); canlı `atolyekart-final:` önekinde test oturumu 0. |
+| Son durum | Salt okuma (yerel n8n dışa aktarımı) | ✅ ruOv `08e2d27a`, IlJ0 `53b87907`, 14IY `2eba8392`, Q8hr `5f9edfd1`: taslak = yayındaki sürüm, değişmedi. İki test workflow'u yayında değil, arşivlenmemiş. n8n'de toplam 38 workflow. |
+
+**Sonuç:** Bulgu 4 (bölüm 5).

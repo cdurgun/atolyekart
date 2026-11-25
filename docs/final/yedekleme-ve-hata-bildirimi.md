@@ -48,7 +48,7 @@ Kullanıcıdan gerekenler:
 
 ### Uygulama sonucu (22–23.11.2026)
 
-Workflow: `atolyekart-final-yedekleme-test` (`jcH8s8nGulXET3bj`), sürüm `fe196dd2`, `active:false`, yayınlanmadı. Credential'lar (ID ile, kısaltılmış): n8n API `bT2d…`, Google Drive `vHAF…`.
+Workflow: `atolyekart-final-yedekleme-test` (`jcH8s8nGulXET3bj`), sürüm `fe196dd2`, `active:false`, yayınlanmadı. *(25.11.2026: taslak `13ed8808`, hâlâ yayınlanmadı; aşağıda "Yedek içeriği ve repo güvenliği". #434 ve #514 `fe196dd2` koduyla alındı.)* Credential'lar (ID ile, kısaltılmış): n8n API `bT2d…`, Google Drive `vHAF…`.
 
 **Tasarımdan farklar:**
 - Ayrı bir Manual Trigger yok; elle çalıştırma Schedule tetikleyicisi ("Her gün 03:00") üzerinden yapılıyor.
@@ -72,6 +72,15 @@ Workflow: `atolyekart-final-yedekleme-test` (`jcH8s8nGulXET3bj`), sürüm `fe196
 - Kullanıcı Drive klasöründe iki dosyayı da gördü; eski yedek silinmemiş.
 - Boyut farkı birimden kaynaklanıyor: n8n kB'yi 1000 bayt, Drive KB'yi 1024 bayt sayıyor.
 - Drive dosya kimlikleri ve klasör kimliği belgeye yazılmadı.
+- 25.11.2026: n8n'e yayınlanmamış iki test workflow'u eklendi; toplam 38 (`asama-7-hata-agi-plan.md` §8). #514'teki 36, 23.11 için geçerli. O tarihten sonra yedek alınmadı.
+
+### Yedek içeriği ve repo güvenliği (25.11.2026)
+
+- **Yedekler hassas kabul edilir.** Yedek dosyası credential değerlerini içermez; ama credential kimliklerini ve adlarını, webhook yollarını ve düğüm parametrelerini içerir. Drive klasörü paylaşıma açılmaz; yedek dosyaları halka açık depoya konmaz. Klasörün paylaşım durumunu kullanıcı arayüzden kontrol edecekti; sonucu bu belgede kayıtlı değil.
+- **Chat ID gizleme (jcH8 taslağı `13ed8808`, yayınlanmadı):** Gizli bilgi taraması Telegram chat ID'sini yakalamıyordu: anahtar adı taranan listede yok, sayısal değer de kalıplara uymuyor. Yeni kodda Telegram düğümlerindeki dolu `chatId` değeri yedekte `[GİZLENDİ]` ile değiştirilir (taslak ve yayındaki sürümün düğümleri). Yedeğe `redacted` sayaçları eklenir; "Sonuç özeti" bu sayıları gösterir. Değişen yalnızca iki Code düğümü (n8n sürüm karşılaştırması `fe196dd2` → `13ed8808`). Geri yüklemede chat ID elle yeniden girilir.
+- **Doğrulama:** Yalnızca yerelde yapıldı: gerçek workflow listesi ve sahte bir chat ID ile; n8n çalıştırması ve Drive'a yazma yok. Sahte değer çıktıda bulunmadı. Gerçek bir elle yedek henüz alınmadı; Drive'daki dosyada doğrulanmadı.
+- **Sınırlar:** Yalnızca chat ID gizlenir. Chat ID, n8n'deki workflow sürüm geçmişinde kalır; Telegram yanıtı da çalışma kayıtlarında chat bilgisi taşıyabilir.
+- **Repo güvenliği:** `.gitignore`'a `atolyekart-final-*.json`, `n8n-yedek-*.json` ve `*.n8n.json` kalıpları eklendi. Bu not yazıldığında (25.11.2026) kural çalışma kopyasında uygulanmıştı ama henüz commit edilmemişti. Kural yalnızca bu adlarla kaydedilen dosyaları korur; dışa aktarılan workflow JSON'ları ve yedek dosyaları depo klasörüne indirilmez.
 
 ## 2. `atolyekart-final-hata-yakalayici` (Telegram bildirimi)
 

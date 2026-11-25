@@ -35,7 +35,7 @@ Final workflow'larını yayına hazırlamak ve yayınlamak; BizCard → bizcard2
 | Sigorta Şartları `Q8hrWLrDUCixAEfn` | Yayınlı, `5f9edfd1`; 2. aşama workflow'u, değiştirilmez kuralı geçerli. Çağıranlar: ruOv'un Sigorta Şartları aracı ve `Pt4WqTG46owMGZ4x`, ikisi de ID ile. | R0 ön kontrolü; 23.11 salt okuma |
 | `Pt4WqTG46owMGZ4x` | Q8hr'nin 2. aşama test çağırıcısı (webhook → Q8hr), yayınlanmadı. Final asistanın bağımlılık zincirinde değil: asistan Q8hr'yi kendi aracından doğrudan çağırıyor; Pt4W'ye hiçbir workflow bağlı değil. | 23.11 salt okuma |
 | Hata yakalayıcı `IlJ0nrSuexnU4Wx4` | Yayınlanmadı; Telegram düğümü devre dışı, chat ID boş | `asama-4-hata-yakalayici-plan.md` §5 |
-| Yedekleme `jcH8s8nGulXET3bj` | Sürüm `fe196dd2`, yayınlanmadı; günlük çalışma yok | `yedekleme-ve-hata-bildirimi.md` → "Uygulama sonucu" |
+| Yedekleme `jcH8s8nGulXET3bj` | Sürüm `fe196dd2`, yayınlanmadı; günlük çalışma yok. *(25.11.2026: taslak `13ed8808`, yayınlanmadı; Telegram chat ID yedekte gizlenir. `yedekleme-ve-hata-bildirimi.md` → "Yedek içeriği ve repo güvenliği".)* | `yedekleme-ve-hata-bildirimi.md` → "Uygulama sonucu" |
 | bizcard2 | `/api/chat` yok, `api/` klasörü yok. Web (`index.html`) ve mobil (`mobile/src/chat.js`) istemciler `chatWebhookUrl` adresine `{ event, cardId, sessionId, question, timestamp }` gönderiyor ve `{ answer: string }` bekliyor. Hata gövdesini okumuyorlar: 429'da bir sabit metin, diğer her hatada genel bir metin gösteriyorlar. `sessionId` `randomUUID()` ile üretiliyor. `chatWebhookUrl` web'de ve mobilde boş. Final asistan `{ ok, output }` döndürüyor. | 23.11 salt okuma |
 | Eski webhook yolunun geçtiği yerler | Kodda yok (iki depoda da). Yalnızca `docs/final` belgelerinde. | 23.11 salt okuma |
 

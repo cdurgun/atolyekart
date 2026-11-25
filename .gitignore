@@ -8,3 +8,9 @@ dist/
 .impeccable/hook.cache.json
 .vercel
 design-reference/
+
+# n8n workflow dışa aktarımları ve yedekleri: halka açık depoya girmez
+# (chat ID, webhook yolu ve credential ID'leri içerebilir).
+atolyekart-final-*.json
+n8n-yedek-*.json
+*.n8n.json
