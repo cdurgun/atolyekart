@@ -15,8 +15,8 @@ Webhook (POST) → Girdiyi doğrula ─┬─ geçersiz → Respond 400 (LLM ça
                          ┌───────────────────────┼──────────────────────────┐
                  OpenAI gpt-4.1-mini        Redis Chat Memory           Araçlar:
                                           (final'e özel anahtar)   • Product Documents (Qdrant, salt okuma)
-                                                                   • Sigorta Şartları → Q8hrWLrDUCixAEfn
-                                                                   • Prim Hesapla → 14IYDf3MyS889v0b
+                                                                   • Sigorta Şartları → Q8hr…
+                                                                   • Prim Hesapla → 14IY…
 ```
 
 - Girdi `{ sessionId, chatInput }` (doğrulama: bölüm 4). Çıktı `{ ok: true, output }`; hata `{ ok: false, mesaj }` + 503.
@@ -30,7 +30,7 @@ Webhook (POST) → Girdiyi doğrula ─┬─ geçersiz → Respond 400 (LLM ça
 ### Kararlar (22.11.2026, kullanıcı onayladı)
 
 1. **Giriş: Webhook.** Ödevin zorunlu "Webhook" parçası; testte `sessionId` verilebilir; Respond to Webhook ile hata yanıtı döner. bizcard2 proxy'si `{ sessionId, chatInput } → { output }` sözleşmesiyle yazılır.
-2. **Sigorta Şartları aracı: 2. aşama alt workflow'u** (`Q8hrWLrDUCixAEfn`) araç olarak çağrılır. Prompt'ta "araç yanıtının özünü değiştirmeden aktar" kuralı; testte kontrol edilir.
+2. **Sigorta Şartları aracı: 2. aşama alt workflow'u** (`Q8hr…`) araç olarak çağrılır. Prompt'ta "araç yanıtının özünü değiştirmeden aktar" kuralı; testte kontrol edilir.
 3. **Redis anahtarı:** `atolyekart-final:<sessionId>`, TTL 7 gün (canlı anahtarlarla çakışmaz).
 4. **Prim tutarlılığı:** bölüm 3 (netleştirildi).
 5. **Webhook kimlik doğrulaması:** test sürümünde yok; Basic Auth 6. aşamada kullanıcının oluşturacağı yeni credential ile.
@@ -124,7 +124,7 @@ Redis'e ajanın ham yanıtı yazılır; bu yanıtta tutar yerine `[PRIM_OZETI]` 
 
 ## 8. Uygulama sonucu (22–23.11.2026)
 
-Workflow: `atolyekart-final-asistan-test` (`ruOvhJ8EtfHvpkrt`), `active:false`, `activeVersionId:null`, yayınlanmadı.
+Workflow: `atolyekart-final-asistan-test` (`ruOv…`), `active:false`, `activeVersionId:null`, yayınlanmadı.
 
 n8n'deki senaryo çalışmaları `execute_workflow` ile elle (`manual`) çalıştırıldı. Elle çalıştırma gerçek bir HTTP isteği olmadığı için HTTP durum kodu ölçülmedi; tabloda yalnızca hangi Respond düğümünün çalıştığı yazılıdır. Son sürümün yerel Node.js testleri n8n çalışması değildir; aşağıdaki "Plandan sapmalar" başlığında ayrıca belirtilmiştir.
 
@@ -189,8 +189,9 @@ Bu sürümlerde eklenen iz alanları: `sigortaCagrilari`, `sigortaMetniEklendi`,
 
 **Ön kontrol (R0, salt okuma, eşleşmeyen bir şey çıkmadı):**
 - Final asistan: sürüm `7ed1c0d7`, `active:false`, `activeVersionId:null`; 15 düğüm, bağlantılar planla aynı.
-- Credential ID'leri: OpenAI `tW1U…` (model ve embedding), Redis `i40q…`, Qdrant `Fk5s…`. Değerler okunmadı.
-- Alt workflow'lar: Prim Hesapla `14IYDf3MyS889v0b` ve Sigorta Şartları `Q8hrWLrDUCixAEfn` yayınlı. Kayıtlı ve yayınlanan sürümler aynı (`2eba8392` ve `5f9edfd1`).
+- Kullanılan credential'lar: OpenAI (model ve embedding), Redis, Qdrant. Değerler okunmadı.
+  - OpenAI: model ve embedding düğümlerinin ikisi de görünen adı `OpenAI account 2` olan credential'ı kullanır. SDK, workflow'u oluştururken bu düğümlere başka bir OpenAI credential'ı bağlamıştı; `6a6be774`'te ikisi de `OpenAI account 2`'ye çevrildi (yukarıdaki sürüm tablosunda "OpenAI credential"). Eşleştirme credential ID'siyle yapıldı; ID'ler ve değerler bu belgeye yazılmaz. 26.11.2026'da yayındaki final asistanda iki düğümün de `OpenAI account 2` kullandığı yeniden okundu (yalnızca görünen ad).
+- Alt workflow'lar: Prim Hesapla `14IY…` ve Sigorta Şartları `Q8hr…` yayınlı. Kayıtlı ve yayınlanan sürümler aynı (`2eba8392` ve `5f9edfd1`).
 
 **Çalıştırma:**
 - Bütün testler `execute_workflow` ile elle (`manual`) çalıştırıldı: 23.11.2026 01:06–01:10 (Europe/Istanbul; n8n kaydında 22.11 22:06–22:10 UTC).
@@ -231,4 +232,4 @@ Alt çalışmalar #505, #508 ve #510, Prim Hesapla'nın `integrated` çalışmal
 - 6. aşamaya kalanlar:
   - Webhook Basic Auth.
   - Final asistanın yayınlanması.
-  - `errorWorkflow` bağlanması (D): handler `IlJ0nrSuexnU4Wx4` yayınlanmadan bağlanamaz.
+  - `errorWorkflow` bağlanması (D): handler `IlJ0…` yayınlanmadan bağlanamaz.

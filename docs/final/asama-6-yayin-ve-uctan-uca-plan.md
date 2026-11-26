@@ -29,13 +29,13 @@ Final workflow'larını yayına hazırlamak ve yayınlamak; BizCard → bizcard2
 
 | Konu | Durum | Kanıt |
 | --- | --- | --- |
-| Final asistan `ruOvhJ8EtfHvpkrt` | Sürüm `7ed1c0d7`, `active:false`, yayınlanmadı. Webhook yolu `atolyekart-final-asistan-test`, kimlik doğrulama yok. Açıklamada "TEST, yayınlanmaz" yazıyor. | `asama-5-final-asistan-plan.md` §8; 23.11 salt okuma |
+| Final asistan `ruOv…` | Sürüm `7ed1c0d7`, `active:false`, yayınlanmadı. Webhook yolu `atolyekart-final-asistan-test`, kimlik doğrulama yok. Açıklamada "TEST, yayınlanmaz" yazıyor. | `asama-5-final-asistan-plan.md` §8; 23.11 salt okuma |
 | Final asistan regresyonu | R1–R6 geçti (#503–#513). Yalnızca n8n tarafının doğrulamasıdır; proxy üzerinden yapılmadı. | `asama-5-final-asistan-plan.md` §8, "Regresyon kontrolü" |
-| Prim Hesapla `14IYDf3MyS889v0b` | Yayınlı, `2eba8392`. Çağıranlar: ruOv'un Prim Hesapla aracı ve test çağırıcısı `I8sSwpc77L9RtvaG`, ikisi de ID ile. Diğer 34 workflow 14IY referansı için taranmadı. | R0 ön kontrolü; 23.11 salt okuma |
-| Sigorta Şartları `Q8hrWLrDUCixAEfn` | Yayınlı, `5f9edfd1`; 2. aşama workflow'u, değiştirilmez kuralı geçerli. Çağıranlar: ruOv'un Sigorta Şartları aracı ve `Pt4WqTG46owMGZ4x`, ikisi de ID ile. | R0 ön kontrolü; 23.11 salt okuma |
-| `Pt4WqTG46owMGZ4x` | Q8hr'nin 2. aşama test çağırıcısı (webhook → Q8hr), yayınlanmadı. Final asistanın bağımlılık zincirinde değil: asistan Q8hr'yi kendi aracından doğrudan çağırıyor; Pt4W'ye hiçbir workflow bağlı değil. | 23.11 salt okuma |
-| Hata yakalayıcı `IlJ0nrSuexnU4Wx4` | Yayınlanmadı; Telegram düğümü devre dışı, chat ID boş | `asama-4-hata-yakalayici-plan.md` §5 |
-| Yedekleme `jcH8s8nGulXET3bj` | Sürüm `fe196dd2`, yayınlanmadı; günlük çalışma yok. *(25.11.2026: taslak `13ed8808`, yayınlanmadı; Telegram chat ID yedekte gizlenir. `yedekleme-ve-hata-bildirimi.md` → "Yedek içeriği ve repo güvenliği".)* | `yedekleme-ve-hata-bildirimi.md` → "Uygulama sonucu" |
+| Prim Hesapla `14IY…` | Yayınlı, `2eba8392`. Çağıranlar: ruOv'un Prim Hesapla aracı ve test çağırıcısı `I8sS…`, ikisi de ID ile. Diğer 34 workflow 14IY referansı için taranmadı. | R0 ön kontrolü; 23.11 salt okuma |
+| Sigorta Şartları `Q8hr…` | Yayınlı, `5f9edfd1`; 2. aşama workflow'u, değiştirilmez kuralı geçerli. Çağıranlar: ruOv'un Sigorta Şartları aracı ve `Pt4W…`, ikisi de ID ile. | R0 ön kontrolü; 23.11 salt okuma |
+| `Pt4W…` | Q8hr'nin 2. aşama test çağırıcısı (webhook → Q8hr), yayınlanmadı. Final asistanın bağımlılık zincirinde değil: asistan Q8hr'yi kendi aracından doğrudan çağırıyor; Pt4W'ye hiçbir workflow bağlı değil. | 23.11 salt okuma |
+| Hata yakalayıcı `IlJ0…` | Yayınlanmadı; Telegram düğümü devre dışı, chat ID boş | `asama-4-hata-yakalayici-plan.md` §5 |
+| Yedekleme `jcH8…` | Sürüm `fe196dd2`, yayınlanmadı; günlük çalışma yok. *(25.11.2026: taslak `13ed8808`, yayınlanmadı; Telegram chat ID yedekte gizlenir. `yedekleme-ve-hata-bildirimi.md` → "Yedek içeriği ve repo güvenliği".)* | `yedekleme-ve-hata-bildirimi.md` → "Uygulama sonucu" |
 | bizcard2 | `/api/chat` yok, `api/` klasörü yok. Web (`index.html`) ve mobil (`mobile/src/chat.js`) istemciler `chatWebhookUrl` adresine `{ event, cardId, sessionId, question, timestamp }` gönderiyor ve `{ answer: string }` bekliyor. Hata gövdesini okumuyorlar: 429'da bir sabit metin, diğer her hatada genel bir metin gösteriyorlar. `sessionId` `randomUUID()` ile üretiliyor. `chatWebhookUrl` web'de ve mobilde boş. Final asistan `{ ok, output }` döndürüyor. | 23.11 salt okuma |
 | Eski webhook yolunun geçtiği yerler | Kodda yok (iki depoda da). Yalnızca `docs/final` belgelerinde. | 23.11 salt okuma |
 
@@ -45,7 +45,7 @@ Final workflow'larını yayına hazırlamak ve yayınlamak; BizCard → bizcard2
 | --- | --- | --- |
 | Y1 | `node --test scripts/n8n-workflow-listesi.test.mjs` | 8/8 geçti |
 | Y2 | REST script'i, kullanıcının terminalinde (23.11.2026) | Toplam 36, aktif 10, uygun 12, istisna 22, ihlal 0, arşiv 2 |
-| Y3 | Çalışma **#514**, `jcH8s8nGulXET3bj`, 23.11.2026 01:37 (İstanbul), `success` | `n8n-yedek-2026-11-23-0137.json` Drive'a yüklendi; gizli bilgi taraması bulgu vermedi |
+| Y3 | Çalışma **#514**, `jcH8…`, 23.11.2026 01:37 (İstanbul), `success` | `n8n-yedek-2026-11-23-0137.json` Drive'a yüklendi; gizli bilgi taraması bulgu vermedi |
 | Y4 | Sayım karşılaştırması + Drive ekran görüntüsü | Aşağıdaki tablo; dosya Drive'da, 383 KB (n8n'e göre 392 kB, 1000/1024 birim farkı); eski yedek duruyor |
 
 | | REST (Y2) | Yedek (#514) |
@@ -61,7 +61,7 @@ Bu ölçütler, yedekleme workflow'u yayınlanmadan elle yapılan çalışmayla 
 | # | Konu | Bilinen | Doğrulanmayan | Doğrulama yolu | Ne zaman kapanmalı |
 | --- | --- | --- | --- | --- | --- |
 | Ö1 | `.env.local` API anahtarı | `n8n_test2` (28.11'de doluyor) değil (kullanıcı kontrolü). Y2 23.11'de çalıştı: o gün geçerliydi ve listeleme yetkisi vardı. | Hangi anahtar olduğu; bitiş tarihi | Kullanıcı REST script'ini çalıştırır, hemen ardından n8n API sayfasında "Last used" değeri "şimdi" olan anahtara bakar | 28.11'den sonra REST script'i yeniden çalıştırılmadan önce ve yedekleme yayın kararından önce |
-| Ö2 | Yedekleme credential'ı `bT2d…` | #514 23.11'de çalıştı: o gün geçerliydi. `n8n_test2`'nin "Last used" değeri Y2 ve #514'ten sonra da "2 gün önce" kaldı; bu güçlü bir işaret ama kesin eşleştirme değil. | Credential'ın `atolyekart-yedekleme` (22.12.2026) anahtarını taşıdığı | jcH8'in elle çalıştırılması ve ardından "Last used" kontrolü. Bu Drive'a ek bir dosya yükler; **ayrı onaya bağlıdır (23.11.2026'da onay verilmedi).** | **Yedekleme yayın kararından önce** |
+| Ö2 | Yedekleme credential'ı | #514 23.11'de çalıştı: o gün geçerliydi. `n8n_test2`'nin "Last used" değeri Y2 ve #514'ten sonra da "2 gün önce" kaldı; bu güçlü bir işaret ama kesin eşleştirme değil. | Credential'ın `atolyekart-yedekleme` (22.12.2026) anahtarını taşıdığı | jcH8'in elle çalıştırılması ve ardından "Last used" kontrolü. Bu Drive'a ek bir dosya yükler; **ayrı onaya bağlıdır (23.11.2026'da onay verilmedi).** | **Yedekleme yayın kararından önce** |
 | Ö3 | API anahtarı izinleri | Ekranda her anahtar için "109 scopes" | İzinlerin adları; iki iş için de gereken `workflow:list` ve `workflow:read` | Kullanıcı n8n API sayfasında ilgili anahtarların ayrıntı ekranına bakar | Ö1 ve Ö2 ile birlikte |
 | Ö4 | Yeniden adlandırma ve açıklama değişikliğinin sürüme etkisi | 14IY yeniden adlandırılmayacağı için yayındaki bir workflow etkilenmez | ruOv, IlJ0 ve jcH8'te ad ve açıklama değişikliğinin yeni sürüm oluşturup oluşturmadığı | D1'den sonra salt okuma: sürüm kimliği ve sürüm farkı | D1'in hemen ardından |
 | Ö5 | bizcard2 oturum kimliği | İstemci `sessionId`'yi `randomUUID()` ile üretiyor (36 karakter); proxy kalıbına (`/^[A-Za-z0-9-]{8,64}$/`) uyuyor | Asistanın "Girdiyi doğrula" düğümündeki kurala uyduğu (bu turda yeniden okunmadı) | ruOv'un salt okunması | Adım E'nin planlamasında |
@@ -75,18 +75,18 @@ Bu ölçütler, yedekleme workflow'u yayınlanmadan elle yapılan çalışmayla 
 
 Standart (`isimlendirme-standardi.md`): `-test` eki yayınlanmayan deneme kopyası içindir; yayınlanan sürümde olmaz.
 
-**Q8hr koruması:** `Q8hrWLrDUCixAEfn` 2. aşama workflow'udur. Açık istisna verilmedikçe hiçbir seçenekte yeniden adlandırılmaz, kopyalanmaz, yayından kaldırılmaz, `errorWorkflow`'a bağlanmaz ve başka şekilde değiştirilmez. Bu durumda `atolyekart-final-sigorta-sartlari-test` adıyla yayında kalır ve isimlendirme standardına istisna olarak yazılır (bu belge değişikliği adım G'de, onayla). `Pt4WqTG46owMGZ4x` için de aynı kural geçerlidir. Q8hr'nin mevcut bağlantıları (ruOv aracı, Pt4W) değiştirilmez.
+**Q8hr koruması:** `Q8hr…` 2. aşama workflow'udur. Açık istisna verilmedikçe hiçbir seçenekte yeniden adlandırılmaz, kopyalanmaz, yayından kaldırılmaz, `errorWorkflow`'a bağlanmaz ve başka şekilde değiştirilmez. Bu durumda `atolyekart-final-sigorta-sartlari-test` adıyla yayında kalır ve isimlendirme standardına istisna olarak yazılır (bu belge değişikliği adım G'de, onayla). `Pt4W…` için de aynı kural geçerlidir. Q8hr'nin mevcut bağlantıları (ruOv aracı, Pt4W) değiştirilmez.
 
 **Karar (23.11.2026): Seçenek B, yalnızca yayınlanmamış üç workflow için.**
 
 | ID | Şimdiki ad | Yeni ad | Not |
 | --- | --- | --- | --- |
-| `ruOvhJ8EtfHvpkrt` | `atolyekart-final-asistan-test` | `atolyekart-final-asistan` | Açıklama da güncellenir |
-| `IlJ0nrSuexnU4Wx4` | `atolyekart-final-hata-yakalayici-test` | `atolyekart-final-hata-yakalayici` | Açıklama da güncellenir |
-| `jcH8s8nGulXET3bj` | `atolyekart-final-yedekleme-test` | `atolyekart-final-yedekleme` | Açıklama da güncellenir |
-| `14IYDf3MyS889v0b` | `atolyekart-final-prim-hesapla-test` | **Değişmez** | Yayınlı; adı, açıklaması ve ayarları bu aşamada değişmez. `-test` adıyla yayında kalır ve isimlendirme standardına istisna olarak yazılır (adım G). |
-| `Q8hrWLrDUCixAEfn`, `Pt4WqTG46owMGZ4x` | — | **Değişmez** | Koruma kuralı |
-| `I8sSwpc77L9RtvaG`, `jV30G6tjeTLF9342`, `kpYBMnrvm0Xy8sJA`, `E3LF02Ao0leg1frw` | — | **Değişmez** | Test yardımcıları; `-test` adıyla ve yayınlanmadan kalır |
+| `ruOv…` | `atolyekart-final-asistan-test` | `atolyekart-final-asistan` | Açıklama da güncellenir |
+| `IlJ0…` | `atolyekart-final-hata-yakalayici-test` | `atolyekart-final-hata-yakalayici` | Açıklama da güncellenir |
+| `jcH8…` | `atolyekart-final-yedekleme-test` | `atolyekart-final-yedekleme` | Açıklama da güncellenir |
+| `14IY…` | `atolyekart-final-prim-hesapla-test` | **Değişmez** | Yayınlı; adı, açıklaması ve ayarları bu aşamada değişmez. `-test` adıyla yayında kalır ve isimlendirme standardına istisna olarak yazılır (adım G). |
+| `Q8hr…`, `Pt4W…` | — | **Değişmez** | Koruma kuralı |
+| `I8sS…`, `jV30…`, `kpYB…`, `E3LF…` | — | **Değişmez** | Test yardımcıları; `-test` adıyla ve yayınlanmadan kalır |
 
 ruOv'un araçları alt workflow'ları ID ile çağırdığı için ad değişikliği bağlantıları koparmaz. Araçlarda görünen eski ad (`cachedResultName`) güncel kalmaz; bu yalnızca görünüm farkıdır ve bu aşamada düzeltilmez.
 
@@ -222,11 +222,11 @@ n8n 2.46.5 (`n8n-bootcamp` konteyneri). Her adım ayrı onayla yapıldı; her ad
 | D1 | ruOv, IlJ0 ve jcH8 yeniden adlandırıldı (`-test` eki kaldırıldı), açıklamaları güncellendi. Yeni sürüm oluşmadı (Ö4: yayınlanmamış workflow'da ad ve açıklama değişikliği sürüm oluşturmuyor). 14IY, Q8hr, Pt4W ve diğer test workflow'ları değişmedi. |
 | D2 | IlJ0 yayınlandı (`53b87907`). Telegram düğümü devre dışı, chat ID boş. |
 | D3 | ruOv webhook düğümü: yol `atolyekart-final-asistan`, Basic Auth (`AtolyeKart Final Assistant Basic Auth`). Yeni sürüm `08e2d27a`; sürüm farkında yalnızca webhook düğümü var. Elle çalıştırma: R6a #515 (400 yanıt düğümü, model çağrılmadı), R1 #516 (200; yalnızca Product Documents; kaynak satırı var; disclaimer yok). R1'de T14 benzeri kesinleştirme yine görüldü ("tercih edilmeli", "kaçınılmalıdır"). |
-| D4 | `errorWorkflow` = IlJ0: ruOv ve jcH8. Yeni sürüm oluşmadı (ayar workflow düzeyinde). Diğer 34 workflow değişmedi; sipariş workflow'ları canlı hata ağına (`LTWx3hv6EaaNCLeR`) bağlı kaldı. |
+| D4 | `errorWorkflow` = IlJ0: ruOv ve jcH8. Yeni sürüm oluşmadı (ayar workflow düzeyinde). Diğer 34 workflow değişmedi; sipariş workflow'ları canlı hata ağına (`LTWx…`) bağlı kaldı. |
 | D5 | ruOv yayınlandı (`08e2d27a`). |
 | K1 | Kimlik bilgisi olmadan dış istek: ilk deneme **502** (Cloudflare'in kendi hata sayfası, n8n'e ulaşmadı). Aynı isteğin yerel n8n'e (tünel atlanarak) gönderilmesi: 401. Dış tekrar: **401** (n8n yanıtı "Authorization is required!", `WWW-Authenticate: Basic realm="Webhook"`). İlk 502 büyük olasılıkla Cloudflare ya da tünel tarafında oluşan geçici bir hataydı; **nedeni doğrulanmadı**. |
 | K2 | Uydurma kimlik bilgisiyle dış istek: **401** ("Authentication data is wrong!"). |
-| K7 | ruOv ve jcH8'in `errorWorkflow` ayarı yayından sonra da `IlJ0nrSuexnU4Wx4`. IlJ0 yayında; Telegram düğümü devre dışı; IlJ0 tetiklenmedi. K7 yalnızca bağlantının kurulu olduğunu doğrular; gerçek bir hatayla tetikleme yapılmadı (7. aşama). |
+| K7 | ruOv ve jcH8'in `errorWorkflow` ayarı yayından sonra da `IlJ0…`. IlJ0 yayında; Telegram düğümü devre dışı; IlJ0 tetiklenmedi. K7 yalnızca bağlantının kurulu olduğunu doğrular; gerçek bir hatayla tetikleme yapılmadı (7. aşama). |
 
 K1, K2 ve yerel kontrolde workflow çalışmadı (ruOv'un son çalışması #516) ve yanıtlarda sır yoktu. İsteklerin gövdesinde bilerek boş mesaj vardı; kimlik doğrulama geçilseydi bile model çağrılmazdı.
 

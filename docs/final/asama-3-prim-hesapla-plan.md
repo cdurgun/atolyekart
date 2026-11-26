@@ -2,7 +2,7 @@
 
 > Hazırlandı: 22.11.2026. **Durum: uygulandı ve test edildi (22.11.2026); iki workflow `active:false`, yayınlanmadı. Sonuç: bölüm 7.** Yeni oturumda bu dosya verilerek başlanır. Kaynak tarife: `sigorta-tarife-taslagi.md` (değerler onaylı). Genel plan ve backlog: `kapsam-ve-plan.md`.
 >
-> **Güncel durum (24.11.2026):** 14IY (`14IYDf3MyS889v0b`) 5. aşamada kullanıcı onayıyla yayınlandı (`2eba8392`); adı `atolyekart-final-prim-hesapla-test` olarak kaldı (`isimlendirme-standardi.md`). Çağırıcı `I8sSwpc77L9RtvaG` yayınlanmadı. **14IY'nin `errorWorkflow` ayarı yoktur:** 4. aşamada yapılan bağlama denemesini n8n reddetti, 6. aşamada da bilerek bağlanmadı (6. aşama planı, bölüm 5, karar 2). Bu nedenle aşağıdaki "4. aşamada bağlanır" ifadesi gerçekleşmemiş bir plandır.
+> **Güncel durum (24.11.2026):** 14IY (`14IY…`) 5. aşamada kullanıcı onayıyla yayınlandı (`2eba8392`); adı `atolyekart-final-prim-hesapla-test` olarak kaldı (`isimlendirme-standardi.md`). Çağırıcı `I8sS…` yayınlanmadı. **14IY'nin `errorWorkflow` ayarı yoktur:** 4. aşamada yapılan bağlama denemesini n8n reddetti, 6. aşamada da bilerek bağlanmadı (6. aşama planı, bölüm 5, karar 2). Bu nedenle aşağıdaki "4. aşamada bağlanır" ifadesi gerçekleşmemiş bir plandır.
 
 ## 0. Yeni oturum için bağlam
 
@@ -14,9 +14,9 @@
 
 | Workflow | ID | Durum |
 | --- | --- | --- |
-| `atolyekart-final-sigorta-sartlari-test` (alt workflow) | `Q8hrWLrDUCixAEfn` | Son sürüm `5f9edfd1`; `active:false`, yayınlanmadı |
-| `atolyekart-final-sigorta-sartlari-cagri-test` (çağırıcı) | `Pt4WqTG46owMGZ4x` | `active:false`, yayınlanmadı |
-| Kaynak `atolyekart-final-sigorta-asistan-test` | `kpYBMnrvm0Xy8sJA` | `8b8fa1d4` sürümünde korunuyor |
+| `atolyekart-final-sigorta-sartlari-test` (alt workflow) | `Q8hr…` | Son sürüm `5f9edfd1`; `active:false`, yayınlanmadı |
+| `atolyekart-final-sigorta-sartlari-cagri-test` (çağırıcı) | `Pt4W…` | `active:false`, yayınlanmadı |
+| Kaynak `atolyekart-final-sigorta-asistan-test` | `kpYB…` | `8b8fa1d4` sürümünde korunuyor |
 
 - Sözleşme: girdi `{ soru }` → `{ ok, yanit, yanitGovdesi, kaynakSatiri, kaynakBolumler, kaynakDokuman, modelDisclaimerYazdi, modelBolumAtfiTemizlendi, kalanBolumAtfi, girisDuzeltildi, icEtiketTemizlendi }`; geçersiz soruda `{ ok:false, reason:'invalid_question' }`. Disclaimer eklemez (final asistan ekler).
 - Test sonuçları: T4 geçti (#435/#436), T3 geçti (#453/#454), T1 kabul edildi (#449/#450), T2 kabul edildi (#455/#456). Kalan model kusurları `kapsam-ve-plan.md` bölüm 8'de.
@@ -107,8 +107,8 @@ Ek olarak belirlenenler: doğrulama sırası `unknown_product` → `invalid_quan
 
 | Workflow | ID | Sürüm | Yapı |
 | --- | --- | --- | --- |
-| `atolyekart-final-prim-hesapla-test` | `14IYDf3MyS889v0b` | `2eba8392` | Execute Workflow Trigger v1.3 (`productId: string`, `quantity: any`) → Code v2 "Prim hesapla" (`runOnceForEachItem`) |
-| `atolyekart-final-prim-hesapla-cagri-test` | `I8sSwpc77L9RtvaG` | `60f4caf6` | Webhook v2.2 (POST, `lastNode`, `firstEntryJson`) → Execute Workflow v1.4 (`waitForSubWorkflow`, `attemptToConvertTypes:false`) |
+| `atolyekart-final-prim-hesapla-test` | `14IY…` | `2eba8392` | Execute Workflow Trigger v1.3 (`productId: string`, `quantity: any`) → Code v2 "Prim hesapla" (`runOnceForEachItem`) |
+| `atolyekart-final-prim-hesapla-cagri-test` | `I8sS…` | `60f4caf6` | Webhook v2.2 (POST, `lastNode`, `firstEntryJson`) → Execute Workflow v1.4 (`waitForSubWorkflow`, `attemptToConvertTypes:false`) |
 
 - Ayarlar: ikisinde `executionOrder v1`, `Europe/Istanbul`, `saveManualExecutions: true`; alt workflow'da ayrıca `callerPolicy: workflowsFromSameOwner`. Credential ve `errorWorkflow` yok. Ayarlar SDK'da olmadığı için oluşturmadan hemen sonra `setWorkflowSettings` ile verildi (her workflow'un geçmişinde iki sürüm var).
 - `quantity` girdisi `any` türündedir; böylece n8n değeri kendisi dönüştürmez, karar 2'yi Code node uygular.
@@ -129,6 +129,6 @@ Ek olarak belirlenenler: doğrulama sırası `unknown_product` → `invalid_quan
 
 - 8/8 geçti; hiçbir test yeniden çalıştırılmadı. Hiçbir çıktıda `rate` yok.
 - Tutarlar JSON'da sayı olarak döner (`33.6`, `15`); "33,60 TL" biçimi 5. aşamada final asistanın işidir.
-- Değişmeyenler: canlı workflow'lar, 2. aşama workflow'ları (`Q8hrWLrDUCixAEfn`, `Pt4WqTG46owMGZ4x`; yalnızca okundu), kaynak `8b8fa1d4`, Qdrant koleksiyonları, Products tablosu. Sipariş, stok bildirimi, poliçe, Telegram ya da e-posta gönderimi yapılmadı.
+- Değişmeyenler: canlı workflow'lar, 2. aşama workflow'ları (`Q8hr…`, `Pt4W…`; yalnızca okundu), kaynak `8b8fa1d4`, Qdrant koleksiyonları, Products tablosu. Sipariş, stok bildirimi, poliçe, Telegram ya da e-posta gönderimi yapılmadı.
 - Çağırıcı Webhook'unda kimlik doğrulama yok (2. aşamadaki çağırıcıyla aynı); workflow aktif olmadığı için production adresi çalışmaz.
 - Gerçek bir sigorta projesinde bu hesabın nerede yapılacağına dair notlar: `docs/gelecek/gercek-sigorta-projesi-n8n.md`.

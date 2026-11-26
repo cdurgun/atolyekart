@@ -1,6 +1,6 @@
 # Otomatik yedekleme ve hata bildirimi: tasarım (TASLAK)
 
-Durum 23.11.2026: 1. bölüm uygulandı ve doğrulandı (`atolyekart-final-yedekleme-test`, `jcH8s8nGulXET3bj`, yayınlanmadı; sonuç: bölüm 1 sonundaki "Uygulama sonucu"). 2. bölüm 4. aşamada uygulandı (`atolyekart-final-hata-yakalayici-test`, `IlJ0nrSuexnU4Wx4`; ayrıntı `asama-4-hata-yakalayici-plan.md`). Telegram mesajı gönderilmedi; hiçbir canlı workflow değişmedi.
+Durum 23.11.2026: 1. bölüm uygulandı ve doğrulandı (`atolyekart-final-yedekleme-test`, `jcH8…`, yayınlanmadı; sonuç: bölüm 1 sonundaki "Uygulama sonucu"). 2. bölüm 4. aşamada uygulandı (`atolyekart-final-hata-yakalayici-test`, `IlJ0…`; ayrıntı `asama-4-hata-yakalayici-plan.md`). Telegram mesajı gönderilmedi; hiçbir canlı workflow değişmedi.
 
 **Güncelleme (24.11.2026):** 6. aşamada `-test` ekleri kaldırıldı: `atolyekart-final-yedekleme` (yayınlanmadı) ve `atolyekart-final-hata-yakalayici` (yayında, `53b87907`). jcH8'in `errorWorkflow`'u IlJ0'a bağlandı (D4). Hata ağı 7. aşamada uçtan uca doğrulandı (`asama-7-hata-agi-plan.md`). Telegram gönderimi hâlâ kapalı.
 
@@ -41,14 +41,14 @@ Kullanıcıdan gerekenler:
 2. Drive'da **"AtolyeKart n8n Yedekleri"** klasörünü oluştur (ya da adını söyle).
 3. **n8n API credential'ı:** n8n'de `n8n_prod_key` adlı bir n8nApi credential'ı var; hangi anahtarı kullandığını ve süresini bilmiyorum. `.env.local`'deki anahtar 28.11.2026'da doluyor. Yedekleme için **3.12.2026'dan sonra dolan** yeni bir anahtar oluşturup credential'a girmen önerilir.
    **Durum (23.11.2026):**
-   - Yedekleme workflow'u `n8n API yedekleme` (`bT2d…`) credential'ını kullanıyor. n8n'de bunun adına ve son kullanım zamanına uyan anahtar `atolyekart-yedekleme`; bitişi 22.12.2026. Credential'ın gerçekten bu anahtarı taşıdığı ayrıca doğrulanmadı.
+   - Yedekleme workflow'u `n8n API yedekleme` credential'ını kullanıyor. n8n'de bunun adına ve son kullanım zamanına uyan anahtar `atolyekart-yedekleme`; bitişi 22.12.2026. Credential'ın gerçekten bu anahtarı taşıdığı ayrıca doğrulanmadı.
    - Kullanıcı, `.env.local`'deki anahtarın 28.11'de dolan `n8n_test2` olmadığını doğruladı. n8n'deki diğer anahtarlar 3.12'den sonra da geçerli.
    - Yeni anahtar oluşturulmadı.
 4. Workflow'u oluşturma (yayınlanmamış `atolyekart-final-yedekleme-test`) ve ilk elle çalıştırma için onay. Zamanlanmış çalışma ancak yayınla (publish) başlar; o da ayrı onaydır.
 
 ### Uygulama sonucu (22–23.11.2026)
 
-Workflow: `atolyekart-final-yedekleme-test` (`jcH8s8nGulXET3bj`), sürüm `fe196dd2`, `active:false`, yayınlanmadı. *(25.11.2026: taslak `13ed8808`, hâlâ yayınlanmadı; aşağıda "Yedek içeriği ve repo güvenliği". #434 ve #514 `fe196dd2` koduyla alındı.)* Credential'lar (ID ile, kısaltılmış): n8n API `bT2d…`, Google Drive `vHAF…`.
+Workflow: `atolyekart-final-yedekleme-test` (`jcH8…`), sürüm `fe196dd2`, `active:false`, yayınlanmadı. *(25.11.2026: taslak `13ed8808`, hâlâ yayınlanmadı; aşağıda "Yedek içeriği ve repo güvenliği". #434 ve #514 `fe196dd2` koduyla alındı.)* Credential'lar: n8n API, Google Drive.
 
 **Tasarımdan farklar:**
 - Ayrı bir Manual Trigger yok; elle çalıştırma Schedule tetikleyicisi ("Her gün 03:00") üzerinden yapılıyor.
@@ -130,7 +130,7 @@ Kurallar: hata mesajı 200 karakterde kesilir; adres, anahtar, e-posta, telefon 
 
 | Adım | Sonuç |
 | --- | --- |
-| Kurulum (Claude, kullanıcı onayıyla) | `atolyekart-final-telegram-test` (`M8TdawbecXcQW08v`): Manual Trigger → Telegram v1.2 `sendMessage`. Sabit metin: "AtölyeKart final – Telegram bağlantı testi. Bu bir test mesajıdır; işlem gerekmez." HTML, n8n imzası ve bağlantı önizlemesi kapalı (IlJ0 ile aynı). Credential IlJ0'daki ile aynı (yerel karşılaştırma; ID yazılmadı). `errorWorkflow` yok; hiçbir workflow çağırmıyor; yayınlanmadı. Elle çalıştırma kaydı kapalı (`saveManualExecutions: false`). |
+| Kurulum (Claude, kullanıcı onayıyla) | `atolyekart-final-telegram-test` (`M8Td…`): Manual Trigger → Telegram v1.2 `sendMessage`. Sabit metin: "AtölyeKart final – Telegram bağlantı testi. Bu bir test mesajıdır; işlem gerekmez." HTML, n8n imzası ve bağlantı önizlemesi kapalı (IlJ0 ile aynı). Credential IlJ0'daki ile aynı (yerel karşılaştırma; ID yazılmadı). `errorWorkflow` yok; hiçbir workflow çağırmıyor; yayınlanmadı. Elle çalıştırma kaydı kapalı (`saveManualExecutions: false`). |
 | Chat ID (kullanıcı) | Kullanıcı chat ID'yi n8n arayüzünde girip kaydetti (taslak `88e8f4d4`). Salt okuma: dolu, sayısal, ifade değil; başka düğüm, bağlantı ve credential değişmedi. Editör kaydederken varsayılan değerli `resource`, `operation`, `replyMarkup` anahtarlarını kaldırdı ve `binaryMode: separate` ayarını ekledi. Claude test sırasında workflow veya canlı yapılandırma değiştirmedi. Telegram mesajının ulaşması kullanıcı bildirimi ve ekran görüntüsüyle doğrulandı; gönderim sürecine ilişkin ayrıca nedensel bir değerlendirme yapılmadı. |
 | Gönderim (kullanıcı) | Kullanıcı arayüzden bir kez çalıştırdı. **Mesaj kullanıcının Telegram'ına ulaştı** (kullanıcı bildirimi ve ekran görüntüsü). Düğümün yeşil/kırmızı durumu ayrıca doğrulanmadı. |
 | Kayıt | Test workflow'una ait kalıcı execution kaydı bulunmadı (çalışma listesi, yalnızca metadata). `saveManualExecutions: false` ayarı mevcut olmakla birlikte, kayıt bulunmaması tek başına bu ayarın davranışını kesin olarak kanıtlamaz. Gönderimin kanıtı kullanıcı bildirimi ve ekran görüntüsüdür. |

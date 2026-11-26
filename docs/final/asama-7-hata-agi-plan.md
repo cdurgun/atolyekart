@@ -4,9 +4,9 @@
 
 ## 1. Amaç ve sınır
 
-Final asistanın (`ruOvhJ8EtfHvpkrt`) production modunda gerçek bir hatayla karşılaştığında:
+Final asistanın (`ruOv…`) production modunda gerçek bir hatayla karşılaştığında:
 - ziyaretçiye anlaşılır bir hata yanıtı (503) döndüğünü,
-- hata yakalayıcının (`IlJ0nrSuexnU4Wx4`) tetiklendiğini ve gerçek Error Trigger verisinden bildirim metni ürettiğini,
+- hata yakalayıcının (`IlJ0…`) tetiklendiğini ve gerçek Error Trigger verisinden bildirim metni ürettiğini,
 - workflow başına 10 dakikada en fazla 1 bildirim sınırının production'da çalıştığını
 
 doğrulamak (kabul ölçütü 4; 4. aşamadan kalan maddeler).
@@ -15,7 +15,7 @@ doğrulamak (kabul ölçütü 4; 4. aşamadan kalan maddeler).
 - Gerçek Telegram gönderimi: düğüm devre dışı kaldı, chat ID boş.
 - 14IY'de teknik hata (bölüm 6).
 - bizcard2 proxy'si üzerinden test (6. aşama adım E; beklemede).
-- Yedekleme workflow'unun (`jcH8s8nGulXET3bj`) hata yolu.
+- Yedekleme workflow'unun (`jcH8…`) hata yolu.
 
 **Sınırlar:**
 - Hiçbir workflow değiştirilmedi ya da yayınlanmadı.
@@ -123,8 +123,8 @@ Sohbette "S3" ve "S3b" olarak konuşuldu. Bölüm 2'deki S1 (bozuk hafıza anaht
 
 | Workflow | ID | Rol |
 | --- | --- | --- |
-| `atolyekart-final-alt-hata-test` | `4UcIHjoOUajs7ibB` | 14IY ile aynı girdi (`productId`, `quantity`); "Bilerek hata" Code düğümü sabit bir hata fırlatır. Tek tetikleyici alt workflow girişi; webhook yok. Credential ve `errorWorkflow` yok. Taslak `3fe2363c`. |
-| `atolyekart-final-asistan-hata-test` | `u9KeREnfXQNCZtyx` | ruOv'un kullanıcı tarafından arayüzden alınmış kopyası. Farklar: webhook yolu `atolyekart-final-asistan-hata-test`; Redis anahtarı `atolyekart-final-hatatest:<sessionId>`, TTL 3600 sn; Prim Hesapla aracı `atolyekart-final-alt-hata-test`'e bağlı; açıklama. Diğer 12 düğüm, bağlantılar, ayarlar ve credential ID'leri ruOv ile aynı (yerel karşılaştırma). `errorWorkflow` = IlJ0 (kopyalamayla geldi). Taslak `d9a24d15`. |
+| `atolyekart-final-alt-hata-test` | `4UcI…` | 14IY ile aynı girdi (`productId`, `quantity`); "Bilerek hata" Code düğümü sabit bir hata fırlatır. Tek tetikleyici alt workflow girişi; webhook yok. Credential ve `errorWorkflow` yok. Taslak `3fe2363c`. |
+| `atolyekart-final-asistan-hata-test` | `u9Ke…` | ruOv'un kullanıcı tarafından arayüzden alınmış kopyası. Farklar: webhook yolu `atolyekart-final-asistan-hata-test`; Redis anahtarı `atolyekart-final-hatatest:<sessionId>`, TTL 3600 sn; Prim Hesapla aracı `atolyekart-final-alt-hata-test`'e bağlı; açıklama. Diğer 12 düğüm, bağlantılar, ayarlar ve credential ID'leri ruOv ile aynı (yerel karşılaştırma). `errorWorkflow` = IlJ0 (kopyalamayla geldi). Taslak `d9a24d15`. |
 
 **Yöntem:**
 - Kopya, MCP `execute_workflow` ile `manual` modda çalıştırıldı; her test bir kez. Yeniden çalıştırma ya da düzeltme yapılmadı.
