@@ -1,6 +1,8 @@
 # X2: Site sohbetinin final asistana bağlanması
 
-> Durum (26.11.2026): Kod ve yerel L1 testi tamamlandı. Commit'ler yeni `main` (`7f729bf`) üzerine cherry-pick ile alındı: yerel dal `ozellik/x2-p1`, kod commit'i `0919822` (ilk dal `ozellik/x2-final-asistan-sohbet`'teki `b44259e` ile aynı içerik). Bu tabanda `npm test` 102/102 ve `npm run build` geçti. Push, PR ve merge P1'in parçasıdır; bu satır yazıldığında hiçbiri yapılmamıştı. **P1 ve P2 yapılmadı; ikisi de ayrı onay bekliyor.** Production'da sohbet hâlâ canlı RAG'e gidiyor.
+> Durum (26.11.2026): **P1 ve P2 tamamlandı. Production sohbeti final asistana gidiyor.** Kod PR #2 ile `main`'e squash merge edildi (`27028a1`). P2'de Vercel Production değişkenleri girildi ve redeploy yapıldı. Smoke testinde senaryo 1–4 ve 6 geçti; senaryo 7'de hafıza ayrımı geçti, "Yeni sohbet" bildirimi production'da doğrudan doğrulanmadı; **senaryo 5 (stok) başarısız** (bölüm 9).
+>
+> Hazırlık: commit'ler yeni `main` (`7f729bf`) üzerine cherry-pick ile `ozellik/x2-p1` dalında hazırlandı (kod commit'i `0919822`, ilk dal `ozellik/x2-final-asistan-sohbet`'teki `b44259e` ile aynı içerik). Bu tabanda `npm test` 102/102 ve `npm run build` geçti.
 
 ## 1. Amaç ve kapsam
 
@@ -83,24 +85,75 @@ Mesajları kullanıcı tarayıcıdan gönderdi. Çalışma kayıtları yalnızca
 - Teklif yanıtında tutar satırı cümlenin ortasına yerleşti: "Prim ve detaylar için Demo teklif: … şeklinde bilgi verebilirim." Tutarlar doğru, dil akıcı değil. Düzeltilmesi canlı workflow değişikliği gerektirir; ayrı karar.
 - Hafıza yanıtında araç çağrılmadığı hâlde demo uyarısı var. Bu tasarım gereği: mesajda "teklif" geçtiğinde uyarı eklenir.
 
-## 7. Henüz doğrulanmayanlar
+## 7. Doğrulananlar ve henüz doğrulanmayanlar
 
-- Production'da Vercel → tünel → final asistan yolu.
-- Vercel Production değişkenleri: `N8N_CHAT_BACKEND` ve `N8N_FINAL_*` henüz girilmedi.
+Doğrulandı (26.11.2026, bölüm 9):
+- Production'da Vercel → tünel → final asistan yolu (ilk P2 mesajı, çalışma #536).
+- Vercel Production değişkenleri: `N8N_FINAL_URL`, `N8N_FINAL_USER`, `N8N_FINAL_PASSWORD` ve `N8N_CHAT_BACKEND=final` kullanıcı tarafından girildi. Claude değerleri görmedi; değişkenlerin etkin olduğu, mesajın final asistana `webhook` modunda ulaşmasıyla anlaşıldı.
+
+Henüz doğrulanmadı:
 - Gerçek bir production hatasının hata yakalayıcı üzerinden Telegram bildirimine dönüştüğü uçtan uca.
+- Final hedefinin hata yanıtları (503 yapılandırma eksik, 502 n8n hatası) production'da. Bilerek tetiklenmedi; birim testleriyle kapsanıyor (`server/chat.test.js`).
+- "Yeni sohbet" bildiriminin production'da ekranda görünmesi (bölüm 9, senaryo 7).
 
-## 8. Sonraki adımlar (her biri ayrı onay bekliyor)
+## 8. Geçiş adımları (her biri ayrı onayla yapıldı)
 
 | Adım | İçerik | Beklenen | Durum |
 | --- | --- | --- | --- |
-| **P1** | Push, PR, `main`'e merge; production deploy'u tetiklenir. `N8N_CHAT_BACKEND` Vercel'de tanımsız. | Davranış değişmez: sohbet canlı RAG'e gider; tek bir smoke mesajı | Yapılmadı, onay bekliyor |
-| Vercel değişkenleri | Kullanıcı Production'a `N8N_FINAL_URL` (tünelin `https` adresi), `N8N_FINAL_USER` ve `N8N_FINAL_PASSWORD` girer. Claude değerleri görmez ve girmez. | — | Yapılmadı |
-| **P2** | Kullanıcı `N8N_CHAT_BACKEND=final` tanımlar; redeploy | Production sohbeti final asistana gider; bakım, teklif ve hafıza mesajlarıyla smoke testi; final asistanda `webhook` çalışmaları, hata yakalayıcıda çalışma yok | Yapılmadı, onay bekliyor |
+| **P1** | Push, PR, `main`'e merge; production deploy'u tetiklenir. `N8N_CHAT_BACKEND` Vercel'de tanımsız. | Davranış değişmez: sohbet canlı RAG'e gider; tek bir smoke mesajı | Yapıldı (26.11.2026): PR #2 squash merge → `27028a1`; deploy `dpl_5PVCvfBArVMg6V4Z84SYBfWHrd39` READY; smoke geçti (bölüm 9) |
+| Vercel değişkenleri | Kullanıcı Production'a `N8N_FINAL_URL` (tünelin `https` adresi), `N8N_FINAL_USER` ve `N8N_FINAL_PASSWORD` girer. Claude değerleri görmez ve girmez. | — | Yapıldı (26.11.2026, kullanıcı) |
+| **P2** | Kullanıcı `N8N_CHAT_BACKEND=final` tanımlar; redeploy | Production sohbeti final asistana gider; bakım, teklif ve hafıza mesajlarıyla smoke testi; final asistanda `webhook` çalışmaları, hata yakalayıcıda çalışma yok | Yapıldı (26.11.2026): redeploy `dpl_nZjzcf8XRPe85vcvpPx6P5fpQmZX`, SHA `27028a1`; smoke sonuçları bölüm 9 |
 
 **X1'e geri dönüş:**
 1. Vercel Production'da `N8N_CHAT_BACKEND` silinir ve redeploy yapılır. `N8N_CHAT_*` değerleri değişmediği için sır yeniden girilmez.
-2. Vercel Instant Rollback kullanılacaksa yalnızca X2'den hemen önceki deploy'a dönülür. 21.11'deki `WEBHOOK_URL` düzeltmesinden önceki bir deploy'a dönmek sipariş akışını bozar (`docs/hafta6/uretim-hazirlik.md` bölüm 6).
+2. Vercel Instant Rollback kullanılacaksa P1 deploy'una (`dpl_5PVCvfBArVMg6V4Z84SYBfWHrd39`; aynı kod, `N8N_CHAT_BACKEND` tanımsızken oluşturuldu) ya da X2'den hemen önceki deploy'a dönülür. 21.11'deki `WEBHOOK_URL` düzeltmesinden önceki bir deploy'a dönmek sipariş akışını bozar (`docs/hafta6/uretim-hazirlik.md` bölüm 6).
 
 **Dikkat:**
-- Final hedefi açıkken final asistanda oluşan bir hata, hata yakalayıcı üzerinden gerçek bir Telegram bildirimi üretebilir. Alt workflow hataları bildirim üretmez (bilinen sınırlama).
+- Final hedefi açıkken final asistanda oluşan bir hata, hata yakalayıcı üzerinden gerçek bir Telegram bildirimi üretebilir. Hata yakalayıcının açıklamasında "Telegram node'u devre dışı" yazsa da 26.11.2026 itibarıyla Telegram düğümü etkindir. Alt workflow hataları bildirim üretmez (bilinen sınırlama).
 - Production sohbeti; Mac'in, Docker'ın ve tünelin açık olmasına bağlıdır. Bu, RAG hedefi için de geçerlidir.
+
+## 9. P1 ve P2 sonuçları (26.11.2026)
+
+**Erişim:** Production, Vercel Authentication (kapsam: tüm deploy'lar) arkasındadır. Testler, production alias'ı için oluşturulan tek Shareable Link ile, Vercel'e giriş yapılmamış gizli pencereden yapıldı. Mesajları kullanıcı gönderdi.
+
+**Kanıt yöntemi:** n8n çalışmaları yalnızca meta veri düzeyinde (kimlik, workflow, durum, mod, zaman) okundu; düğüm verisi, prompt ve mesaj içeriği okunmadı. Çalışmalar senaryolarla gönderim sırası ve zamanla eşleştirildi. n8n MCP bağlantısının yerel instance'a gittiği, aynı workflow'un `updatedAt` değerinin konteynerden alınan dışa aktarımla karşılaştırılmasıyla doğrulandı. Yanıtların değerlendirmesi ekran görüntülerine dayanır; HTTP durum kodları ayrıca ölçülmedi.
+
+### P1 (hedef: canlı RAG)
+
+- Deploy `dpl_5PVCvfBArVMg6V4Z84SYBfWHrd39`, SHA `27028a1`, READY; production alias'ları bu deploy'a geçti.
+- Ön kontrol: Vercel Production'da `N8N_CHAT_BACKEND` tanımlı değildi (kullanıcı panelden baktı).
+- Smoke: yeni karşılama metni göründü; tek mesaj canlı RAG'de #535 `webhook` `success` oldu. Final asistanda ve hata yakalayıcıda çalışma yok.
+- Gözlem: canlı RAG'in stok yanıtı sitedeki katalogla uyuşmadı (katalogda olmayan ürün adları ve farklı stok durumu). P2'den sonra production sohbeti RAG'e gitmediği için demoyu etkilemez.
+
+### P2 (hedef: final asistan)
+
+- Deploy `dpl_nZjzcf8XRPe85vcvpPx6P5fpQmZX` (redeploy), SHA `27028a1`, READY; production alias'ları bu deploy'a geçti.
+
+| # | Senaryo | Sonuç | Çalışmalar |
+| --- | --- | --- | --- |
+| 1 | Pencereyi açma | ✅ Yalnızca yeni karşılama metni | Yok |
+| 2 | Bakım (Amber Soya Mum fitili) | ✅ Dokümanda olmayan malzeme bilgisi uydurulmadı; "Kaynak: soy-candle-care-guide, sürüm 1.2"; demo uyarısı yok | #536 `ruOv` `webhook` `success` |
+| 3 | Teklif (2 adet Luna Seramik Kupa) | ✅ Bedel 840,00 TL, prim 33,60 TL, vergiler hariç; demo uyarısı bir kez. Tutar satırı cümlenin ortasına yerleşti (bulgu 2) | #537 `ruOv` `webhook` `success`; #538 Prim Hesapla `integrated` `success` |
+| 4 | Hafıza | ✅ "2 adet Luna Seramik Kupa"; araç çağrılmadı | #539 `ruOv` `webhook` `success` |
+| 5 | Stok (Terra Minimal Kolye) | ❌ Prim Hesapla aracı çağrıldı; kesin stok durumu bildirildi ve istenmeyen bir demo teklifi eklendi (bulgu 1). Soru tekrar sorulmadı | #540 `ruOv` `webhook` `success`; #541 Prim Hesapla `integrated` `success` |
+| 6 | Sayfa yenileme ve aynı oturumda hafıza sorusu | ✅ Yenilemeden sonra yalnızca karşılama; hafıza sunucu tarafında sürdü | Yenileme: yok; mesaj: #542 `ruOv` `webhook` `success` |
+| 7 | Yeni sohbet ve hafıza sorusu | ✅ Yeni oturumda önceki ürün ve adet bilinmedi. Bildirim metni doğrulanamadı (aşağıda) | Düğme: yok; mesaj: #543 `ruOv` `webhook` `success` |
+| 8 | Final uç noktası hatası | Bilerek tetiklenmedi (bölüm 7) | — |
+
+- Canlı RAG'de P1'deki #535'ten sonra, hata yakalayıcıda bu testler boyunca çalışma yok; Telegram bildirimi gitmedi.
+- **Senaryo 7, bildirim:** `ChatWidget.jsx`'te "Yeni sohbet" bildirimi düğmeye basılınca gösterilir ve zamanlayıcı olmadan bir sonraki mesaj gönderilince kaldırılır. Ekran görüntüsü mesaj gönderildikten sonra alındığı için bildirimin görünmemesi kodla tutarlıdır; ancak production'da ekranda göründüğü doğrudan doğrulanmadı.
+- **Yan etkiler:** final asistanda 6 (#536, #537, #539, #540, #542, #543) ve Prim Hesapla'da 2 (#538, #541) çalışma ile bunların OpenAI çağrıları; Redis'te iki oturum için `atolyekart-final:` önekli hafıza anahtarı; mesajlar n8n çalışma kayıtlarında. Sipariş, stok bildirimi ya da poliçe oluşmadı.
+
+### Açık bulgular
+
+1. **Stok sorusu (senaryo 5):** final asistan stok sorusunda Prim Hesapla aracını çağırıyor, kesin stok durumu bildiriyor ve istenmeyen teklif ekliyor. Stok cümlesinin aracın çıktısından geldiği bir çıkarımdır; düğüm verisi okunmadı. Düzeltme canlı workflow değişikliği gerektirir (ayrı karar).
+2. **Teklif satırının yerleşimi:** tutar satırı cümlenin ortasına giriyor ("… için Demo teklif: … yazabilirsiniz."). Tutarlar doğru; düzeltme canlı workflow değişikliği gerektirir (ayrı karar).
+3. **Hata yakalayıcının açıklaması eskimiş:** açıklama Telegram düğümünü devre dışı olarak anlatıyor, düğüm etkin.
+4. **"Yeni sohbet" bildirimi** production'da doğrudan doğrulanmadı (düşük risk; kodla tutarlı).
+
+### Demo kısıtları
+
+- Düzeltme yapılana kadar demoda stok sorusu sorulmaz.
+- Erişim tek Shareable Link iledir (Hobby planda aynı anda tek link; yeni link eskisini iptal eder). Değerlendirme bitince link iptal edilir.
+- Production sohbeti Mac'in, Docker'ın ve tünelin açık olmasına bağlıdır.
+- Final asistanda oluşan gerçek bir hata Telegram bildirimi üretir.
