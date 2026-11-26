@@ -1,6 +1,6 @@
 # X2: Site sohbetinin final asistana bağlanması
 
-> Durum (26.11.2026): Kod ve yerel L1 testi tamamlandı. Yerel commit `b44259e`, dal `ozellik/x2-final-asistan-sohbet` (`main` `631ee35` tabanlı); push edilmedi. **P1 ve P2 yapılmadı; ikisi de ayrı onay bekliyor.** Production'da sohbet hâlâ canlı RAG'e gidiyor.
+> Durum (26.11.2026): Kod ve yerel L1 testi tamamlandı. Commit'ler yeni `main` (`7f729bf`) üzerine cherry-pick ile alındı: yerel dal `ozellik/x2-p1`, kod commit'i `0919822` (ilk dal `ozellik/x2-final-asistan-sohbet`'teki `b44259e` ile aynı içerik). Bu tabanda `npm test` 102/102 ve `npm run build` geçti. Push, PR ve merge P1'in parçasıdır; bu satır yazıldığında hiçbiri yapılmamıştı. **P1 ve P2 yapılmadı; ikisi de ayrı onay bekliyor.** Production'da sohbet hâlâ canlı RAG'e gidiyor.
 
 ## 1. Amaç ve kapsam
 
