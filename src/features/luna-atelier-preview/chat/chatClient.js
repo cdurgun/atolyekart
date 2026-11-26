@@ -11,13 +11,16 @@
 // zaten süzer; parseHistory yine de yalnızca boş olmayan ziyaretçi (human) ve asistan (ai) metinlerini kabul eder.
 //
 // Oturum kimliği tarayıcının localStorage'ında (SESSION_STORAGE_KEY) tutulur; böylece sayfa yenilense
-// ya da ziyaretçi sonra geri gelse de aynı konuşma sürer. Geçmiş n8n tarafında (Redis) son mesajdan
-// itibaren 30 gün saklanır. localStorage kapalıysa kimlik yalnızca sayfa açıkken bellekte yaşar.
+// ya da ziyaretçi sonra geri gelse de aynı konuşma sürer. localStorage kapalıysa kimlik yalnızca sayfa
+// açıkken bellekte yaşar.
+// Sunucu tarafında iki ayrı kayıt vardır: (1) Redis sohbet hafızası, TTL'i seçili hedefe göre değişir
+// (sunucudaki N8N_CHAT_BACKEND; ayrıntı server/routes/chat.js ve n8n workflow'u); (2) n8n çalışma
+// kayıtları, saklanmaları n8n'in kendi ayarlarına bağlıdır ve Redis TTL'iyle silinmez.
 
 export const CHAT_PATH = '/api/chat'
 
 export const WELCOME_TEXT =
-  "Merhaba! Ben AtölyeKart'ın dijital asistanıyım. Ürünlerimiz, özellikleri ve stok durumu hakkında size yardımcı olabilirim."
+  "Merhaba! Ben AtölyeKart'ın dijital asistanıyım. Ürünlerimiz hakkında size yardımcı olabilirim."
 
 export const ERROR_TEXTS = {
   config: 'Asistan şu anda kullanılamıyor. Sorularınız için lütfen daha sonra yeniden deneyin.',
@@ -88,10 +91,10 @@ export function getOrCreateSessionId(storage = defaultStorage()) {
 }
 
 // "Yeni sohbet": kayıtlı kimliği yalnızca bu tarayıcıdan siler ve yeni bir kimlik üretip kaydeder.
-// Ağ isteği yapmaz; eski konuşma sunucuda (n8n / Redis) kalır ve oradaki saklama süresi dolunca silinir.
+// Ağ isteği yapmaz; sunucudaki hiçbir kaydı silmez. Eski konuşma Redis hafızasında TTL dolana kadar,
+// n8n çalışma kayıtlarında ise n8n'in saklama ayarlarına göre kalır (bkz. dosya başındaki not).
 export const NEW_CHAT_NOTICE =
-  'Yeni sohbet başladı. Önceki konuşma yalnızca bu cihazdan kaldırıldı; sunucudaki kaydı silinmedi. ' +
-  'Asistanın konuşma geçmişi, son mesajınızdan 30 gün sonra sunucudan otomatik olarak silinir.'
+  'Yeni sohbet başladı. Önceki konuşma bu cihazdaki sohbet görünümünden kaldırıldı. Sunucuda işlenmiş kayıtlar ayrıca tutulabilir.'
 
 export function startNewSession(storage = defaultStorage()) {
   const previous = readStoredSessionId(storage)

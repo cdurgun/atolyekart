@@ -295,10 +295,15 @@ test('yeni sohbet depolama hata fırlatsa ya da yoksa da yeni kimlik döner', ()
   assert.match(startNewSession(null), /^[A-Za-z0-9-]{8,64}$/)
 })
 
-test('yeni sohbet bilgilendirmesi sunucudaki kaydın silinmediğini açıkça söyler', () => {
-  assert.match(NEW_CHAT_NOTICE, /bu cihazdan/)
-  assert.match(NEW_CHAT_NOTICE, /sunucu[^.]*silinmedi/)
-  assert.doesNotMatch(NEW_CHAT_NOTICE, /sunucudan silindi|kalıcı olarak silindi|tamamen silindi/)
+test('yeni sohbet bilgilendirmesi yalnızca bu cihazdaki görünümün kaldırıldığını ve sunucu kayıtlarının kalabileceğini söyler', () => {
+  // Kaldırılan şey bu cihazdaki sohbet görünümüdür.
+  assert.match(NEW_CHAT_NOTICE, /bu cihazdaki sohbet görünümünden kaldırıldı/)
+  // Sunucuda işlenmiş kayıtların ayrıca tutulabileceği söylenir.
+  assert.match(NEW_CHAT_NOTICE, /[Ss]unucuda işlenmiş kayıtlar ayrıca tutulabilir/)
+  // Sunucu kayıtlarının silindiği ya da belli bir sürede kendiliğinden silineceği iddia edilmez.
+  assert.doesNotMatch(NEW_CHAT_NOTICE, /otomatik olarak silin|kendiliğinden silin|süresi dolunca/)
+  assert.doesNotMatch(NEW_CHAT_NOTICE, /sunucudan silindi|kalıcı olarak silindi|tamamen silindi|kayıtlar silindi/)
+  assert.doesNotMatch(NEW_CHAT_NOTICE, /\d+\s*gün/)
 })
 
 // --- Geçmiş (loadPreviousSession) ---
