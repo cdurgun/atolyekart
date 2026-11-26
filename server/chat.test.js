@@ -1,7 +1,7 @@
 // /api/chat proxy testleri. n8n çağrısı fetch taklidiyle yakalanır; gerçek ağ isteği yapılmaz.
 import assert from 'node:assert/strict'
-import { beforeEach, mock, test } from 'node:test'
-import { chatConfig, chatLimits, HISTORY_TIMEOUT_MS, SEND_TIMEOUT_MS } from './routes/chat.js'
+import { afterEach, beforeEach, mock, test } from 'node:test'
+import { chatBackend, chatConfig, chatLimits, HISTORY_TIMEOUT_MS, SEND_TIMEOUT_MS, upstreamBody } from './routes/chat.js'
 import { resetRateLimit } from './lib/rate-limit.js'
 import { handleApi } from './router.js'
 
@@ -34,12 +34,19 @@ const N8N_HISTORY = {
   ],
 }
 
+// Testlerin dokunduğu tüm N8N_* değişkenleri. Dosya yüklenirken değerleri saklanır ve her testten sonra
+// geri yüklenir; böylece testler birbirini ve test dışındaki ortamı etkilemez.
+const N8N_ENV_KEYS = ['N8N_CHAT_URL', 'N8N_CHAT_USER', 'N8N_CHAT_PASSWORD', 'N8N_CHAT_BACKEND', 'N8N_FINAL_URL', 'N8N_FINAL_USER', 'N8N_FINAL_PASSWORD']
+const ORIGINAL_ENV = Object.fromEntries(N8N_ENV_KEYS.map((key) => [key, process.env[key]]))
+
 let upstream // n8n'e giden istekler
 let respond // n8n'in vereceği yanıt
 beforeEach(() => {
   resetRateLimit()
   upstream = []
   respond = () => new Response(JSON.stringify({ output: 'Elde yıkama önerilir.' }), { status: 200 })
+  // Başlangıç: hedef seçilmemiş (RAG), final değişkenleri yok, RAG değişkenleri geçerli.
+  for (const key of ['N8N_CHAT_BACKEND', 'N8N_FINAL_URL', 'N8N_FINAL_USER', 'N8N_FINAL_PASSWORD']) delete process.env[key]
   process.env.N8N_CHAT_URL = N8N_URL
   process.env.N8N_CHAT_USER = USER
   process.env.N8N_CHAT_PASSWORD = PASSWORD
@@ -49,6 +56,13 @@ beforeEach(() => {
     return respond(url, init)
   })
   mock.method(console, 'error', () => {})
+})
+
+afterEach(() => {
+  for (const key of N8N_ENV_KEYS) {
+    if (ORIGINAL_ENV[key] === undefined) delete process.env[key]
+    else process.env[key] = ORIGINAL_ENV[key]
+  }
 })
 
 // --- Protokol ---
@@ -250,4 +264,167 @@ test('hiçbir yanıtta ve günlükte n8n adresi, kullanıcı adı ya da parola g
   for (const secret of [PASSWORD, USER, N8N_URL, 'n8n.example.test', Buffer.from(`${USER}:${PASSWORD}`).toString('base64')]) {
     assert.ok(!everything.includes(secret), `sızıntı: ${secret}`)
   }
+})
+
+// --- Hedef seçimi: final asistan (N8N_CHAT_BACKEND=final) ---
+// Final asistan webhook'u taklit edilir; gerçek n8n, Redis, OpenAI ya da Telegram çağrılmaz.
+
+const FINAL_URL = 'https://final.example.test/webhook/final-test'
+const FINAL_USER = 'final-test-kullanici'
+const FINAL_PASSWORD = 'final-icin-uydurma-parola-9876543210'
+const FINAL_AUTH = `Basic ${Buffer.from(`${FINAL_USER}:${FINAL_PASSWORD}`).toString('base64')}`
+const RAG_AUTH = `Basic ${Buffer.from(`${USER}:${PASSWORD}`).toString('base64')}`
+
+// Final modunu açar. RAG değişkenleri (beforeEach) geçerli kalır; böylece RAG'e geri dönüş olsaydı görünürdü.
+function useFinal(overrides = {}) {
+  Object.assign(process.env, { N8N_CHAT_BACKEND: 'final', N8N_FINAL_URL: FINAL_URL, N8N_FINAL_USER: FINAL_USER, N8N_FINAL_PASSWORD: FINAL_PASSWORD }, overrides)
+}
+const finalReply = (status, body) => () => new Response(JSON.stringify(body), { status })
+
+test('final: N8N_FINAL_URL / USER / PASSWORD kullanılır; RAG adresi ve kimliği kullanılmaz', async () => {
+  useFinal()
+  respond = finalReply(200, { ok: true, output: 'Soya mumu fitili 5 mm kısaltılmalıdır.' })
+  const response = await chat(send())
+  assert.equal(response.status, 200)
+
+  assert.equal(upstream.length, 1)
+  const { url, init } = upstream[0]
+  assert.equal(url, FINAL_URL)
+  assert.equal(init.method, 'POST')
+  assert.equal(init.headers.Authorization, FINAL_AUTH)
+  assert.notEqual(init.headers.Authorization, RAG_AUTH)
+  assert.equal(init.redirect, 'error')
+
+  const config = chatConfig({ N8N_CHAT_BACKEND: 'final', N8N_FINAL_URL: FINAL_URL, N8N_FINAL_USER: FINAL_USER, N8N_FINAL_PASSWORD: FINAL_PASSWORD, N8N_CHAT_URL: N8N_URL, N8N_CHAT_USER: USER, N8N_CHAT_PASSWORD: PASSWORD })
+  assert.deepEqual(config, { url: FINAL_URL, authorization: FINAL_AUTH })
+})
+
+test('final: n8n\'e giden gövde tam olarak { sessionId, chatInput }; action ve ek alanlar gönderilmez', async () => {
+  useFinal()
+  respond = finalReply(200, { ok: true, output: 'Tamam.' })
+  await chat(send('  2 kupa için teklif  ', { metadata: { admin: true }, productName: 'x' }))
+  const sent = JSON.parse(upstream[0].init.body)
+  assert.deepEqual(sent, { sessionId: SESSION, chatInput: '2 kupa için teklif' })
+  assert.deepEqual(Object.keys(sent).sort(), ['chatInput', 'sessionId'])
+  assert.equal('action' in sent, false)
+
+  // Saf fonksiyon: final gövdesi yeni nesne; RAG gövdesi aynen geçer.
+  const payload = { action: 'sendMessage', sessionId: SESSION, chatInput: 'x' }
+  assert.deepEqual(upstreamBody('final', payload), { sessionId: SESSION, chatInput: 'x' })
+  assert.equal(upstreamBody('rag', payload), payload)
+})
+
+test('final: değişkenler eksik ya da geçersizse 503; RAG\'e geri dönülmez ve n8n çağrılmaz', async () => {
+  const cases = [
+    { N8N_FINAL_URL: '' },
+    { N8N_FINAL_USER: '' },
+    { N8N_FINAL_PASSWORD: '' },
+    { N8N_FINAL_URL: 'http://final.example.test/webhook/final-test' },
+    { N8N_FINAL_URL: 'ftp://x' },
+    { N8N_FINAL_URL: 'adres-degil' },
+  ]
+  for (const env of cases) {
+    resetRateLimit()
+    useFinal(env)
+    for (const body of [send(), load()]) {
+      const response = await chat(body)
+      assert.equal(response.status, 503, `${JSON.stringify(env)} ${body.action}`)
+      assert.equal((await response.json()).error, 'chat_unavailable')
+    }
+  }
+  // RAG değişkenleri baştan sona geçerliydi; buna rağmen hiçbir istek (RAG dahil) gitmedi.
+  assert.equal(upstream.length, 0)
+  assert.equal(chatConfig({ N8N_CHAT_BACKEND: 'final', N8N_CHAT_URL: N8N_URL, N8N_CHAT_USER: USER, N8N_CHAT_PASSWORD: PASSWORD }), null)
+  assert.ok(chatConfig({ N8N_CHAT_BACKEND: 'final', N8N_FINAL_URL: 'http://localhost:5678/webhook/x', N8N_FINAL_USER: 'u', N8N_FINAL_PASSWORD: 'p' }))
+})
+
+test('final: loadPreviousSession n8n\'e gitmeden { data: [] } döner', async () => {
+  useFinal()
+  respond = () => new Response(JSON.stringify(N8N_HISTORY), { status: 200 }) // çağrılırsa dolu geçmiş dönerdi
+  const response = await chat(load())
+  assert.equal(response.status, 200)
+  assert.deepEqual(await response.json(), { data: [] })
+  assert.equal(upstream.length, 0)
+
+  // Ardından gelen mesaj normal şekilde final asistana gider.
+  respond = finalReply(200, { ok: true, output: 'Merhaba.' })
+  assert.equal((await chat(send())).status, 200)
+  assert.equal(upstream.length, 1)
+  assert.equal(upstream[0].url, FINAL_URL)
+})
+
+test('N8N_CHAT_BACKEND tanımsız, FINAL, Final, rag ya da boşsa RAG davranışı aynen sürer', async () => {
+  for (const value of [undefined, 'FINAL', 'Final', 'rag', '', 'finale']) {
+    resetRateLimit()
+    upstream = []
+    useFinal() // final değişkenleri de tanımlı: seçilmedikleri için kullanılmamalılar
+    if (value === undefined) delete process.env.N8N_CHAT_BACKEND
+    else process.env.N8N_CHAT_BACKEND = value
+    const label = String(value)
+    assert.equal(chatBackend(), 'rag', label)
+
+    respond = () => new Response(JSON.stringify({ output: 'Elde yıkama önerilir.' }), { status: 200 })
+    const sent = await chat(send())
+    assert.equal(sent.status, 200, label)
+    assert.deepEqual(await sent.json(), { output: 'Elde yıkama önerilir.' }, label)
+    assert.equal(upstream[0].url, N8N_URL, label)
+    assert.equal(upstream[0].init.headers.Authorization, RAG_AUTH, label)
+    assert.deepEqual(JSON.parse(upstream[0].init.body), { action: 'sendMessage', sessionId: SESSION, chatInput: 'Kupa bulaşık makinesine girer mi?' }, label)
+
+    // Geçmiş isteği RAG'de n8n'e gider ve süzülmüş geçmiş döner.
+    respond = () => new Response(JSON.stringify(N8N_HISTORY), { status: 200 })
+    const history = await chat(load())
+    assert.equal(history.status, 200, label)
+    assert.equal((await history.json()).data.length, 2, label)
+    assert.equal(upstream.length, 2, label)
+    assert.deepEqual(JSON.parse(upstream[1].init.body), { action: 'loadPreviousSession', sessionId: SESSION }, label)
+  }
+  // Yalnızca tam 'final' (baştaki/sondaki boşluk kırpılarak) final asistanı seçer.
+  assert.equal(chatBackend({ N8N_CHAT_BACKEND: 'final' }), 'final')
+  assert.equal(chatBackend({ N8N_CHAT_BACKEND: ' final ' }), 'final')
+  assert.equal(chatBackend({}), 'rag')
+})
+
+test('final: 200 { ok: true, output } → 200 { output }; 400 ve 503 → 502, ayrıntı tarayıcıya gitmez', async () => {
+  useFinal()
+
+  respond = finalReply(200, { ok: true, output: 'Demo teklif: Luna Seramik Kupa × 2.' })
+  const ok = await chat(send())
+  assert.equal(ok.status, 200)
+  assert.deepEqual(await ok.json(), { output: 'Demo teklif: Luna Seramik Kupa × 2.' })
+
+  const failures = [
+    finalReply(400, { ok: false, reason: 'invalid_input', mesaj: 'Mesaj 1 ile 1000 karakter arasında olmalı.' }),
+    finalReply(503, { ok: false, mesaj: 'Asistan şu anda yanıt veremiyor. Lütfen biraz sonra yeniden deneyin.' }),
+    finalReply(200, { ok: true, output: '' }),
+  ]
+  for (const handler of failures) {
+    resetRateLimit()
+    respond = handler
+    const response = await chat(send())
+    assert.equal(response.status, 502)
+    const body = await response.json()
+    assert.deepEqual(body, { ok: false, error: 'upstream_error', message: 'Asistan şu anda yanıt veremiyor.' })
+    assert.ok(!JSON.stringify(body).includes('invalid_input'))
+  }
+})
+
+test('final: hiçbir yanıtta ve günlükte final adresi, kullanıcı adı ya da parola görünmez', async () => {
+  const logged = []
+  console.error.mock.mockImplementation((...args) => logged.push(args.join(' ')))
+  const bodies = []
+  for (const handler of [finalReply(401, {}), finalReply(503, { ok: false }), () => Promise.reject(new TypeError('fetch failed')), finalReply(200, { ok: true, output: 'ok' })]) {
+    resetRateLimit()
+    useFinal()
+    respond = handler
+    bodies.push(await (await chat(send())).text())
+  }
+  useFinal({ N8N_FINAL_PASSWORD: '' })
+  bodies.push(await (await chat(send())).text())
+  const everything = [...bodies, ...logged].join('\n')
+  for (const secret of [FINAL_PASSWORD, FINAL_USER, FINAL_URL, 'final.example.test', FINAL_AUTH.slice(6)]) {
+    assert.ok(!everything.includes(secret), `sızıntı: ${secret}`)
+  }
+  // Günlükte değer değil, yalnızca değişken adları yazılır.
+  assert.ok(logged.some((line) => line.includes('N8N_FINAL_URL / N8N_FINAL_USER / N8N_FINAL_PASSWORD')))
 })

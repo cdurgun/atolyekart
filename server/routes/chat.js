@@ -9,6 +9,14 @@
 //
 // Geçmiş yanıtı sunucuda süzülür: araç çağrıları, araç sonuçları (ör. Google Sheets satırları) ve sistem
 // mesajları tarayıcıya hiç gönderilmez. Streaming yoktur: n8n Chat Trigger (webhook modu) düz JSON döner.
+//
+// Hedef seçimi (N8N_CHAT_BACKEND):
+//   tanımsız ya da 'final' dışında bir değer → canlı RAG Chat Trigger, N8N_CHAT_* (bugünkü davranış, değişmez)
+//   'final' → final asistan webhook'u, N8N_FINAL_URL / N8N_FINAL_USER / N8N_FINAL_PASSWORD
+// Final asistanın sözleşmesi: { sessionId, chatInput } → 200 { ok: true, output } (400/503 → proxy 502).
+// Final asistanda geçmiş yükleme uç noktası yoktur: loadPreviousSession n8n'e gönderilmez, { data: [] } döner;
+// konuşma bağlamı n8n tarafındaki hafızada sürer, pencere yalnızca karşılamayla açılır.
+// Final değişkenleri eksik ya da geçersizse 503 döner; RAG'e sessizce geri dönülmez.
 import { MAX_MESSAGE_LENGTH, extractReply, parseHistory, SESSION_ID_PATTERN } from '../../src/features/luna-atelier-preview/chat/chatClient.js'
 import { clientIp, json, readJsonObject } from '../lib/http.js'
 import { createRateLimiter } from '../lib/rate-limit.js'
@@ -41,11 +49,20 @@ function fail(kind, headers) {
   return json(status, { ok: false, error, message }, headers)
 }
 
-// Yalnızca https (yerelde http://localhost) adresi ve kullanıcı adı + parola birlikte varsa yapılandırılmış sayılır.
+// Yalnızca 'final' değeri final asistanı seçer; diğer her durumda canlı RAG kullanılır.
+export function chatBackend(env = process.env) {
+  return env.N8N_CHAT_BACKEND?.trim() === 'final' ? 'final' : 'rag'
+}
+
+const ENV_PREFIX = { rag: 'N8N_CHAT', final: 'N8N_FINAL' }
+
+// Seçili hedefin değişkenleri okunur. Yalnızca https (yerelde http://localhost) adresi ve kullanıcı adı +
+// parola birlikte varsa yapılandırılmış sayılır.
 export function chatConfig(env = process.env) {
-  const url = env.N8N_CHAT_URL?.trim()
-  const user = env.N8N_CHAT_USER
-  const password = env.N8N_CHAT_PASSWORD
+  const prefix = ENV_PREFIX[chatBackend(env)]
+  const url = env[`${prefix}_URL`]?.trim()
+  const user = env[`${prefix}_USER`]
+  const password = env[`${prefix}_PASSWORD`]
   if (!url || !user || !password) return null
   try {
     const { protocol, hostname } = new URL(url)
@@ -81,18 +98,24 @@ export function validateChatBody(body) {
   return { action: 'sendMessage', sessionId: body.sessionId, chatInput }
 }
 
+// n8n'e giden gövde. Final asistan yalnızca sessionId ve chatInput okur; action gönderilmez.
+export function upstreamBody(backend, payload) {
+  if (backend === 'final') return { sessionId: payload.sessionId, chatInput: payload.chatInput }
+  return payload
+}
+
 function limited(result) {
   return result.allowed ? null : fail('rateLimited', { 'Retry-After': String(result.retryAfter) })
 }
 
-async function callN8n(config, payload) {
+async function callN8n(config, backend, payload) {
   const timeoutMs = payload.action === 'sendMessage' ? SEND_TIMEOUT_MS : HISTORY_TIMEOUT_MS
   let response
   try {
     response = await fetch(config.url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Accept: 'application/json', Authorization: config.authorization },
-      body: JSON.stringify(payload),
+      body: JSON.stringify(upstreamBody(backend, payload)),
       redirect: 'error',
       signal: AbortSignal.timeout(timeoutMs),
     })
@@ -138,13 +161,18 @@ export default {
       if (blocked) return blocked
     }
 
+    const backend = chatBackend()
     const config = chatConfig()
     if (!config) {
-      console.error('[chat] N8N_CHAT_URL / N8N_CHAT_USER / N8N_CHAT_PASSWORD eksik ya da geçersiz')
+      const prefix = ENV_PREFIX[backend]
+      console.error(`[chat] ${prefix}_URL / ${prefix}_USER / ${prefix}_PASSWORD eksik ya da geçersiz`)
       return fail('unavailable')
     }
 
-    const result = await callN8n(config, payload)
+    // Final asistanda geçmiş uç noktası yok: n8n'e gidilmez, pencere karşılamayla açılır.
+    if (backend === 'final' && payload.action === 'loadPreviousSession') return json(200, { data: [] })
+
+    const result = await callN8n(config, backend, payload)
     if (result.error) return fail(result.error)
 
     if (payload.action === 'loadPreviousSession') {

@@ -46,7 +46,13 @@ export default defineConfig(({ mode }) => {
   // Sunucu sırları (.env.local) yalnızca bu Node sürecine verilir. VITE_ öneki taşımadıkları için
   // Vite bunları tarayıcı paketine koymaz.
   const env = loadEnv(mode, process.cwd(), '')
-  for (const key of ['WEBHOOK_URL', 'WEBHOOK_SECRET', 'JWT_SECRET', 'N8N_CHAT_URL', 'N8N_CHAT_USER', 'N8N_CHAT_PASSWORD']) {
+  // N8N_CHAT_BACKEND ve N8N_FINAL_*: /api/chat'in hedef seçimi (bkz. server/routes/chat.js).
+  const serverKeys = [
+    'WEBHOOK_URL', 'WEBHOOK_SECRET', 'JWT_SECRET',
+    'N8N_CHAT_URL', 'N8N_CHAT_USER', 'N8N_CHAT_PASSWORD',
+    'N8N_CHAT_BACKEND', 'N8N_FINAL_URL', 'N8N_FINAL_USER', 'N8N_FINAL_PASSWORD',
+  ]
+  for (const key of serverKeys) {
     if (env[key]) process.env[key] ??= env[key]
   }
 
