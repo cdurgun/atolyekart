@@ -1,6 +1,7 @@
 # X2: Site sohbetinin final asistana bağlanması
 
 > Durum (26.11.2026): **P1 ve P2 tamamlandı. Production sohbeti final asistana gidiyor.** Kod PR #2 ile `main`'e squash merge edildi (`27028a1`). P2'de Vercel Production değişkenleri girildi ve redeploy yapıldı. Smoke testinde senaryo 1–4 ve 6 geçti; senaryo 7'de hafıza ayrımı geçti, "Yeni sohbet" bildirimi production'da doğrudan doğrulanmadı; **senaryo 5 (stok) başarısız** (bölüm 9).
+> **Güncelleme (27.11.2026):** stok sorusu hatası ve teklif satırının yerleşimi için final asistan düzeltildi, taslakta test edildi (8/9) ve `8a504da3` sürümü olarak yayınlandı. D9 bilinen hafıza sınırlaması olarak kaldı (bölüm 10).
 >
 > Hazırlık: commit'ler yeni `main` (`7f729bf`) üzerine cherry-pick ile `ozellik/x2-p1` dalında hazırlandı (kod commit'i `0919822`, ilk dal `ozellik/x2-final-asistan-sohbet`'teki `b44259e` ile aynı içerik). Bu tabanda `npm test` 102/102 ve `npm run build` geçti.
 
@@ -95,6 +96,8 @@ Henüz doğrulanmadı:
 - Gerçek bir production hatasının hata yakalayıcı üzerinden Telegram bildirimine dönüştüğü uçtan uca.
 - Final hedefinin hata yanıtları (503 yapılandırma eksik, 502 n8n hatası) production'da. Bilerek tetiklenmedi; birim testleriyle kapsanıyor (`server/chat.test.js`).
 - "Yeni sohbet" bildiriminin production'da ekranda görünmesi (bölüm 9, senaryo 7).
+- Yayınlanan `8a504da3` sürümünde production hafıza davranışı (bölüm 10).
+- Yanıt kodundaki yer tutucu güvenlik ağının canlıda çalışması (bölüm 10).
 
 ## 8. Geçiş adımları (her biri ayrı onayla yapıldı)
 
@@ -109,7 +112,7 @@ Henüz doğrulanmadı:
 2. Vercel Instant Rollback kullanılacaksa P1 deploy'una (`dpl_5PVCvfBArVMg6V4Z84SYBfWHrd39`; aynı kod, `N8N_CHAT_BACKEND` tanımsızken oluşturuldu) ya da X2'den hemen önceki deploy'a dönülür. 21.11'deki `WEBHOOK_URL` düzeltmesinden önceki bir deploy'a dönmek sipariş akışını bozar (`docs/hafta6/uretim-hazirlik.md` bölüm 6).
 
 **Dikkat:**
-- Final hedefi açıkken final asistanda oluşan bir hata, hata yakalayıcı üzerinden gerçek bir Telegram bildirimi üretebilir. Hata yakalayıcının açıklamasında "Telegram node'u devre dışı" yazsa da 26.11.2026 itibarıyla Telegram düğümü etkindir. Alt workflow hataları bildirim üretmez (bilinen sınırlama).
+- Final hedefi açıkken final asistanda oluşan bir hata, hata yakalayıcı üzerinden gerçek bir Telegram bildirimi üretebilir. Hata yakalayıcının açıklamasında "Telegram node'u devre dışı" yazsa da 26.11.2026 itibarıyla Telegram düğümü etkindir. Bunun bilerek yapıldığı doğrulanmadı. Alt workflow hataları bildirim üretmez (bilinen sınırlama).
 - Production sohbeti; Mac'in, Docker'ın ve tünelin açık olmasına bağlıdır. Bu, RAG hedefi için de geçerlidir.
 
 ## 9. P1 ve P2 sonuçları (26.11.2026)
@@ -146,6 +149,8 @@ Henüz doğrulanmadı:
 
 ### Açık bulgular
 
+26.11.2026 itibarıyla. Bulgu 1 ve 2'nin 27.11.2026 durumu bölüm 10'da.
+
 1. **Stok sorusu (senaryo 5):** final asistan stok sorusunda Prim Hesapla aracını çağırıyor, kesin stok durumu bildiriyor ve istenmeyen teklif ekliyor. Stok cümlesinin aracın çıktısından geldiği bir çıkarımdır; düğüm verisi okunmadı. Düzeltme canlı workflow değişikliği gerektirir (ayrı karar).
 2. **Teklif satırının yerleşimi:** tutar satırı cümlenin ortasına giriyor ("… için Demo teklif: … yazabilirsiniz."). Tutarlar doğru; düzeltme canlı workflow değişikliği gerektirir (ayrı karar).
 3. **Hata yakalayıcının açıklaması eskimiş:** açıklama Telegram düğümünü devre dışı olarak anlatıyor, düğüm etkin.
@@ -153,7 +158,72 @@ Henüz doğrulanmadı:
 
 ### Demo kısıtları
 
-- Düzeltme yapılana kadar demoda stok sorusu sorulmaz.
+- Düzeltme yapılana kadar demoda stok sorusu sorulmaz. (27.11.2026: düzeltme yayınlandı; D1, D2, D5 ve production testlerinde stok hatası görülmedi, bkz. bölüm 10. Her mesaj bir kez denendi. D9'daki hafıza sınırlaması devam ediyor.)
 - Erişim tek Shareable Link iledir (Hobby planda aynı anda tek link; yeni link eskisini iptal eder). Değerlendirme bitince link iptal edilir.
 - Production sohbeti Mac'in, Docker'ın ve tünelin açık olmasına bağlıdır.
 - Final asistanda oluşan gerçek bir hata Telegram bildirimi üretir.
+
+## 10. Stok ve teklif düzeltmesi: test, yayın ve production sonucu (27.11.2026)
+
+### Düzeltme
+
+Yalnızca final asistan workflow'unda (`ruOv`) üç alan değişti. Site kodu değişmedi ve Vercel redeploy gerekmedi.
+
+- **AI Agent sistem mesajı:** Prim Hesapla yalnızca açık sigorta primi ya da teklifi talebinde çağrılır. Stok sorusunda araç çağrılmaz ve sabit cümle kullanılır. Model tutar ve özet yazmaz; özeti kod ekler.
+- **Prim Hesapla açıklaması:** araç stok ve fiyat sorularında kullanılmaz; `inStock` alanı stok bilgisi olarak aktarılmaz.
+- **"Yanıtı tamamla" kodu:** teklif özeti her zaman sonda, ayrı paragrafta eklenir. Model yine de yer tutucu yazarsa devreye giren bir güvenlik ağı eklendi. Eski stok cümlesi (`STOK_YOK`) koddan kaldırıldı. Prim Hesapla çağrılıp Sigorta Şartları çağrılmadığında modelin şart terimli cümleleri gizlenir; bu ikinci davranışın canlıda devreye girdiği bir test görülmedi.
+
+### Taslak testleri (D1–D9): 8/9 geçti
+
+**Yöntem:** testler yayınlanmamış taslakta (`8a504da3`), yerel n8n'in `/webhook-test/` yoluyla ve her biri bir kez çalıştırıldı. İstekleri kullanıcı kendi terminalinden gönderdi.
+
+**Kanıt:** kullanıcının paylaştığı yanıtlar ve ekran görüntüsü ile çalışma meta verisi. Ek olarak, kullanıcının isteğiyle #545, #546, #548, #550 ve #555'te yalnızca "Yanıtı tamamla" düğümünün çıktısı okundu. D3–D9 için HTTP 200 terminal çıktısında görüldü; D1 ve D2'nin HTTP durum kodu paylaşılmadı.
+
+| Test | Mesaj | Sonuç | Prim Hesapla | Çalışmalar |
+| --- | --- | --- | --- | --- |
+| D1 | Terra Minimal Kolye stok sorusu | ✅ Sabit stok cümlesi; teklif ve demo uyarısı yok | 0 | #544 |
+| D2 | Luna Seramik Kupa stok sorusu | ✅ Sabit stok cümlesi; teklif ve demo uyarısı yok | 0 | #545 |
+| D3 | 2 kupa için teklif | ✅ 840,00 TL / 33,60 TL (vergiler hariç); demo uyarısı bir kez | 1 | #546, #547 |
+| D4 | 1 kolye için teklif | ✅ 290,00 TL / 15,00 TL; stok cümlesi yok | 1 | #548, #549 |
+| D5 | Stok sorusu ve teklif birlikte | ✅ Sabit stok cümlesi ve 290,00 TL / 15,00 TL | 1 | #550, #551 |
+| D6 | Amber Soya Mum fitil bakımı | ✅ Bakım bilgisi ve kaynak satırı | 0 | #552 |
+| D7 | Kırılan ürün teminatı | ✅ Sigorta Şartları çağrıldı; demo uyarısı bir kez | 0 | #553, #554 (Sigorta Şartları) |
+| D8 | "Peki 3 adet olursa?" (D3 oturumu) | ✅ 1.260,00 TL / 50,40 TL | 1 | #555, #556 |
+| D9 | "Az önce hangi üründen kaç adet sormuştum?" (D3 oturumu) | ❌ Son soru 3 adet iken yanıt 2 adet dedi | 0 | #557 |
+
+- Testler boyunca canlı RAG'de ve hata yakalayıcıda çalışma yok.
+- Prim sayıları alt workflow'un çalışma kayıtlarıyla eşleştirildi.
+
+### Yer tutucu güvenlik ağı
+
+Dört teklif testinde (D3, D4, D5, D8) güvenlik ağı **tetiklenmedi**: `yerTutucuGuvenlikAgi` `false`, `yerTutucuGizlenen` boş ve `yerTutucuDonusum` sayaçlarının tümü 0. Model bu testlerde yer tutucu yazmadı. Bu yüzden güvenlik ağı **canlıda henüz sınanmadı**; davranışı yalnızca yerel simülasyona dayanıyor.
+
+### Bilinen sınırlama: hafıza (D9)
+
+Aynı oturumda önce 2 adet için teklif istenip sonra "Peki 3 adet olursa?" diye soruldu. "Kaç adet sormuştum?" sorusuna model 3 yerine **2 adet** yanıtı verdi. Bir kez gözlendi; nedeni incelenmedi, düzeltme yapılmadı ve test yeniden çalıştırılmadı. Davranışın önceki sürümde de olup olmadığı bilinmiyor.
+
+### Yayın
+
+- Yayınlanan sürüm: **`8a504da3`** (kullanıcı onayıyla). Aktif sürüm, konteynerden alınan dışa aktarımla doğrulandı.
+- Geri dönüş: önceki sürüm **`08e2d27a`** yeniden yayınlanır.
+
+### Production testi
+
+Mesajları kullanıcı siteden gönderdi ve yanıtları paylaştı. Çalışmalar meta veri düzeyinde okundu; HTTP durum kodları ölçülmedi. Çalışmalar mesajlarla gönderim sırası ve zamana göre eşleştirildi; Prim Hesapla çağrı sayıları alt workflow'un çalışma kayıtlarından çıkarıldı.
+
+| Mesaj | Sonuç | Prim Hesapla | Çalışmalar |
+| --- | --- | --- | --- |
+| Terra Minimal Kolye stok sorusu | ✅ Sabit stok cümlesi; teklif ve demo uyarısı yok | 0 | #558 `webhook` `success` |
+| 2 adet Luna Seramik Kupa için teklif | ✅ 840,00 TL / 33,60 TL (vergiler hariç), ayrı paragrafta; demo uyarısı bir kez | 1 | #559 `webhook` `success`; #560 `integrated` `success` |
+
+- Stok ve teklif yanıtları doğru. Bulgu 1 (stok) ve bulgu 2 (tutar satırının cümle ortasına girmesi) bu testte görülmedi.
+- **Küçük biçim kusuru:** "Başka bir konuda yardımcı olabilir miyim?" cümlesi teklif özetinden önce geliyor.
+- Canlı RAG'de, Sigorta Şartları'nda ve hata yakalayıcıda çalışma yok.
+- **Production hafıza testi yapılmadı.**
+
+### Diğer gözlemler
+
+- Teklif yanıtlarının giriş cümleleri yer yer gereksiz ya da tuhaf; D5'teki "Sigorta teklifi için işlem yaptım" ifadesi bir işlem yapılmış gibi okunabilir.
+- D7 yanıtında farklı numaralar içeren iki liste var ("Kaynaklar: Parçalar …" ve "Getirilen demo şartları bölümleri …"); ziyaretçi için kafa karıştırıcı olabilir. Kanıt: kullanıcının paylaştığı yanıt. Farkın nedeni, önceki sürümde de olup olmadığı ve şartların kaynak belgeye göre doğruluğu incelenmedi.
+- Her test bir kez çalıştırıldı; sonuçlar modelin her seferinde aynı davranacağını göstermez.
+- Hata yakalayıcıda Telegram düğümünün etkin olmasının bilerek yapıldığı hâlâ doğrulanmadı.
