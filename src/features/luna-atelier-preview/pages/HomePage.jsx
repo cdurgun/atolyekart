@@ -44,6 +44,38 @@ function StoryVideo() {
   )
 }
 
+const heroLabel = 'Güneşli atölyede çömlekçi çarkında kil şekillendiren seramik sanatçısı'
+
+// Sessiz döngü. Hareket azaltma tercihi açıksa video yüklenmez, yerine ilk karesi gösterilir.
+// Tercih ilk çizimde okunur; böylece video bir an bile oynamaz.
+function HeroMedia() {
+  const [reduced, setReduced] = useState(() => window.matchMedia('(prefers-reduced-motion: reduce)').matches)
+  useEffect(() => {
+    const query = window.matchMedia('(prefers-reduced-motion: reduce)')
+    const onChange = (event) => setReduced(event.matches)
+    query.addEventListener('change', onChange)
+    return () => query.removeEventListener('change', onChange)
+  }, [])
+  if (reduced) {
+    return <img className="lp-hero-image" src={images.atolyeCarkPoster} alt={heroLabel} width="1600" height="900" />
+  }
+  return (
+    <video
+      className="lp-hero-image"
+      src={videos.atolyeCark}
+      poster={images.atolyeCarkPoster}
+      width="1600"
+      height="900"
+      muted
+      autoPlay
+      loop
+      playsInline
+      preload="auto"
+      aria-label={heroLabel}
+    />
+  )
+}
+
 const values = [
   { icon: 'pen', label: 'Elde Şekillendirme' },
   { icon: 'leaf', label: 'Sade, Doğal Dokular' },
@@ -63,13 +95,7 @@ export default function HomePage({ onAdd }) {
           <div className="lp-hero-grid">
             <div className="lp-hero-media">
               <div className="lp-hero-underlay" aria-hidden="true" />
-              <img
-                className="lp-hero-image"
-                src={images.atolyeCarkBasinda}
-                alt="Güneşli atölyede çömlekçi çarkında kil şekillendiren seramik sanatçısı"
-                width="1200"
-                height="655"
-              />
+              <HeroMedia />
               <span className="lp-hero-tag lp-mobile-only"><span className="lp-dot" />El Yapımı</span>
             </div>
             <div className="lp-hero-copy">
